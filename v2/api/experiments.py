@@ -267,7 +267,7 @@ Respond in this exact JSON format (no markdown, no extra text):
             timeout=DGX_TIMEOUT,
         )
         resp.raise_for_status()
-        raw = resp.json().get("text", "")
+        raw = resp.json().get("response", "")
     except Exception as e:
         return jsonify({"error": f"Gemma4 unavailable: {e}"}), 503
 

@@ -15,6 +15,7 @@ likeBtn?.addEventListener("click", async () => {
 // ── Comments ────────────────────────────────────────────────────────
 async function loadComments() {
   const container = document.getElementById("comments-list");
+  if (!container) return;  // not rendered for draft/retracted experiments
   try {
     const comments = await apiFetch(`/api/v2/experiments/${expId}/comments`);
     renderComments(comments, container);
