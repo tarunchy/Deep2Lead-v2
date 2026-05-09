@@ -110,9 +110,32 @@
           </label>
         </div>
 
-        <button type="button" id="run3dBtn" class="btn btn-primary" style="width:100%;" onclick="run3DExperiment()">
-          🚀 Generate &amp; Score Candidates
-        </button>
+        <div style="background:#1c2128;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px;">
+            <input type="checkbox" id="auto_retry">
+            <span style="font-size:.85rem;font-weight:600;">Auto-retry if no candidates found</span>
+          </label>
+          <div id="retryOptions" style="display:none;display:flex;align-items:center;gap:8px;padding-left:22px;">
+            <span style="font-size:.8rem;color:#8b949e;">Max attempts:</span>
+            <select id="max_retries" class="form-control" style="width:auto;padding:3px 8px;font-size:.82rem;">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="100">100</option>
+              <option value="0">Until stopped</option>
+            </select>
+            <span style="font-size:.78rem;color:#8b949e;">Each retry varies diversity level</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button type="button" id="run3dBtn" class="btn btn-primary" style="flex:1;" onclick="run3DExperiment()">
+            🚀 Generate &amp; Score Candidates
+          </button>
+          <button type="button" id="stopBtn" class="btn btn-outline" style="display:none;padding:0 16px;color:#ff7b72;border-color:#ff7b72;" onclick="requestStop()">
+            ⏹ Stop
+          </button>
+        </div>
       </form>
 
       <div id="run3dProgress" style="display:none;margin-top:16px;">
@@ -214,6 +237,10 @@ window.PAGE_GUIDE = {
   const UNIPROT_ID = "{{ target.uniprot_id if target else '' }}";
   const PDB_ID = "{{ target.pdb_id if target else '' }}";
 
+  document.getElementById("auto_retry").addEventListener("change", function() {
+    document.getElementById("retryOptions").style.display = this.checked ? "flex" : "none";
+  });
+
   // Load structure on page load
   document.addEventListener("DOMContentLoaded", async () => {
     StructureViewer.init("structureViewer");
@@ -239,75 +266,128 @@ window.PAGE_GUIDE = {
     }
   });
 
+  let _stopRequested = false;
+  function requestStop() { _stopRequested = true; }
+
   async function run3DExperiment() {
     const btn = document.getElementById("run3dBtn");
+    const stopBtn = document.getElementById("stopBtn");
     const progress = document.getElementById("run3dProgress");
     const bar = document.getElementById("progressBar");
     const lbl = document.getElementById("progressLabel");
     const pct = document.getElementById("progressPct");
     const originalBtnText = btn.innerHTML;
+    const autoRetry = document.getElementById("auto_retry").checked;
+    const maxRetries = parseInt(document.getElementById("max_retries").value) || 0;
+    const unlimited = maxRetries === 0;
 
+    _stopRequested = false;
     btn.disabled = true;
     btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:8px;"></span>Running…';
+    if (autoRetry) stopBtn.style.display = "inline-flex";
     progress.style.display = "block";
     progress.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
+    const baseNoise = parseFloat(document.getElementById("noise_level").value);
+    const NOISE_STEPS = [0, 0.1, -0.1, 0.2, -0.15, 0.25, 0.3, -0.2, 0.35, 0.15,
+                         -0.25, 0.4, -0.3, 0.45, 0.05, -0.35, 0.5, -0.05, 0.55, 0.6];
+
+    function clampNoise(n) { return Math.min(0.95, Math.max(0.05, n)); }
+
+    function setProgress(widthPct, label, pctText) {
+      bar.style.width = widthPct + "%";
+      lbl.textContent = label;
+      pct.textContent = pctText;
+    }
+
     const steps = [
-      { label: "Validating inputs…", pct: 8 },
-      { label: "Generating candidates with Gemma4…", pct: 30 },
-      { label: "Computing drug-likeness scores…", pct: 58 },
+      { label: "Generating candidates with Gemma4…", pct: 25 },
+      { label: "Computing drug-likeness scores…", pct: 55 },
       { label: "Running molecular docking…", pct: 80 },
-      { label: "Ranking candidates…", pct: 93 },
+      { label: "Ranking candidates…", pct: 92 },
     ];
 
-    let stepIdx = 0;
-    function advanceStep() {
-      if (stepIdx < steps.length) {
-        bar.style.width = steps[stepIdx].pct + "%";
-        lbl.textContent = steps[stepIdx].label;
-        pct.textContent = steps[stepIdx].pct + "%";
-        stepIdx++;
-      }
-    }
-    advanceStep();  // show first step immediately
-    const stepTimer = setInterval(advanceStep, 2500);
-
-    const payload = {
-      target_id: TARGET_ID,
-      amino_acid_seq: document.getElementById("amino_acid_seq").value.trim(),
-      smile: document.getElementById("seed_smiles").value.trim(),
-      num_candidates: parseInt(document.getElementById("num_candidates").value),
-      noise: parseFloat(document.getElementById("noise_level").value),
-      enable_docking: document.getElementById("enable_docking").checked,
-      mode: "3d",
-      uniprot_id: UNIPROT_ID,
-      pdb_id: PDB_ID,
-      target_name: "{{ target.name if target else '' }}",
-    };
+    let attempt = 0;
+    let found = [];
 
     try {
-      const res = await apiFetch("/api/v2/generate", { method: "POST", body: JSON.stringify(payload) });
-      clearInterval(stepTimer);
-      bar.style.width = "100%";
-      lbl.textContent = "Done!";
-      pct.textContent = "100%";
-      document.getElementById("progressPulse").style.animation = "none";
-      document.getElementById("progressSpinner").style.display = "none";
-      if (res.error) { showAlert(res.error, "danger"); btn.disabled = false; btn.innerHTML = originalBtnText; return; }
-      renderCandidates(res.candidates || []);
-      document.getElementById("resultsSection").style.display = "block";
-      document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth", block: "start" });
-      showAlert(`Generated ${res.candidates.length} candidates!`, "success");
-    } catch (e) {
-      clearInterval(stepTimer);
-      lbl.textContent = "Something went wrong.";
-      pct.textContent = "";
-      document.getElementById("progressPulse").style.animation = "none";
-      document.getElementById("progressSpinner").style.display = "none";
-      showAlert("Error: " + e.message, "danger");
+      while (true) {
+        if (_stopRequested) { setProgress(bar.style.width.replace('%','') || 0, "Stopped by user.", ""); break; }
+        attempt++;
+        const retryLabel = autoRetry ? ` (attempt ${attempt}${unlimited ? "" : "/" + maxRetries})` : "";
+        const noise = clampNoise(baseNoise + (NOISE_STEPS[(attempt - 1) % NOISE_STEPS.length] || 0));
+
+        setProgress(8, `Validating inputs…${retryLabel}`, "8%");
+
+        let stepIdx = 0;
+        const stepTimer = setInterval(() => {
+          if (stepIdx < steps.length) {
+            const retryLbl = autoRetry ? ` (attempt ${attempt}${unlimited ? "" : "/" + maxRetries})` : "";
+            setProgress(steps[stepIdx].pct, steps[stepIdx].label + retryLbl, steps[stepIdx].pct + "%");
+            stepIdx++;
+          }
+        }, 2500);
+
+        const payload = {
+          target_id: TARGET_ID,
+          amino_acid_seq: document.getElementById("amino_acid_seq").value.trim(),
+          smile: document.getElementById("seed_smiles").value.trim(),
+          num_candidates: parseInt(document.getElementById("num_candidates").value),
+          noise,
+          enable_docking: document.getElementById("enable_docking").checked,
+          mode: "3d",
+          uniprot_id: UNIPROT_ID,
+          pdb_id: PDB_ID,
+          target_name: "{{ target.name if target else '' }}",
+        };
+
+        let res;
+        try {
+          res = await apiFetch("/api/v2/generate", { method: "POST", body: JSON.stringify(payload) });
+        } catch(e) {
+          clearInterval(stepTimer);
+          setProgress(0, "API error — " + e.message, "");
+          break;
+        }
+        clearInterval(stepTimer);
+
+        if (res.error) { showAlert(res.error, "danger"); break; }
+
+        if (res.candidates && res.candidates.length > 0) {
+          found = res.candidates;
+          setProgress(100, `Done! Found ${found.length} candidates on attempt ${attempt}.`, "100%");
+          break;
+        }
+
+        // No candidates — decide whether to retry
+        if (!autoRetry) {
+          setProgress(100, "No candidates found. Try enabling Auto-retry.", "100%");
+          break;
+        }
+        if (!unlimited && attempt >= maxRetries) {
+          setProgress(100, `Reached ${maxRetries} attempts — no candidates found. Try a different seed.`, "100%");
+          break;
+        }
+
+        setProgress(5, `Attempt ${attempt} — 0 candidates. Retrying with diversity ${noise.toFixed(2)}…`, "");
+        await new Promise(r => setTimeout(r, 400));
+      }
     } finally {
+      document.getElementById("progressPulse").style.animation = "none";
+      document.getElementById("progressSpinner").style.display = "none";
+      stopBtn.style.display = "none";
       btn.disabled = false;
       btn.innerHTML = originalBtnText;
+    }
+
+    if (found.length > 0) {
+      renderCandidates(found);
+      document.getElementById("resultsSection").style.display = "block";
+      document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth", block: "start" });
+      showAlert(`Found ${found.length} candidates in ${attempt} attempt${attempt > 1 ? "s" : ""}!`, "success");
+    } else if (!_stopRequested) {
+      renderCandidates([]);
+      document.getElementById("resultsSection").style.display = "block";
     }
   }
 
