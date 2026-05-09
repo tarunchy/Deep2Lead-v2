@@ -106,6 +106,17 @@
     }
   }
 
+  // ── Acknowledgment phrases ────────────────────────────────────
+  const _ACKS = [
+    "Sure! Let me think about that and I'll answer in just a moment.",
+    "Great question! Give me a second to research that for you.",
+    "Absolutely, let me look into that and get back to you shortly.",
+    "Good question! I'm working on your answer right now.",
+    "Of course! Let me think through that — I'll have an answer for you in just a second.",
+    "Sure thing! Let me dig into that question for you.",
+  ];
+  function _randomAck() { return _ACKS[Math.floor(Math.random() * _ACKS.length)]; }
+
   // ── LLM call ──────────────────────────────────────────────────
   async function _ask(text) {
     _appendUserMsg(text);
@@ -115,13 +126,23 @@
     _setState("thinking");
     const typingEl = _appendTyping();
 
+    // Fire LLM call and acknowledgment TTS in parallel
+    const ackPhrase   = _randomAck();
+    const llmPromise  = fetch("/api/v2/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, history: _history.slice(0, -1) }),
+    });
+    const ackPromise  = _fetchTtsAudio(ackPhrase);
+
     try {
-      const res  = await fetch("/api/v2/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history: _history.slice(0, -1) }),
-      });
-      const data = await res.json();
+      // Play acknowledgment immediately while LLM is still computing
+      const ackAudio = await ackPromise;
+      if (ackAudio) await _playAudioObj(ackAudio);
+
+      // Now wait for LLM (usually already done by the time ack finishes)
+      const res   = await llmPromise;
+      const data  = await res.json();
       const reply = data.reply || data.error || "Sorry, I couldn't understand that.";
 
       typingEl.remove();
@@ -130,7 +151,7 @@
       const msgEl = _appendAiMsg(reply, data.tools_used || []);
       _setState("idle");
 
-      // Auto-play TTS
+      // Auto-play the full answer
       await _speak(reply, msgEl);
 
     } catch (e) {
@@ -141,29 +162,54 @@
   }
 
   // ── Kokoro TTS ────────────────────────────────────────────────
-  async function _speak(text, msgEl) {
-    const btn = msgEl?.querySelector(".ai-play-btn");
-    _setState("speaking");
-    _setPlayBtn(btn, true);
-
+  async function _fetchTtsAudio(text) {
     try {
-      const res  = await fetch("/api/v2/tts", {
+      const res = await fetch("/api/v2/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, voice: "af_heart", speed: 0.92 }),
       });
-      if (!res.ok) throw new Error("TTS failed");
-      const url = URL.createObjectURL(await res.blob());
+      if (!res.ok) return null;
+      const url   = URL.createObjectURL(await res.blob());
       const audio = new Audio(url);
+      audio._blobUrl = url;
+      return audio;
+    } catch { return null; }
+  }
+
+  function _playAudioObj(audio) {
+    return new Promise(resolve => {
       _playingAudio = audio;
       audio.onended = () => {
-        URL.revokeObjectURL(url);
+        if (audio._blobUrl) URL.revokeObjectURL(audio._blobUrl);
         _playingAudio = null;
+        resolve();
+      };
+      audio.onerror = () => { _playingAudio = null; resolve(); };
+      audio.play().catch(resolve);
+    });
+  }
+
+  async function _speak(text, msgEl) {
+    const btn = msgEl?.querySelector(".ai-play-btn");
+    _setState("speaking");
+    _setPlayBtn(btn, true);
+    try {
+      const audio = await _fetchTtsAudio(text);
+      if (audio) {
+        audio.onended = () => {
+          if (audio._blobUrl) URL.revokeObjectURL(audio._blobUrl);
+          _playingAudio = null;
+          _setState("idle");
+          _setPlayBtn(btn, false);
+        };
+        audio.onerror = () => { _setState("idle"); _setPlayBtn(btn, false); };
+        _playingAudio = audio;
+        await audio.play();
+      } else {
         _setState("idle");
         _setPlayBtn(btn, false);
-      };
-      audio.onerror = () => { _setState("idle"); _setPlayBtn(btn, false); };
-      await audio.play();
+      }
     } catch {
       _setState("idle");
       _setPlayBtn(btn, false);
