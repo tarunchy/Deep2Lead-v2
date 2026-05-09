@@ -1,4 +1,4 @@
-/* ask_ai.js — Voice + text Q&A: Whisper STT → LLM → Kokoro TTS */
+/* ask_ai.js — Voice + text Q&A with 3D globe UI */
 (function () {
   "use strict";
 
@@ -6,27 +6,44 @@
   let _state    = "idle";
   let _recorder = null;
   let _chunks   = [];
-  let _history  = [];          // [{role, content}] for LLM context
-  let _playingAudio = null;    // current TTS audio element
+  let _history  = [];
+  let _playingAudio = null;
+  let _stopPlayback = false;
 
   // ── DOM refs ──────────────────────────────────────────────────
-  const feed     = () => document.getElementById("askFeed");
-  const textarea = () => document.getElementById("askInput");
-  const micBtn   = () => document.getElementById("askMic");
-  const sendBtn  = () => document.getElementById("askSend");
-  const status   = () => document.getElementById("askStatus");
+  const feed        = () => document.getElementById("askFeed");
+  const textarea    = () => document.getElementById("askInput");
+  const micGlobe    = () => document.getElementById("askMic");
+  const micText     = () => document.getElementById("askMicText");
+  const sendBtn     = () => document.getElementById("askSend");
+  const statusGlobe = () => document.getElementById("askStatus");
+  const statusText  = () => document.getElementById("askStatusText");
+  const globeLabel  = () => document.getElementById("globeLabel");
+
+  // ── Mode (globe | text) ───────────────────────────────────────
+  window.askSetMode = function (mode) {
+    const wrap = document.getElementById("askWrap");
+    wrap.className = "askai-wrap " + mode + "-mode";
+    setTimeout(() => { if (window.GlobeViz) GlobeViz.resize(); }, 560);
+  };
 
   // ── Init ──────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", () => {
-    sendBtn().addEventListener("click", _handleSend);
-    micBtn().addEventListener("click",  _toggleMic);
+    // Init globe
+    if (window.GlobeViz) {
+      GlobeViz.load("globeCanvas");
+    }
 
-    textarea().addEventListener("keydown", e => {
+    // Wire send + mic for text mode
+    sendBtn()?.addEventListener("click", _handleSend);
+    micText()?.addEventListener("click", _toggleMic);
+    micGlobe()?.addEventListener("click", _toggleMic);
+
+    textarea()?.addEventListener("keydown", e => {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); _handleSend(); }
     });
 
-    // Auto-resize textarea
-    textarea().addEventListener("input", () => {
+    textarea()?.addEventListener("input", () => {
       const el = textarea();
       el.style.height = "auto";
       el.style.height = Math.min(el.scrollHeight, 120) + "px";
@@ -35,14 +52,19 @@
 
   // ── Hint chips ────────────────────────────────────────────────
   window.askHint = function (text) {
-    textarea().value = text;
-    textarea().dispatchEvent(new Event("input"));
-    textarea().focus();
+    askSetMode("text");
+    setTimeout(() => {
+      const el = textarea();
+      if (!el) return;
+      el.value = text;
+      el.dispatchEvent(new Event("input"));
+      el.focus();
+    }, 100);
   };
 
   // ── Send ──────────────────────────────────────────────────────
   function _handleSend() {
-    const text = textarea().value.trim();
+    const text = textarea()?.value.trim();
     if (!text || _state === "thinking" || _state === "speaking") return;
     textarea().value = "";
     textarea().style.height = "auto";
@@ -70,8 +92,8 @@
       };
       _recorder.start();
       _setState("recording");
-    } catch (e) {
-      _setStatus("Microphone access denied — please allow mic in browser settings.", "");
+    } catch {
+      _setStatus("Microphone access denied — please allow mic in browser settings.");
     }
   }
 
@@ -87,22 +109,25 @@
 
   // ── Whisper STT ───────────────────────────────────────────────
   async function _transcribe(blob) {
-    _setStatus("🎙 Transcribing…", "thinking");
+    _setState("transcribing");
     try {
       const form = new FormData();
       form.append("audio", blob, "recording.webm");
       const res  = await fetch("/api/v2/stt", { method: "POST", body: form });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      const text = data.transcript.trim();
-      if (!text) { _setState("idle"); _setStatus("No speech detected — try again.", ""); return; }
+      const text = data.transcript?.trim();
+      if (!text) { _setState("idle"); _setStatus("No speech detected — try again."); return; }
       _setState("idle");
-      textarea().value = text;
-      textarea().dispatchEvent(new Event("input"));
-      _ask(text);
+      // Switch to text mode to show transcript, then send
+      askSetMode("text");
+      setTimeout(() => {
+        if (textarea()) { textarea().value = text; textarea().dispatchEvent(new Event("input")); }
+        _ask(text);
+      }, 80);
     } catch (e) {
       _setState("idle");
-      _setStatus("Transcription failed: " + e.message, "");
+      _setStatus("Transcription failed: " + e.message);
     }
   }
 
@@ -117,6 +142,37 @@
   ];
   function _randomAck() { return _ACKS[Math.floor(Math.random() * _ACKS.length)]; }
 
+  // ── Text utilities ────────────────────────────────────────────
+  function _cleanText(text) {
+    return text
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/^[-*+]\s+/gm, "")
+      .replace(/^\d+\.\s+/gm, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  function _chunkText(text, maxLen = 420) {
+    const sentences = text.match(/[^.!?]+[.!?]+\s*/g) || [text];
+    const chunks = [];
+    let cur = "";
+    for (const s of sentences) {
+      if (cur && (cur + s).length > maxLen) {
+        chunks.push(cur.trim());
+        cur = s;
+      } else {
+        cur += s;
+      }
+    }
+    if (cur.trim()) chunks.push(cur.trim());
+    return chunks.length ? chunks : [text];
+  }
+
   // ── LLM call ──────────────────────────────────────────────────
   async function _ask(text) {
     _appendUserMsg(text);
@@ -126,21 +182,18 @@
     _setState("thinking");
     const typingEl = _appendTyping();
 
-    // Fire LLM call and acknowledgment TTS in parallel
-    const ackPhrase   = _randomAck();
-    const llmPromise  = fetch("/api/v2/chat", {
+    const ackPhrase  = _randomAck();
+    const llmPromise = fetch("/api/v2/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text, history: _history.slice(0, -1) }),
     });
-    const ackPromise  = _fetchTtsAudio(ackPhrase);
+    const ackPromise = _fetchTtsAudio(ackPhrase);
 
     try {
-      // Play acknowledgment immediately while LLM is still computing
       const ackAudio = await ackPromise;
       if (ackAudio) await _playAudioObj(ackAudio);
 
-      // Now wait for LLM (usually already done by the time ack finishes)
       const res   = await llmPromise;
       const data  = await res.json();
       const reply = data.reply || data.error || "Sorry, I couldn't understand that.";
@@ -151,10 +204,9 @@
       const msgEl = _appendAiMsg(reply, data.tools_used || []);
       _setState("idle");
 
-      // Auto-play the full answer
-      await _speak(reply, msgEl);
+      await _speakChunked(reply, msgEl);
 
-    } catch (e) {
+    } catch {
       typingEl.remove();
       _appendAiMsg("Sorry, there was an error reaching the AI. Please try again.", []);
       _setState("idle");
@@ -190,44 +242,44 @@
     });
   }
 
-  async function _speak(text, msgEl) {
+  // Chunked TTS: clean text → split into sentences → play sequentially
+  async function _speakChunked(text, msgEl) {
     const btn = msgEl?.querySelector(".ai-play-btn");
+    _stopPlayback = false;
     _setState("speaking");
     _setPlayBtn(btn, true);
-    try {
-      const audio = await _fetchTtsAudio(text);
-      if (audio) {
-        audio.onended = () => {
-          if (audio._blobUrl) URL.revokeObjectURL(audio._blobUrl);
-          _playingAudio = null;
-          _setState("idle");
-          _setPlayBtn(btn, false);
-        };
-        audio.onerror = () => { _setState("idle"); _setPlayBtn(btn, false); };
-        _playingAudio = audio;
-        await audio.play();
-      } else {
-        _setState("idle");
-        _setPlayBtn(btn, false);
-      }
-    } catch {
+
+    const chunks = _chunkText(_cleanText(text));
+    for (const chunk of chunks) {
+      if (_stopPlayback || _state !== "speaking") break;
+      const audio = await _fetchTtsAudio(chunk);
+      if (!audio || _stopPlayback) break;
+      await _playAudioObj(audio);
+    }
+
+    if (!_stopPlayback) {
       _setState("idle");
       _setPlayBtn(btn, false);
     }
+    _stopPlayback = false;
   }
 
-  // Called when user manually clicks ▶/⏸ on an AI message
+  // Called when user clicks ▶/⏸ on an AI message
   window.toggleSpeech = async function (btn, text) {
-    if (_playingAudio) {
-      _playingAudio.pause();
-      _playingAudio = null;
+    if (_playingAudio || _state === "speaking") {
+      _stopPlayback = true;
+      if (_playingAudio) {
+        _playingAudio.pause();
+        if (_playingAudio._blobUrl) URL.revokeObjectURL(_playingAudio._blobUrl);
+        _playingAudio = null;
+      }
       _setState("idle");
       btn.textContent = "▶ Play";
       btn.classList.remove("playing");
       return;
     }
     const msgEl = btn.closest(".ai-msg");
-    await _speak(text, msgEl);
+    await _speakChunked(text, msgEl);
   };
 
   // ── DOM helpers ───────────────────────────────────────────────
@@ -237,7 +289,7 @@
     el.innerHTML = `
       <div class="ai-avatar">👤</div>
       <div class="ai-bubble">${_esc(text)}</div>`;
-    feed().appendChild(el);
+    feed()?.appendChild(el);
     _scrollFeed();
   }
 
@@ -250,19 +302,18 @@
       <div class="ai-bubble">
         <div class="ai-typing"><span></span><span></span><span></span></div>
       </div>`;
-    feed().appendChild(el);
+    feed()?.appendChild(el);
     _scrollFeed();
     return el;
   }
 
   function _appendAiMsg(text, toolsUsed) {
-    const safeText = _esc(text).replace(/`([^`]+)`/g, "<code>$1</code>");
+    const safeText = _esc(_cleanText(text)).replace(/`([^`]+)`/g, "<code>$1</code>");
     const tools = (toolsUsed || []).map(t => {
       const labels = { novelty: "🔍 Novelty", properties: "⚗️ Properties", validate: "✓ SMILES" };
       return `<span class="hint-chip" style="cursor:default;">${labels[t] || t}</span>`;
     }).join("");
 
-    const rawText = text; // for TTS onclick
     const el = document.createElement("div");
     el.className = "ai-msg ai";
     el.innerHTML = `
@@ -270,9 +321,9 @@
       <div class="ai-bubble">
         <div>${safeText}</div>
         ${tools ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${tools}</div>` : ""}
-        <button class="ai-play-btn" onclick="toggleSpeech(this, ${JSON.stringify(rawText)})">▶ Play</button>
+        <button class="ai-play-btn" onclick="toggleSpeech(this, ${JSON.stringify(text)})">▶ Play</button>
       </div>`;
-    feed().appendChild(el);
+    feed()?.appendChild(el);
     _scrollFeed();
     return el;
   }
@@ -294,33 +345,62 @@
   }
 
   // ── State machine ─────────────────────────────────────────────
+  const _GLOBE_STATES = {
+    idle: "idle", recording: "listening", transcribing: "thinking",
+    thinking: "thinking", speaking: "speaking",
+  };
+  const _GLOBE_LABELS = {
+    idle:         "Tap mic to ask a question",
+    recording:    "Listening…",
+    transcribing: "Transcribing…",
+    thinking:     "Thinking…",
+    speaking:     "Speaking…",
+  };
+  const _STATUS_MSG = {
+    idle:         "",
+    recording:    '<span class="status-dot-live"></span> Recording… tap mic to stop',
+    transcribing: "🎙 Transcribing your question…",
+    thinking:     "🤖 Thinking…",
+    speaking:     "🔊 Speaking…",
+  };
+
   function _setState(s) {
     _state = s;
-    const mic  = micBtn();
-    const send = sendBtn();
-    const txt  = textarea();
 
-    const messages = {
-      idle:         "",
-      recording:    '<span class="status-dot-live"></span> Recording… click mic to stop',
-      transcribing: "🎙 Transcribing your question…",
-      thinking:     "🤖 Thinking…",
-      speaking:     "🔊 Speaking…",
-    };
+    // Globe integration
+    if (window.GlobeViz) GlobeViz.setState(_GLOBE_STATES[s] || "idle");
 
-    _setStatus(messages[s] || "", s);
+    // Globe label
+    const lbl = globeLabel();
+    if (lbl) lbl.textContent = _GLOBE_LABELS[s] || "";
 
-    if (mic) {
+    // Globe status
+    const gSt = statusGlobe();
+    if (gSt) {
+      gSt.className = "globe-status " + s;
+      gSt.innerHTML = _STATUS_MSG[s] || "";
+    }
+
+    // Text mode mic buttons
+    const mg = micGlobe();
+    const mt = micText();
+    [mg, mt].forEach(mic => {
+      if (!mic) return;
       mic.classList.toggle("recording", s === "recording");
       mic.textContent = s === "recording" ? "⏹" : "🎙";
       mic.disabled = s === "transcribing" || s === "thinking" || s === "speaking";
-    }
+    });
+
+    // Text mode status + controls
+    _setStatus(_STATUS_MSG[s] || "", s);
+    const send = sendBtn();
+    const txt  = textarea();
     if (send) send.disabled = s === "thinking" || s === "speaking";
     if (txt)  txt.disabled  = s === "transcribing" || s === "thinking";
   }
 
   function _setStatus(msg, cls) {
-    const el = status();
+    const el = statusText();
     if (!el) return;
     el.innerHTML = msg;
     el.className = "askai-status " + (cls || "");
