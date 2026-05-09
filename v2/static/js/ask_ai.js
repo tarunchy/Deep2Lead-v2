@@ -1,4 +1,4 @@
-/* ask_ai.js — Voice globe + text chatbot Q&A */
+/* ask_ai.js — Split globe + chat UI */
 (function () {
   "use strict";
 
@@ -10,30 +10,15 @@
   let _stopPlayback = false;
 
   // ── DOM refs ──────────────────────────────────────────────────
-  const voOverlay = () => document.getElementById("voiceOverlay");
-  const voLabel   = () => document.getElementById("voLabel");
-  const voStatus  = () => document.getElementById("askStatus");
-  const micGlobe  = () => document.getElementById("askMic");
-
-  const txOverlay = () => document.getElementById("textOverlay");
-  const feed      = () => document.getElementById("askFeed");
-  const textarea  = () => document.getElementById("askInput");
-  const micText   = () => document.getElementById("askMicText");
-  const sendBtn   = () => document.getElementById("askSend");
-  const txStatus  = () => document.getElementById("askStatusText");
-
-  // ── Mode switch ───────────────────────────────────────────────
-  window.askSetMode = function (mode) {
-    if (mode === "text") {
-      voOverlay()?.style.setProperty("display", "none");
-      txOverlay()?.classList.add("active");
-    } else {
-      txOverlay()?.classList.remove("active");
-      voOverlay()?.style.removeProperty("display");
-      // resize globe after it's visible again
-      setTimeout(() => { if (window.GlobeViz) GlobeViz.resize(); }, 60);
-    }
-  };
+  const voPanel  = () => document.getElementById("voicePanel");
+  const voLabel  = () => document.getElementById("voLabel");
+  const voStatus = () => document.getElementById("askStatus");
+  const micGlobe = () => document.getElementById("askMic");
+  const feed     = () => document.getElementById("askFeed");
+  const textarea = () => document.getElementById("askInput");
+  const micText  = () => document.getElementById("askMicText");
+  const sendBtn  = () => document.getElementById("askSend");
+  const txStatus = () => document.getElementById("askStatusText");
 
   // ── Init ──────────────────────────────────────────────────────
   const _GREETINGS = [
@@ -72,14 +57,11 @@
 
   // ── Hint chips ────────────────────────────────────────────────
   window.askHint = function (text) {
-    askSetMode("text");
-    setTimeout(() => {
-      const el = textarea();
-      if (!el) return;
-      el.value = text;
-      el.dispatchEvent(new Event("input"));
-      el.focus();
-    }, 60);
+    const el = textarea();
+    if (!el) return;
+    el.value = text;
+    el.dispatchEvent(new Event("input"));
+    el.focus();
   };
 
   // ── Send ──────────────────────────────────────────────────────
@@ -102,7 +84,7 @@
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       _chunks = [];
 
-      // ── VAD: auto-stop after 2s of silence post-speech ──────────
+      // VAD: auto-stop after 2s of silence following detected speech
       let _audioCtx = null, _silenceTimer = null, _hasSpeech = false, _vadIv = null;
       try {
         _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -125,7 +107,7 @@
             }, HOLD);
           }
         }, 120);
-      } catch { /* VAD unavailable — manual stop only */ }
+      } catch { /* no VAD — manual stop only */ }
 
       _recorder = new MediaRecorder(stream, { mimeType: _bestMime() });
       _recorder.ondataavailable = e => e.data.size > 0 && _chunks.push(e.data);
@@ -165,7 +147,7 @@
       const text = data.transcript?.trim();
       if (!text) { _setState("idle"); return; }
       _setState("idle");
-      // Stay in current mode (globe stays visible if in voice mode)
+      if (textarea()) { textarea().value = text; textarea().dispatchEvent(new Event("input")); }
       _ask(text);
     } catch (e) {
       _setState("idle");
@@ -173,7 +155,7 @@
     }
   }
 
-  // ── Acknowledgment ────────────────────────────────────────────
+  // ── Ack phrases ───────────────────────────────────────────────
   const _ACKS = [
     "Sure! Let me think about that and I'll answer in just a moment.",
     "Great question! Give me a second to research that for you.",
@@ -201,14 +183,12 @@
 
   function _chunkText(text, maxLen = 400) {
     const result = [];
-    // Split at every newline so colon-terminated intro lines ("involves:") get their own chunk
     for (const line of text.split(/\n+/)) {
       const p = line.trim();
       if (!p) continue;
       if (p.length <= maxLen) {
         result.push(p);
       } else {
-        // Long paragraph: split at sentence boundaries
         const sents = p.match(/[^.!?]+[.!?]+\s*/g) || [p];
         let cur = "";
         for (const s of sents) {
@@ -221,7 +201,7 @@
     return result.length ? result : [text];
   }
 
-  // ── LLM call ──────────────────────────────────────────────────
+  // ── LLM ──────────────────────────────────────────────────────
   async function _ask(text) {
     _appendUserMsg(text);
     _history.push({ role: "user", content: text });
@@ -242,7 +222,6 @@
       const res   = await llmPromise;
       const data  = await res.json();
       const reply = data.reply || data.error || "Sorry, I couldn't understand that.";
-
       typingEl.remove();
       _history.push({ role: "assistant", content: reply });
       const msgEl = _appendAiMsg(reply, data.tools_used || []);
@@ -295,14 +274,19 @@
       if (_stopPlayback || _state !== "speaking") break;
       const audio = await _fetchTtsAudio(chunk);
       if (_stopPlayback) break;
-      if (!audio) continue;   // TTS failed for this chunk — skip, don't abort
+      if (!audio) continue;
       await _playAudioObj(audio);
     }
     if (!_stopPlayback) { _setState("idle"); _setPlayBtn(btn, false); }
     _stopPlayback = false;
   }
 
-  window.toggleSpeech = async function (btn, text) {
+  // ── Play / Pause toggle ───────────────────────────────────────
+  // Text stored in data-speech attribute to avoid HTML-escaping issues
+  window.toggleSpeech = async function (btn) {
+    const text = btn.dataset.speech || "";
+    if (!text) return;
+
     if (_playingAudio || _state === "speaking") {
       _stopPlayback = true;
       if (_playingAudio) {
@@ -311,12 +295,10 @@
         _playingAudio = null;
       }
       _setState("idle");
-      btn.textContent = "▶ Play";
-      btn.classList.remove("playing");
+      _setPlayBtn(btn, false);
       return;
     }
-    const msgEl = btn.closest(".ai-msg");
-    await _speakChunked(text, msgEl);
+    await _speakChunked(text, btn.closest(".ai-msg"));
   };
 
   // ── DOM helpers ───────────────────────────────────────────────
@@ -343,6 +325,7 @@
       const labels = { novelty: "🔍 Novelty", properties: "⚗️ Properties", validate: "✓ SMILES" };
       return `<span class="hint-chip" style="cursor:default;">${labels[t]||t}</span>`;
     }).join("");
+
     const el = document.createElement("div");
     el.className = "ai-msg ai";
     el.innerHTML = `
@@ -350,8 +333,10 @@
       <div class="ai-bubble">
         <div>${safeText}</div>
         ${tools ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${tools}</div>` : ""}
-        <button class="ai-play-btn" onclick="toggleSpeech(this, ${JSON.stringify(text)})">▶ Play</button>
+        <button class="ai-play-btn" onclick="toggleSpeech(this)">▶ Play</button>
       </div>`;
+    // Store raw text in data attribute — avoids quote-escaping issues in onclick
+    el.querySelector(".ai-play-btn").dataset.speech = text;
     feed()?.appendChild(el);
     _scrollFeed();
     return el;
@@ -371,8 +356,8 @@
   }
 
   // ── State machine ─────────────────────────────────────────────
-  const _G_STATES  = { idle:"idle", recording:"listening", transcribing:"thinking", thinking:"thinking", speaking:"speaking" };
-  const _G_LABELS  = { idle:"Tap mic to ask a question", recording:"Listening…", transcribing:"Transcribing…", thinking:"Thinking…", speaking:"Speaking…" };
+  const _G_STATES = { idle:"idle", recording:"listening", transcribing:"thinking", thinking:"thinking", speaking:"speaking" };
+  const _G_LABELS = { idle:"Tap mic to ask a question", recording:"Listening…", transcribing:"Transcribing…", thinking:"Thinking…", speaking:"Speaking…" };
   const _STATUS_TX = {
     idle:"", recording:'<span class="status-dot-live"></span> Recording… tap mic to stop',
     transcribing:"🎙 Transcribing…", thinking:"🤖 Thinking…", speaking:"🔊 Speaking…",
@@ -382,16 +367,13 @@
     _state = s;
     if (window.GlobeViz) GlobeViz.setState(_G_STATES[s] || "idle");
 
-    // Voice overlay
-    const ov = voOverlay();
-    if (ov) ov.dataset.state = _G_STATES[s] || "idle";
+    const vp = voPanel();
+    if (vp) vp.dataset.state = _G_STATES[s] || "idle";
     const lbl = voLabel();
     if (lbl) lbl.textContent = _G_LABELS[s] || "";
 
-    // Voice status
     _setVoStatus(_STATUS_TX[s] || "", s);
 
-    // Both mic buttons
     [micGlobe(), micText()].forEach(m => {
       if (!m) return;
       m.classList.toggle("recording", s === "recording");
@@ -399,7 +381,6 @@
       m.disabled = s === "transcribing" || s === "thinking" || s === "speaking";
     });
 
-    // Text mode controls
     const st = txStatus();
     if (st) { st.innerHTML = _STATUS_TX[s] || ""; st.className = "askai-status " + s; }
     const sb = sendBtn(), ta = textarea();

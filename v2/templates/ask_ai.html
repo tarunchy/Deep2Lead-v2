@@ -5,79 +5,72 @@
 {% endblock %}
 {% block content %}
 
-<!-- ── Voice scene (full-screen, fixed, default view) ──────────── -->
-<div class="voice-overlay" id="voiceOverlay" data-state="idle">
+<div class="askai-split" id="askaiSplit">
 
-  <!-- State label above globe -->
-  <div class="vo-label" id="voLabel">Tap mic to ask a question</div>
+  <!-- ── Left: Voice globe panel ───────────────────────────────── -->
+  <div class="voice-panel" id="voicePanel" data-state="idle">
 
-  <!-- Globe + CSS animation rings -->
-  <div class="vo-globe-area">
-    <!-- Rings animate based on data-state on parent -->
-    <div class="vo-ring r1"></div>
-    <div class="vo-ring r2"></div>
-    <div class="vo-ring r3"></div>
-    <div class="vo-ring r4"></div>
-    <canvas id="globeCanvas" class="vo-canvas"></canvas>
-  </div>
+    <div class="vo-label" id="voLabel">Tap mic to ask a question</div>
 
-  <!-- Mic button -->
-  <button class="vo-mic" id="askMic" title="Tap to speak">🎙</button>
-  <div class="vo-status" id="askStatus"></div>
-
-  <!-- Toggle: switch to text/chatbot view -->
-  <button class="vo-text-toggle" id="showTextBtn" onclick="askSetMode('text')">
-    💬 Text view
-  </button>
-
-</div>
-
-<!-- ── Text / chatbot scene (hidden by default) ────────────────── -->
-<div class="text-overlay" id="textOverlay">
-
-  <div class="to-header">
-    <div>
-      <h2>🤖 Ask AI</h2>
-      <p>Ask anything about drug discovery — voice or text.</p>
+    <div class="vo-globe-area">
+      <div class="vo-ring r1"></div>
+      <div class="vo-ring r2"></div>
+      <div class="vo-ring r3"></div>
+      <div class="vo-ring r4"></div>
+      <canvas id="globeCanvas" class="vo-canvas"></canvas>
     </div>
-    <button class="to-voice-btn" onclick="askSetMode('voice')">🌐 Voice</button>
+
+    <button class="vo-mic" id="askMic" title="Tap to speak">🎙</button>
+    <div class="vo-status" id="askStatus"></div>
+
   </div>
 
-  <div class="askai-feed" id="askFeed">
-    <div class="ai-msg ai">
-      <div class="ai-avatar">🤖</div>
-      <div class="ai-bubble">
-        Hi! I'm your AI research assistant. You can ask me anything about drug discovery,
-        molecules, proteins, or the experiments you're running here.
-        <br><br>
-        Click <strong>🎙</strong> to ask by voice, or type your question below.
-        <button class="ai-play-btn"
-          onclick="toggleSpeech(this, &quot;Hi! I'm your AI research assistant. You can ask me anything about drug discovery, molecules, proteins, or the experiments you're running here. Click the mic to ask by voice, or type below.&quot;)">
-          ▶ Play
-        </button>
+  <!-- ── Right: Chat panel ─────────────────────────────────────── -->
+  <div class="chat-panel" id="chatPanel">
+
+    <div class="chat-panel-header">
+      <div>
+        <h2>🤖 Ask AI</h2>
+        <p>Ask about drug discovery — voice or text.</p>
       </div>
     </div>
-  </div>
 
-  <div class="askai-input-area">
-    <div class="askai-status" id="askStatusText"></div>
-    <div class="askai-row">
-      <button class="askai-mic" id="askMicText" title="Click to record, click again to stop">🎙</button>
-      <textarea id="askInput" class="askai-textarea" rows="1"
-        placeholder="Ask a question… (Enter to send, Shift+Enter for newline)"></textarea>
-      <button class="askai-send" id="askSend" title="Send">➤</button>
+    <div class="askai-feed" id="askFeed">
+      <div class="ai-msg ai">
+        <div class="ai-avatar">🤖</div>
+        <div class="ai-bubble">
+          Hi! I'm your AI research assistant. Ask me anything about drug discovery,
+          molecules, proteins, or the experiments you're running here.
+          <br><br>
+          Use the <strong>🎙 mic</strong> on the left or type below.
+          <button class="ai-play-btn"
+            data-speech="Hi! I'm your AI research assistant. Ask me anything about drug discovery, molecules, proteins, or the experiments you're running here."
+            onclick="toggleSpeech(this)">▶ Play</button>
+        </div>
+      </div>
     </div>
-    <div class="askai-hints">
-      <button class="hint-chip" onclick="askHint('What is molecular docking and why does it matter?')">What is molecular docking?</button>
-      <button class="hint-chip" onclick="askHint('How does AlphaFold predict protein structure?')">How does AlphaFold work?</button>
-      <button class="hint-chip" onclick="askHint('What does QED score mean for a drug molecule?')">What is QED score?</button>
-      <button class="hint-chip" onclick="askHint('Explain the Lipinski Rule of Five in simple terms.')">Lipinski Rule of Five</button>
-      <button class="hint-chip" onclick="askHint('What is the difference between a target and a ligand?')">Target vs Ligand</button>
-      <button class="hint-chip" onclick="askHint('How does the Auto Experiment optimization loop work?')">How Auto Experiment works</button>
-    </div>
-  </div>
 
-</div>
+    <div class="askai-input-area">
+      <div class="askai-status" id="askStatusText"></div>
+      <div class="askai-row">
+        <button class="askai-mic" id="askMicText" title="Click to record">🎙</button>
+        <textarea id="askInput" class="askai-textarea" rows="1"
+          placeholder="Ask a question… (Enter to send, Shift+Enter for newline)"></textarea>
+        <button class="askai-send" id="askSend" title="Send">➤</button>
+      </div>
+      <div class="askai-hints">
+        <button class="hint-chip" onclick="askHint('What is molecular docking and why does it matter?')">What is molecular docking?</button>
+        <button class="hint-chip" onclick="askHint('How does AlphaFold predict protein structure?')">How does AlphaFold work?</button>
+        <button class="hint-chip" onclick="askHint('What does QED score mean for a drug molecule?')">What is QED score?</button>
+        <button class="hint-chip" onclick="askHint('Explain the Lipinski Rule of Five in simple terms.')">Lipinski Rule of Five</button>
+        <button class="hint-chip" onclick="askHint('What is the difference between a target and a ligand?')">Target vs Ligand</button>
+        <button class="hint-chip" onclick="askHint('How does the Auto Experiment optimization loop work?')">How Auto Experiment works</button>
+      </div>
+    </div>
+
+  </div><!-- /chat-panel -->
+
+</div><!-- /askai-split -->
 
 {% endblock %}
 {% block scripts %}
