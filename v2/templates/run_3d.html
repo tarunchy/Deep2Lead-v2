@@ -301,10 +301,10 @@ window.PAGE_GUIDE = {
     }
 
     const steps = [
-      { label: "Generating candidates with Gemma4…", pct: 25 },
-      { label: "Computing drug-likeness scores…", pct: 55 },
-      { label: "Running molecular docking…", pct: 80 },
-      { label: "Ranking candidates…", pct: 92 },
+      { label: "Sending request to Gemma4…", pct: 20 },
+      { label: "Waiting for AI response…", pct: 45 },
+      { label: "Parsing generated molecules…", pct: 70 },
+      { label: "Scoring & validating…", pct: 88 },
     ];
 
     let attempt = 0;
@@ -369,8 +369,10 @@ window.PAGE_GUIDE = {
           break;
         }
 
-        setProgress(5, `Attempt ${attempt} — 0 candidates. Retrying with diversity ${noise.toFixed(2)}…`, "");
-        await new Promise(r => setTimeout(r, 400));
+        bar.style.transition = "none";
+        setProgress(0, `Attempt ${attempt} returned 0 molecules. Starting attempt ${attempt + 1} with diversity ${noise.toFixed(2)}…`, "");
+        await new Promise(r => setTimeout(r, 600));
+        bar.style.transition = "width .6s ease";
       }
     } finally {
       document.getElementById("progressPulse").style.animation = "none";
