@@ -10,6 +10,14 @@ const publishBtn = document.getElementById("publish-btn");
 const titleInput = document.getElementById("exp-title");
 const hypothesisInput = document.getElementById("exp-hypothesis");
 
+// Pre-fill from tutorial "Try in App" buttons
+(function () {
+  const sm = localStorage.getItem("d2l_prefill_smile");
+  const aa = localStorage.getItem("d2l_prefill_aa");
+  if (sm) { seedSmileInput.value = sm; localStorage.removeItem("d2l_prefill_smile"); renderSeedPreview(); }
+  if (aa) { document.getElementById("amino_acid_seq").value = aa; localStorage.removeItem("d2l_prefill_aa"); }
+})();
+
 // Live noise value display
 noiseInput?.addEventListener("input", () => {
   noiseVal.textContent = parseFloat(noiseInput.value).toFixed(2);

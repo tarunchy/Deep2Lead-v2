@@ -33,11 +33,13 @@ def create_app() -> Flask:
     from api.experiments import bp as exp_bp
     from api.feed import bp as feed_bp
     from api.admin import bp as admin_bp
+    from api.tutorial import bp as tutorial_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(exp_bp)
     app.register_blueprint(feed_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(tutorial_bp)
 
     @app.cli.command("create-admin")
     @click.argument("username")

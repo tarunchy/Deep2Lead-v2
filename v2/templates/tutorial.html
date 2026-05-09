@@ -1,0 +1,644 @@
+{% extends "base.html" %}
+{% block title %}Drug Discovery Tutorial — Deep2Lead V2{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tutorial.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Progress bar -->
+<div class="tut-progress-wrap">
+  <div id="tut-progress" class="tut-progress-bar" style="width:12.5%"></div>
+</div>
+<div class="tut-header">
+  <span id="tut-section-label" class="text-muted text-sm">Section 1 of 8</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — What Is Drug Discovery? -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="tut-section" data-section="1">
+  <div class="tut-section-badge">01</div>
+  <h2 class="tut-heading">What Is Drug Discovery?</h2>
+
+  <p class="tut-intro">Traditional pharmaceutical research takes over a decade and costs between <strong>$1–2.6 billion</strong> per approved drug — and <strong>90% of clinical candidates still fail</strong>. The primary causes: weak binding, toxicity, and poor pharmacokinetics identified far too late in the process.</p>
+
+  <div class="tut-card-row">
+    <div class="tut-stat-card danger"><div class="tut-stat-num">90%</div><div class="tut-stat-label">of clinical trial candidates fail to reach approval</div></div>
+    <div class="tut-stat-card danger"><div class="tut-stat-num">10+</div><div class="tut-stat-label">years from target identification to market</div></div>
+    <div class="tut-stat-card danger"><div class="tut-stat-num">$2.6B</div><div class="tut-stat-label">average cost per approved drug (2024)</div></div>
+    <div class="tut-stat-card success"><div class="tut-stat-num">AI</div><div class="tut-stat-label">predicts ADMET &amp; binding in silico before any lab work</div></div>
+  </div>
+
+  <h3 class="tut-subheading">The Drug Development Pipeline — Where It Breaks</h3>
+  <table class="tut-table">
+    <thead><tr><th>Stage</th><th>Objective</th><th>Primary Failure Reason</th></tr></thead>
+    <tbody>
+      <tr><td>Hit Discovery</td><td>Find molecules that interact with the target</td><td>Low selectivity or weak binding</td></tr>
+      <tr><td>Lead Optimization</td><td>Refine potency and safety</td><td>Emerging toxicity or poor metabolic profile</td></tr>
+      <tr><td>Preclinical</td><td>Validate in cell lines and animal models</td><td>Animal-to-human discrepancy</td></tr>
+      <tr><td>Phase I–III Trials</td><td>Assess safety and efficacy in humans</td><td>Lack of clinical efficacy (40–50% of failures)</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="tut-subheading">How Deep2Lead Accelerates This</h3>
+  <ol class="tut-steps">
+    <li>You provide a <strong>seed molecule</strong> (SMILES string) and a <strong>protein target</strong> (amino acid sequence)</li>
+    <li><strong>Gemma4</strong> (LLM on NVIDIA DGX GPU) generates novel structurally-similar candidate SMILES</li>
+    <li><strong>RDKit</strong> computes QED, SAS, LogP, MW, Tanimoto similarity, and Lipinski compliance for each</li>
+    <li>A <strong>heuristic DTI model</strong> estimates drug-target binding probability</li>
+    <li>Candidates are <strong>ranked by composite score</strong> — before any lab synthesis is required</li>
+    <li>You <strong>publish findings</strong> to the class feed for peer review and scientific discussion</li>
+  </ol>
+
+  <div class="tut-quiz">
+    <p class="tut-quiz-q">What percentage of drug candidates entering clinical trials fail to get approved?</p>
+    <div class="tut-quiz-options">
+      <button onclick="checkAnswer(this,'A','C')">A) About 10%</button>
+      <button onclick="checkAnswer(this,'B','C')">B) About 50%</button>
+      <button onclick="checkAnswer(this,'C','C')">C) About 90%</button>
+    </div>
+    <p class="tut-quiz-feedback" style="display:none;"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — Chemistry Fundamentals -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="tut-section" data-section="2" style="display:none;">
+  <div class="tut-section-badge">02</div>
+  <h2 class="tut-heading">Chemistry Fundamentals — Atoms &amp; Chemical Bonds</h2>
+
+  <p class="tut-intro">Drug-target binding is fundamentally about <strong>electron interactions</strong>. A drug molecule (the "key") must fit into a binding pocket on a protein (the "lock") through a series of electronic attractions — shape and charge together determine binding strength.</p>
+
+  <h3 class="tut-subheading">Key Atoms in Drug Molecules</h3>
+  <div class="tut-card-row">
+    <div class="tut-atom-card"><div class="tut-atom-symbol">C</div><div>Carbon<br><small>4 bonds · backbone of all organic molecules</small></div></div>
+    <div class="tut-atom-card"><div class="tut-atom-symbol">N</div><div>Nitrogen<br><small>3 bonds · H-bond donor/acceptor · in proteins &amp; DNA</small></div></div>
+    <div class="tut-atom-card"><div class="tut-atom-symbol">O</div><div>Oxygen<br><small>2 bonds · H-bond acceptor · in water, drugs</small></div></div>
+    <div class="tut-atom-card"><div class="tut-atom-symbol">H</div><div>Hydrogen<br><small>1 bond · H-bond donor when attached to N or O</small></div></div>
+    <div class="tut-atom-card"><div class="tut-atom-symbol">S</div><div>Sulfur<br><small>2 bonds · in cysteine &amp; methionine residues</small></div></div>
+    <div class="tut-atom-card"><div class="tut-atom-symbol">Cl</div><div>Chlorine<br><small>1 bond · common halogen in drugs (e.g. Chlorambucil)</small></div></div>
+  </div>
+
+  <h3 class="tut-subheading">The Four Bond Types — Strength Determines Drug Behavior</h3>
+  <table class="tut-table">
+    <thead><tr><th>Bond Type</th><th>Relative Strength</th><th>Reversible?</th><th>Role in Drugs</th></tr></thead>
+    <tbody>
+      <tr><td>Covalent</td><td>⭐⭐⭐⭐⭐ Extremely strong</td><td>No (usually)</td><td>Rare — used in irreversible inhibitors; dangerous if off-target</td></tr>
+      <tr><td>Ionic</td><td>⭐⭐⭐⭐ Strong</td><td>Yes</td><td>Salt bridges in binding pockets</td></tr>
+      <tr><td><strong>Hydrogen Bond</strong></td><td>⭐⭐⭐ Moderate</td><td>Yes</td><td><strong>The workhorse of drug binding</strong> — N–H···O and O–H···N interactions</td></tr>
+      <tr><td><strong>Van der Waals</strong></td><td>⭐⭐ Weak</td><td>Yes</td><td><strong>Collectively powerful</strong> when molecule fits snugly into a hydrophobic pocket</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tut-callout">
+    <strong>Key Insight:</strong> Most drugs bind using <em>multiple weak, reversible forces</em> simultaneously (hydrogen bonds + Van der Waals). This allows the drug to bind, trigger a signaling change, and then safely depart. Aspirin is unusual — it <em>covalently</em> modifies COX-1's Ser530, making it irreversible and explaining its long-lasting antiplatelet effect.
+  </div>
+
+  <h3 class="tut-subheading">ADMET — Why a Good Binder Might Still Fail</h3>
+  <p style="font-size:0.88rem;line-height:1.6;margin-bottom:10px;">A molecule must do more than just bind its target. It needs a favorable <strong>ADMET</strong> profile:</p>
+  <div class="tut-card-row" style="flex-wrap:wrap;gap:10px;">
+    <div class="tut-stat-card" style="min-width:100px;"><div class="tut-stat-num" style="font-size:1.1rem;">A</div><div class="tut-stat-label"><strong>Absorption</strong><br>Can it enter the bloodstream?</div></div>
+    <div class="tut-stat-card" style="min-width:100px;"><div class="tut-stat-num" style="font-size:1.1rem;">D</div><div class="tut-stat-label"><strong>Distribution</strong><br>Can it reach the target tissue?</div></div>
+    <div class="tut-stat-card" style="min-width:100px;"><div class="tut-stat-num" style="font-size:1.1rem;">M</div><div class="tut-stat-label"><strong>Metabolism</strong><br>How is it broken down?</div></div>
+    <div class="tut-stat-card" style="min-width:100px;"><div class="tut-stat-num" style="font-size:1.1rem;">E</div><div class="tut-stat-label"><strong>Excretion</strong><br>How fast is it removed?</div></div>
+    <div class="tut-stat-card danger" style="min-width:100px;"><div class="tut-stat-num" style="font-size:1.1rem;">T</div><div class="tut-stat-label"><strong>Toxicity</strong><br>Does it harm cells or organs?</div></div>
+  </div>
+
+  <div class="tut-quiz">
+    <p class="tut-quiz-q">Which bond types do most reversible drugs primarily use to bind their protein target?</p>
+    <div class="tut-quiz-options">
+      <button onclick="checkAnswer(this,'A','B')">A) Irreversible covalent bonds only</button>
+      <button onclick="checkAnswer(this,'B','B')">B) Hydrogen bonds and Van der Waals forces (reversible, weak)</button>
+      <button onclick="checkAnswer(this,'C','B')">C) Ionic interactions only</button>
+    </div>
+    <p class="tut-quiz-feedback" style="display:none;"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — SMILES -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="tut-section" data-section="3" style="display:none;">
+  <div class="tut-section-badge">03</div>
+  <h2 class="tut-heading">SMILES — The Language of Molecules</h2>
+
+  <p class="tut-intro"><strong>SMILES</strong> (Simplified Molecular Input Line Entry System) encodes a molecule as a plain text string. It is the universal computational representation of drug structures — you will paste a SMILES string as your <em>seed molecule</em> in Deep2Lead.</p>
+
+  <h3 class="tut-subheading">SMILES Syntax Quick Reference</h3>
+  <table class="tut-table">
+    <thead><tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>C, N, O, S</code></td><td>Aliphatic atoms (uppercase)</td><td><code>CCO</code> = ethanol</td></tr>
+      <tr><td><code>c, n, o, s</code></td><td>Aromatic atoms (lowercase)</td><td><code>c1ccccc1</code> = benzene ring</td></tr>
+      <tr><td><code>=</code></td><td>Double bond</td><td><code>C=O</code> = carbonyl group</td></tr>
+      <tr><td><code>#</code></td><td>Triple bond</td><td><code>C#N</code> = nitrile</td></tr>
+      <tr><td><code>( )</code></td><td>Branch off main chain</td><td><code>CC(=O)O</code> = acetic acid</td></tr>
+      <tr><td><code>1, 2, 3…</code></td><td>Ring closure (number pairs mark where ring closes)</td><td><code>C1CCCCC1</code> = cyclohexane</td></tr>
+      <tr><td><code>Cl, Br, [NH4+]</code></td><td>Multi-letter atoms or charged species in brackets</td><td><code>ClCC</code> = chloroethane</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tut-callout">
+    <strong>Reading CC(=O)Oc1ccccc1C(=O)O (Aspirin) step by step:</strong><br>
+    <code>CC(=O)</code> — methyl group with a carbonyl · <code>O</code> — ester oxygen ·
+    <code>c1ccccc1</code> — benzene ring · <code>C(=O)O</code> — carboxylic acid group
+  </div>
+
+  <h3 class="tut-subheading">Example Molecules — Preview &amp; Try in App</h3>
+  <div class="mol-gallery">
+
+    <div class="mol-card">
+      <div class="mol-card-name">Aspirin</div>
+      <div class="mol-card-use text-muted text-sm">COX inhibitor · anti-inflammatory · MW 180 Da</div>
+      <img src="/api/v2/mol/svg?smiles=CC(=O)Oc1ccccc1C(=O)O" alt="Aspirin" class="mol-card-img" onerror="this.style.display='none'">
+      <code class="mol-smiles" id="smi-aspirin">CC(=O)Oc1ccccc1C(=O)O</code>
+      <div class="flex gap-8 mt-8">
+        <button class="btn btn-sm btn-outline" onclick="copyMol('smi-aspirin')">Copy</button>
+        <button class="btn btn-sm btn-primary" onclick="tryInApp('CC(=O)Oc1ccccc1C(=O)O','MLARALLLCAVLALSHTANPCCSHPCQNRGVCMSVGFDQYKCDCTRTGFYLTRDLSVSDAIGSNLGFREDQEKQLNRSSDFHFSLKYSK')">Try in App</button>
+      </div>
+    </div>
+
+    <div class="mol-card">
+      <div class="mol-card-name">Imatinib (Gleevec)</div>
+      <div class="mol-card-use text-muted text-sm">BCR-ABL inhibitor · CML leukemia · MW 493 Da</div>
+      <img src="/api/v2/mol/svg?smiles=Cc1ccc(NC(=O)c2ccc(CN3CCN(C)CC3)cc2)cc1Nc1nccc(-c2cccnc2)n1" alt="Imatinib" class="mol-card-img" onerror="this.style.display='none'">
+      <code class="mol-smiles" id="smi-imat">Cc1ccc(NC(=O)c2ccc(CN3CCN(C)CC3)cc2)cc1Nc1nccc(-c2cccnc2)n1</code>
+      <div class="flex gap-8 mt-8">
+        <button class="btn btn-sm btn-outline" onclick="copyMol('smi-imat')">Copy</button>
+        <button class="btn btn-sm btn-primary" onclick="tryInApp('Cc1ccc(NC(=O)c2ccc(CN3CCN(C)CC3)cc2)cc1Nc1nccc(-c2cccnc2)n1','MGPSENDPNLFVALYDFVASGDNTLSITKGEKLRVLGYNHNGEWCEAQTKNGQGWVPSNYITPVNSLEKHSWYHGPVSRNAAEYLLSSGINGSFLVR')">Try in App</button>
+      </div>
+    </div>
+
+    <div class="mol-card">
+      <div class="mol-card-name">Chlorambucil</div>
+      <div class="mol-card-use text-muted text-sm">DNA alkylator · chronic leukemia · MW 304 Da</div>
+      <img src="/api/v2/mol/svg?smiles=ClCCN(CCCl)CCCc1ccc(cc1)C(=O)CCCC(=O)O" alt="Chlorambucil" class="mol-card-img" onerror="this.style.display='none'">
+      <code class="mol-smiles" id="smi-chlor">ClCCN(CCCl)CCCc1ccc(cc1)C(=O)CCCC(=O)O</code>
+      <div class="flex gap-8 mt-8">
+        <button class="btn btn-sm btn-outline" onclick="copyMol('smi-chlor')">Copy</button>
+        <button class="btn btn-sm btn-primary" onclick="tryInApp('ClCCN(CCCl)CCCc1ccc(cc1)C(=O)CCCC(=O)O','KVLGSGAFGTVYKGLWIPEGEKVKIPVAIKELREATSPKANKEILDEAYVMASVDNPHVCRLLGICLTSTVQLITQLMPFGCLLDYVREHKDNIGSQ')">Try in App</button>
+      </div>
+    </div>
+
+    <div class="mol-card">
+      <div class="mol-card-name">Caffeine</div>
+      <div class="mol-card-use text-muted text-sm">Adenosine antagonist · CNS stimulant · MW 194 Da</div>
+      <img src="/api/v2/mol/svg?smiles=Cn1c(=O)c2c(ncn2C)n(C)c1=O" alt="Caffeine" class="mol-card-img" onerror="this.style.display='none'">
+      <code class="mol-smiles" id="smi-caff">Cn1c(=O)c2c(ncn2C)n(C)c1=O</code>
+      <div class="flex gap-8 mt-8">
+        <button class="btn btn-sm btn-outline" onclick="copyMol('smi-caff')">Copy</button>
+        <button class="btn btn-sm btn-primary" onclick="tryInApp('Cn1c(=O)c2c(ncn2C)n(C)c1=O','MLARALLLCAVLALSHTANPCCSHPCQNRGVCMSVGFDQYKCDCTRTGFYLTRDLSVSDAIGSNLGFREDQEKQLNRSSDFHFSLKYSK')">Try in App</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tut-quiz">
+    <p class="tut-quiz-q">In SMILES notation, what does a lowercase letter like 'c' or 'n' represent?</p>
+    <div class="tut-quiz-options">
+      <button onclick="checkAnswer(this,'A','B')">A) A carbon atom with a negative charge</button>
+      <button onclick="checkAnswer(this,'B','B')">B) An atom participating in an aromatic ring</button>
+      <button onclick="checkAnswer(this,'C','B')">C) A carbon with a triple bond to the next atom</button>
+    </div>
+    <p class="tut-quiz-feedback" style="display:none;"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — Protein Sequences -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="tut-section" data-section="4" style="display:none;">
+  <div class="tut-section-badge">04</div>
+  <h2 class="tut-heading">Protein Sequences — Your Drug Target</h2>
+
+  <p class="tut-intro">A <strong>protein</strong> is a chain of amino acids that folds into a specific 3D structure. Drug molecules bind to pockets in this structure. In Deep2Lead, you provide the <strong>amino acid sequence</strong> of the target protein to help Gemma4 generate relevant candidates.</p>
+
+  <h3 class="tut-subheading">The 20 Standard Amino Acids — Single-Letter Codes</h3>
+  <div class="aa-grid">
+    <div class="aa-cell"><span class="aa-letter">A</span>Alanine</div>
+    <div class="aa-cell"><span class="aa-letter">C</span>Cysteine</div>
+    <div class="aa-cell"><span class="aa-letter">D</span>Aspartic acid</div>
+    <div class="aa-cell"><span class="aa-letter">E</span>Glutamic acid</div>
+    <div class="aa-cell"><span class="aa-letter">F</span>Phenylalanine</div>
+    <div class="aa-cell"><span class="aa-letter">G</span>Glycine</div>
+    <div class="aa-cell"><span class="aa-letter">H</span>Histidine</div>
+    <div class="aa-cell"><span class="aa-letter">I</span>Isoleucine</div>
+    <div class="aa-cell"><span class="aa-letter">K</span>Lysine</div>
+    <div class="aa-cell"><span class="aa-letter">L</span>Leucine</div>
+    <div class="aa-cell"><span class="aa-letter">M</span>Methionine</div>
+    <div class="aa-cell"><span class="aa-letter">N</span>Asparagine</div>
+    <div class="aa-cell"><span class="aa-letter">P</span>Proline</div>
+    <div class="aa-cell"><span class="aa-letter">Q</span>Glutamine</div>
+    <div class="aa-cell"><span class="aa-letter">R</span>Arginine</div>
+    <div class="aa-cell"><span class="aa-letter">S</span>Serine</div>
+    <div class="aa-cell"><span class="aa-letter">T</span>Threonine</div>
+    <div class="aa-cell"><span class="aa-letter">V</span>Valine</div>
+    <div class="aa-cell"><span class="aa-letter">W</span>Tryptophan</div>
+    <div class="aa-cell"><span class="aa-letter">Y</span>Tyrosine</div>
+  </div>
+
+  <div class="tut-callout">
+    <strong>Where to find protein sequences:</strong> Search <a href="https://www.uniprot.org" target="_blank">UniProt.org</a> by protein name or gene name. Copy the FASTA sequence (the text after the &gt; header line). Deep2Lead accepts any length using the 20 standard single-letter codes above.
+  </div>
+
+  <h3 class="tut-subheading">Sample Protein Targets — Copy and Use in Deep2Lead</h3>
+
+  <div class="tut-sequence-card">
+    <div class="flex items-center justify-between">
+      <div><strong>EGFR kinase domain</strong> — Epidermal Growth Factor Receptor (breast &amp; lung cancer target)</div>
+      <button class="btn btn-sm btn-outline" onclick="copySeq('seq-egfr')">Copy</button>
+    </div>
+    <pre id="seq-egfr" class="tut-seq">KVLGSGAFGTVYKGLWIPEGEKVKIPVAIKELREATSPKANKEILDEAYVMASVDNPHVCRLLGICLTSTVQLITQLMPFGCLLDYVREHKDNIGSQYLLNWCVQIAKGMNYLEDRRLVHRDLAARNVLVKTPQHVKITDFGLAKLLGAEEKEYHAEGGKVPIKWMALESILHRIYTHQSDVWSYGVTVWELMTFGSK</pre>
+  </div>
+
+  <div class="tut-sequence-card">
+    <div class="flex items-center justify-between">
+      <div><strong>BCR-ABL kinase</strong> — Fusion oncogene (chronic myeloid leukemia · Imatinib's primary target)</div>
+      <button class="btn btn-sm btn-outline" onclick="copySeq('seq-bcrabl')">Copy</button>
+    </div>
+    <pre id="seq-bcrabl" class="tut-seq">MGPSENDPNLFVALYDFVASGDNTLSITKGEKLRVLGYNHNGEWCEAQTKNGQGWVPSNYITPVNSLEKHSWYHGPVSRNAAEYLLSSGINGSFLVRESESSPGQRSISLRYEGRVYHYRINTASDGKLYVSSESRFNTLAELVHHHSTVASGSHNLAKVEAIESQNSSISFESVLQHHLPSGRDIFQSEVQIPAAHNFTLK</pre>
+  </div>
+
+  <div class="tut-sequence-card">
+    <div class="flex items-center justify-between">
+      <div><strong>COX-2</strong> — Cyclooxygenase-2 (inflammation target · Aspirin, Ibuprofen, Celecoxib)</div>
+      <button class="btn btn-sm btn-outline" onclick="copySeq('seq-cox2')">Copy</button>
+    </div>
+    <pre id="seq-cox2" class="tut-seq">MLARALLLCAVLALSHTANPCCSHPCQNRGVCMSVGFDQYKCDCTRTGFYLTRDLSVSDAIGSNLGFREDQEKQLNRSSDFHFSLKYSKDTSVVLKRHQQNMIDNLMKQKKLEFEDYLEPASQETFSDLWKLLPENPRDNLSGDTDSGIFLIYQKAFAEQKLISEEDL</pre>
+  </div>
+
+  <div class="tut-quiz">
+    <p class="tut-quiz-q">What does the letter 'K' represent in an amino acid sequence?</p>
+    <div class="tut-quiz-options">
+      <button onclick="checkAnswer(this,'A','A')">A) Lysine — a positively charged amino acid</button>
+      <button onclick="checkAnswer(this,'B','A')">B) Potassium — an ionic mineral</button>
+      <button onclick="checkAnswer(this,'C','A')">C) Keratin — a structural protein</button>
+    </div>
+    <p class="tut-quiz-feedback" style="display:none;"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — Properties & Scoring -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="tut-section" data-section="5" style="display:none;">
+  <div class="tut-section-badge">05</div>
+  <h2 class="tut-heading">Molecular Properties &amp; Scoring</h2>
+
+  <p class="tut-intro">Every generated candidate is evaluated on <strong>6 molecular properties</strong> and ranked by a <strong>composite score</strong>. Understanding these scores lets you identify the most promising molecules from your results.</p>
+
+  <div class="tut-prop-grid">
+    <div class="tut-prop-card">
+      <div class="tut-prop-name">QED</div>
+      <div class="tut-prop-full">Quantitative Estimate of Drug-likeness</div>
+      <div class="tut-prop-range">Range: 0.0 → 1.0</div>
+      <div class="tut-prop-ideal">Ideal: &gt; 0.5 &nbsp;·&nbsp; Higher = more drug-like</div>
+      <div class="tut-prop-desc">A holistic score combining MW, LogP, H-bond donors/acceptors, polar surface area, and rotatable bonds. Aspirin scores ~0.61. Imatinib scores ~0.55.</div>
+    </div>
+    <div class="tut-prop-card">
+      <div class="tut-prop-name">SAS</div>
+      <div class="tut-prop-full">Synthetic Accessibility Score</div>
+      <div class="tut-prop-range">Range: 1.0 → 10.0</div>
+      <div class="tut-prop-ideal">Ideal: &lt; 4.0 &nbsp;·&nbsp; Lower = easier to synthesize</div>
+      <div class="tut-prop-desc">Estimates how difficult it would be to synthesize the molecule. Score is <em>inverted</em> in composite scoring — lower SAS means higher contribution to the final score.</div>
+    </div>
+    <div class="tut-prop-card">
+      <div class="tut-prop-name">LogP</div>
+      <div class="tut-prop-full">Octanol-Water Partition Coefficient</div>
+      <div class="tut-prop-range">Typical range: -3 to +7</div>
+      <div class="tut-prop-ideal">Ideal: 0 to 3 for oral bioavailability</div>
+      <div class="tut-prop-desc">Too high = poor water solubility (can't dissolve in blood). Too low = can't cross lipid membranes. The sweet spot is 0–3 for most oral drugs.</div>
+    </div>
+    <div class="tut-prop-card">
+      <div class="tut-prop-name">MW</div>
+      <div class="tut-prop-full">Molecular Weight</div>
+      <div class="tut-prop-range">Units: Daltons (Da)</div>
+      <div class="tut-prop-ideal">Ideal: &lt; 500 Da (Lipinski Rule)</div>
+      <div class="tut-prop-desc">Larger molecules struggle to cross cell membranes. Aspirin = 180 Da, Imatinib = 493 Da (near the limit). Anything over 500 Da is flagged as a Lipinski violation.</div>
+    </div>
+    <div class="tut-prop-card">
+      <div class="tut-prop-name">Tanimoto</div>
+      <div class="tut-prop-full">Tanimoto Similarity to Seed Molecule</div>
+      <div class="tut-prop-range">Range: 0.0 → 1.0</div>
+      <div class="tut-prop-ideal">1.0 = identical &nbsp;·&nbsp; &lt; 0.3 = very different</div>
+      <div class="tut-prop-desc">Computed using Morgan ECFP4 fingerprints (2048-bit). Ensures candidates are structurally relevant analogs of your seed. Values of 0.35–0.65 are typical for useful analogs.</div>
+    </div>
+    <div class="tut-prop-card">
+      <div class="tut-prop-name">Lipinski</div>
+      <div class="tut-prop-full">Lipinski's Rule of Five</div>
+      <div class="tut-prop-range">Result: Pass ✓ or Fail ✗</div>
+      <div class="tut-prop-ideal">All 4 rules must pass for oral bioavailability</div>
+      <div class="tut-prop-desc">MW ≤ 500 Da · LogP ≤ 5 · H-bond donors ≤ 5 · H-bond acceptors ≤ 10. Violations predict poor absorption from the gut into the bloodstream.</div>
+    </div>
+  </div>
+
+  <h3 class="tut-subheading">Composite Score Formula (how candidates are ranked)</h3>
+  <div class="tut-formula">
+    <div class="tut-formula-row">
+      <span class="tut-formula-term">0.35 × DTI</span>
+      <span class="tut-formula-plus">+</span>
+      <span class="tut-formula-term">0.30 × QED</span>
+      <span class="tut-formula-plus">+</span>
+      <span class="tut-formula-term">0.20 × (1 − SAS/9)</span>
+      <span class="tut-formula-plus">+</span>
+      <span class="tut-formula-term">0.15 × Tanimoto</span>
+    </div>
+    <p class="text-muted text-sm" style="margin-top:10px;">DTI = Drug-Target Interaction score [0–1]. Higher composite = more promising candidate. Maximum theoretical score = 1.0.</p>
+  </div>
+
+  <h3 class="tut-subheading">DTI Heuristic Formula (Phase 1)</h3>
+  <div class="tut-formula" style="font-size:0.85rem;">
+    <div class="tut-formula-row">
+      <span class="tut-formula-term">0.35 × QED</span>
+      <span class="tut-formula-plus">+</span>
+      <span class="tut-formula-term">0.25 if Lipinski pass</span>
+      <span class="tut-formula-plus">+</span>
+      <span class="tut-formula-term">0.20 × LogP range bonus</span>
+      <span class="tut-formula-plus">+</span>
+      <span class="tut-formula-term">0.20 × (10−SAS)/9</span>
+    </div>
+    <p class="text-muted text-sm" style="margin-top:8px;">LogP bonus: full 0.20 if LogP is 0–3; half (0.10) if −1 to 5; zero otherwise.</p>
+  </div>
+
+  <div class="tut-quiz">
+    <p class="tut-quiz-q">A QED score of 0.85 for a generated molecule means it is:</p>
+    <div class="tut-quiz-options">
+      <button onclick="checkAnswer(this,'A','B')">A) Very easy to synthesize in a chemistry lab</button>
+      <button onclick="checkAnswer(this,'B','B')">B) Highly drug-like — close to ideal molecular properties for a drug</button>
+      <button onclick="checkAnswer(this,'C','B')">C) Very structurally similar to the seed molecule</button>
+    </div>
+    <p class="tut-quiz-feedback" style="display:none;"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 6 — Running an Experiment -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="tut-section" data-section="6" style="display:none;">
+  <div class="tut-section-badge">06</div>
+  <h2 class="tut-heading">Running an Experiment — Step by Step</h2>
+
+  <div class="tut-steps-visual">
+    <div class="tut-step-item">
+      <div class="tut-step-num">1</div>
+      <div class="tut-step-body">
+        <strong>Navigate to Run Experiment</strong>
+        <p>Click "Run Experiment" in the top navigation bar. You must be logged in.</p>
+      </div>
+    </div>
+    <div class="tut-step-item">
+      <div class="tut-step-num">2</div>
+      <div class="tut-step-body">
+        <strong>Paste your protein target sequence</strong>
+        <p>Copy one of the sequences from Section 4, or find your own at <a href="https://www.uniprot.org" target="_blank">UniProt.org</a>. Paste the raw sequence (no FASTA header, no spaces).</p>
+      </div>
+    </div>
+    <div class="tut-step-item">
+      <div class="tut-step-num">3</div>
+      <div class="tut-step-body">
+        <strong>Enter your seed SMILES</strong>
+        <p>Paste any valid SMILES string. A 2D structure preview renders automatically as you type, confirming the molecule is valid. Use the examples from Section 3.</p>
+      </div>
+    </div>
+    <div class="tut-step-item">
+      <div class="tut-step-num">4</div>
+      <div class="tut-step-body">
+        <strong>Set the Diversity Level</strong>
+        <p><strong>Low (0.1–0.3):</strong> Small modifications — close structural analogs, high Tanimoto similarity.<br>
+        <strong>Medium (0.4–0.6):</strong> Balanced — good diversity without losing relevance. Start here.<br>
+        <strong>High (0.7–1.0):</strong> Large structural changes — more creative exploration, lower Tanimoto.</p>
+      </div>
+    </div>
+    <div class="tut-step-item">
+      <div class="tut-step-num">5</div>
+      <div class="tut-step-body">
+        <strong>Choose candidate count and click Generate Candidates</strong>
+        <p>10–20 candidates is a good starting point. Gemma4 on the DGX returns results in under 60 seconds. If generation yields fewer candidates than requested, Gemma4 retries automatically (up to 3×).</p>
+      </div>
+    </div>
+    <div class="tut-step-item">
+      <div class="tut-step-num">6</div>
+      <div class="tut-step-body">
+        <strong>Add title and hypothesis, then Publish</strong>
+        <p>The Save &amp; Publish panel appears after generation. Click <strong>✨ AI Suggest</strong> to let Gemma4 draft a title and hypothesis. Edit to match your scientific reasoning, then click <strong>Publish to Class Feed</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="tut-subheading">Ready-to-Run Example Experiments</h3>
+  <p class="text-sm text-muted" style="margin-bottom:12px;">Click "Try This Experiment" to auto-fill the Run page with the seed SMILES and protein sequence.</p>
+  <div class="tut-example-grid">
+
+    <div class="tut-example-card">
+      <div class="tut-example-title">Aspirin Analog Search — COX-2</div>
+      <div class="tut-example-desc text-sm text-muted">Start with Aspirin's scaffold and explore structural modifications targeting the COX-2 active site. Great first experiment — simple scaffold, well-studied target.</div>
+      <div class="tut-example-fields">
+        <div>Seed: <code>CC(=O)Oc1ccccc1C(=O)O</code></div>
+        <div>Target: COX-2 cyclooxygenase</div>
+        <div>Suggested diversity: 0.40</div>
+      </div>
+      <button class="btn btn-primary btn-sm w-full" onclick="tryInApp('CC(=O)Oc1ccccc1C(=O)O','MLARALLLCAVLALSHTANPCCSHPCQNRGVCMSVGFDQYKCDCTRTGFYLTRDLSVSDAIGSNLGFREDQEKQLNRSSDFHFSLKYSKDTSVVLKRHQQNMIDNLMKQKKLEFEDYLEPASQETFSDLWKLLPENPRDNLSGDTDSGIFLIYQKAFAEQKLISEEDL')">Try This Experiment</button>
+    </div>
+
+    <div class="tut-example-card">
+      <div class="tut-example-title">Imatinib Analog Search — BCR-ABL</div>
+      <div class="tut-example-desc text-sm text-muted">The original Deep2Lead paper case study. Starting from Gleevec, the system found an analog predicted to be 10× more potent against the BCR-ABL fusion kinase.</div>
+      <div class="tut-example-fields">
+        <div>Seed: <code>Cc1ccc(NC(=O)c2ccc(CN3CCN(C)CC3)cc2)cc1Nc1nccc(-c2cccnc2)n1</code></div>
+        <div>Target: BCR-ABL kinase domain</div>
+        <div>Suggested diversity: 0.35</div>
+      </div>
+      <button class="btn btn-primary btn-sm w-full" onclick="tryInApp('Cc1ccc(NC(=O)c2ccc(CN3CCN(C)CC3)cc2)cc1Nc1nccc(-c2cccnc2)n1','MGPSENDPNLFVALYDFVASGDNTLSITKGEKLRVLGYNHNGEWCEAQTKNGQGWVPSNYITPVNSLEKHSWYHGPVSRNAAEYLLSSGINGSFLVRESESSPGQRSISLRYEGRVYHYRINTASDGKLYVSSESRFNTLAELVHHHSTVASGSHNLAKVEAIESQNSSISFESVLQHHLPSGRDIFQSEVQIPAAHNFTLK')">Try This Experiment</button>
+    </div>
+
+    <div class="tut-example-card">
+      <div class="tut-example-title">Chlorambucil Analog — EGFR Kinase</div>
+      <div class="tut-example-desc text-sm text-muted">Explore modifications to Chlorambucil (nitrogen mustard alkylator) targeting the EGFR kinase domain. Used in the platform's built-in test dataset.</div>
+      <div class="tut-example-fields">
+        <div>Seed: <code>ClCCN(CCCl)CCCc1ccc(cc1)C(=O)CCCC(=O)O</code></div>
+        <div>Target: EGFR kinase domain</div>
+        <div>Suggested diversity: 0.50</div>
+      </div>
+      <button class="btn btn-primary btn-sm w-full" onclick="tryInApp('ClCCN(CCCl)CCCc1ccc(cc1)C(=O)CCCC(=O)O','KVLGSGAFGTVYKGLWIPEGEKVKIPVAIKELREATSPKANKEILDEAYVMASVDNPHVCRLLGICLTSTVQLITQLMPFGCLLDYVREHKDNIGSQYLLNWCVQIAKGMNYLEDRRLVHRDLAARNVLVKTPQHVKITDFGLAKLLGAEEKEYHAEGGKVPIKWMALESILHRIYTHQSDVWSYGVTVWELMTFGSK')">Try This Experiment</button>
+    </div>
+
+  </div>
+
+  <div class="tut-quiz">
+    <p class="tut-quiz-q">What does setting a HIGH diversity level (0.8–1.0) do in Deep2Lead?</p>
+    <div class="tut-quiz-options">
+      <button onclick="checkAnswer(this,'A','C')">A) Generates more candidate molecules than a low setting</button>
+      <button onclick="checkAnswer(this,'B','C')">B) Keeps all candidates very close in structure to the seed</button>
+      <button onclick="checkAnswer(this,'C','C')">C) Instructs Gemma4 to explore more structurally diverse chemical space</button>
+    </div>
+    <p class="tut-quiz-feedback" style="display:none;"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 7 — Reading Results -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="tut-section" data-section="7" style="display:none;">
+  <div class="tut-section-badge">07</div>
+  <h2 class="tut-heading">Reading Your Results</h2>
+
+  <p class="tut-intro">After generation, candidates are ranked by <strong>composite score</strong> (highest = most promising). The rank 1 candidate is highlighted. Use the table below to understand every column.</p>
+
+  <h3 class="tut-subheading">Results Table — Column Guide</h3>
+  <div style="overflow-x:auto;">
+    <table class="tut-table">
+      <thead><tr><th>Column</th><th>What It Measures</th><th>Target Value</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><strong>#</strong></td><td>Rank by composite score</td><td>1 = best</td><td>Row 1 is highlighted gold</td></tr>
+        <tr><td><strong>Score</strong></td><td>Weighted composite of DTI + QED + SAS + Tanimoto</td><td>&gt; 0.50</td><td>Max theoretical = 1.0</td></tr>
+        <tr><td><strong>DTI</strong></td><td>Drug-Target Interaction probability (heuristic)</td><td>&gt; 0.60</td><td>Phase 2 will use ESM-2 + ECFP MLP</td></tr>
+        <tr><td><strong>QED</strong></td><td>Overall drug-likeness (0–1)</td><td>&gt; 0.50</td><td>Aspirin ≈ 0.61</td></tr>
+        <tr><td><strong>SAS</strong></td><td>Synthetic accessibility (1–10)</td><td>&lt; 4.0</td><td>Lower = easier to make</td></tr>
+        <tr><td><strong>LogP</strong></td><td>Lipophilicity (fat/water partition)</td><td>0 – 3</td><td>High = poor solubility</td></tr>
+        <tr><td><strong>MW</strong></td><td>Molecular weight in Daltons</td><td>&lt; 500 Da</td><td>Lipinski threshold</td></tr>
+        <tr><td><strong>Tanimoto</strong></td><td>Structural similarity to seed (Morgan ECFP4)</td><td>0.30 – 0.70</td><td>1.0 = identical to seed</td></tr>
+        <tr><td><strong>Lipinski</strong></td><td>Passes all 4 Rule-of-Five criteria</td><td>✓ Pass</td><td>✗ Fail = likely poor oral absorption</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="tut-subheading">How to Evaluate a Candidate</h3>
+  <div class="tut-card-row" style="flex-direction:column;gap:12px;">
+    <div class="tut-callout success-callout">
+      <strong>Strong Lead Candidate</strong><br>
+      Composite &gt; 0.55 · QED &gt; 0.60 · SAS &lt; 3.5 · LogP 0–3 · Lipinski ✓ · Tanimoto 0.30–0.70
+    </div>
+    <div class="tut-callout warn-callout">
+      <strong>Interesting but Investigate Further</strong><br>
+      Composite 0.40–0.55 · May violate 1 Lipinski rule · Check which property is the bottleneck (LogP? SAS?)
+    </div>
+    <div class="tut-callout danger-callout">
+      <strong>Likely to Skip</strong><br>
+      Composite &lt; 0.35 · SAS &gt; 6.0 · Lipinski ✗ · Extreme LogP (&lt;−2 or &gt;5) · Tanimoto &lt; 0.15
+    </div>
+  </div>
+
+  <div class="tut-callout">
+    <strong>Workflow tip:</strong> Click <strong>View</strong> on any candidate to see its 2D structure diagram — compare it visually to your seed. Click <strong>Copy</strong> to get the SMILES string for external tools (Schrödinger, AutoDock, RDKit Jupyter notebooks). The seed molecule's own properties are shown above the table for direct comparison.
+  </div>
+
+  <div class="tut-quiz">
+    <p class="tut-quiz-q">Which composite score indicates a more promising drug candidate?</p>
+    <div class="tut-quiz-options">
+      <button onclick="checkAnswer(this,'A','B')">A) 0.22</button>
+      <button onclick="checkAnswer(this,'B','B')">B) 0.71</button>
+      <button onclick="checkAnswer(this,'C','B')">C) 1.50 (impossible — composite max is 1.0)</button>
+    </div>
+    <p class="tut-quiz-feedback" style="display:none;"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 8 — Publishing & Collaboration -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="tut-section" data-section="8" style="display:none;">
+  <div class="tut-section-badge">08</div>
+  <h2 class="tut-heading">Publishing &amp; Collaboration</h2>
+
+  <p class="tut-intro">Science advances through peer review. After generating candidates, publish your experiment to the <strong>Class Feed</strong> so classmates can review, critique, and build on your work — mirroring the real scientific process.</p>
+
+  <h3 class="tut-subheading">Publishing Workflow</h3>
+  <div class="tut-steps-visual">
+    <div class="tut-step-item">
+      <div class="tut-step-num">1</div>
+      <div class="tut-step-body">
+        <strong>Add a descriptive Title</strong>
+        <p>Required before publishing. Include the scaffold name and the target protein. Example: <em>"Imatinib analog search targeting BCR-ABL fusion kinase"</em></p>
+      </div>
+    </div>
+    <div class="tut-step-item">
+      <div class="tut-step-num">2</div>
+      <div class="tut-step-body">
+        <strong>Write a scientific Hypothesis</strong>
+        <p>Explain what structural modification you explored, and why it might improve binding or ADMET properties. Use <strong>✨ AI Suggest</strong> for a Gemma4-generated draft — then edit it to reflect your actual reasoning.</p>
+      </div>
+    </div>
+    <div class="tut-step-item">
+      <div class="tut-step-num">3</div>
+      <div class="tut-step-body">
+        <strong>Publish to Class Feed</strong>
+        <p>Your experiment becomes visible to all students in your cohort with your name, date, and top candidate highlighted. You can retract and republish later if you revise your hypothesis.</p>
+      </div>
+    </div>
+    <div class="tut-step-item">
+      <div class="tut-step-num">4</div>
+      <div class="tut-step-body">
+        <strong>Engage with comments</strong>
+        <p>Respond to classmates' feedback. Strong scientific engagement is part of the grade. You can also like and comment on others' experiments.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="tut-subheading">Comment Tags — Use Them for Structured Peer Review</h3>
+  <div class="tut-tag-grid">
+    <div class="tut-tag-card">
+      <span class="comment-tag tag-question">question</span>
+      <p class="text-sm" style="margin-top:8px;">Ask for clarification. <em>"Why did you choose diversity 0.7 rather than 0.4?"</em></p>
+    </div>
+    <div class="tut-tag-card">
+      <span class="comment-tag tag-suggestion">suggestion</span>
+      <p class="text-sm" style="margin-top:8px;">Propose an alternative. <em>"Have you tried starting from Dasatinib instead of Imatinib?"</em></p>
+    </div>
+    <div class="tut-tag-card">
+      <span class="comment-tag tag-correction">correction</span>
+      <p class="text-sm" style="margin-top:8px;">Point out an error. <em>"The BCR-ABL fragment you used is the SH3 domain, not the kinase domain."</em></p>
+    </div>
+    <div class="tut-tag-card">
+      <span class="comment-tag tag-praise">praise</span>
+      <p class="text-sm" style="margin-top:8px;">Acknowledge strong work. <em>"Excellent insight linking SAS to synthetic feasibility."</em></p>
+    </div>
+  </div>
+
+  <h3 class="tut-subheading">Writing a Good Hypothesis</h3>
+  <div class="tut-callout">
+    <strong>Template:</strong> "Starting from [seed molecule], I explored [type of structural modification] to improve [property] for the [target name]. I hypothesize that [change] will [predicted effect] because [chemical rationale]."
+  </div>
+  <div class="tut-callout success-callout">
+    <strong>Strong example:</strong> "Starting from Imatinib, I explored piperazine N-substituent modifications (diversity = 0.4) targeting BCR-ABL. I hypothesize that replacing the N-methyl group with a shorter ethyl chain will reduce CYP3A4-mediated metabolism without disrupting the critical hydrogen bond to Thr315, potentially improving the drug's half-life."
+  </div>
+  <div class="tut-callout danger-callout">
+    <strong>Weak example:</strong> "I used the Imatinib SMILES and got some candidates. The top one has a score of 0.72." — This has no scientific reasoning and will not earn engagement from peers.
+  </div>
+
+  <div class="tut-quiz">
+    <p class="tut-quiz-q">What comment tag should you use when pointing out that a peer used the wrong protein sequence for their stated target?</p>
+    <div class="tut-quiz-options">
+      <button onclick="checkAnswer(this,'A','C')">A) Praise — they did good work finding the error themselves</button>
+      <button onclick="checkAnswer(this,'B','C')">B) Question — ask them if they are sure about the sequence</button>
+      <button onclick="checkAnswer(this,'C','C')">C) Correction — directly flag the factual or methodological error</button>
+    </div>
+    <p class="tut-quiz-feedback" style="display:none;"></p>
+  </div>
+
+  <!-- Completion banner -->
+  <div class="tut-complete-banner" id="complete-banner" style="display:none;">
+    <div class="tut-complete-icon">🎓</div>
+    <h2>Tutorial Complete!</h2>
+    <p>You understand the fundamentals of AI-driven drug discovery and how to use Deep2Lead end-to-end. Time to run your first real experiment.</p>
+    <a href="/run" class="btn btn-primary" style="font-size:1rem;padding:12px 28px;margin-top:8px;">Start Your First Experiment →</a>
+  </div>
+</div>
+
+<!-- ── Bottom navigation bar ───────────────────────────────────── -->
+<div class="tut-nav-bar">
+  <button id="nav-prev" class="btn btn-outline" onclick="navigate(-1)" disabled>← Previous</button>
+  <button id="audio-btn" class="btn btn-ai" onclick="toggleAudio()">
+    <span id="audio-icon">🔊</span>
+    <span id="audio-label">Listen</span>
+  </button>
+  <button id="nav-next" class="btn btn-primary" onclick="navigate(1)">Next →</button>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/tutorial.js') }}"></script>
+{% endblock %}
