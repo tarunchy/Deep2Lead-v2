@@ -9,8 +9,8 @@
 <body>
 <div class="login-wrap">
   <div class="card login-card">
-    <div class="login-logo">Deep2Lead V2</div>
-    <div class="login-sub">Georgia Institute of Technology · Drug Discovery Platform</div>
+    <div class="login-logo">Deep2Lead</div>
+    <div class="login-sub">Drug Discovery Platform</div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, msg in messages %}
@@ -21,7 +21,7 @@
     <form method="POST" action="{{ url_for('auth.login') }}">
       <div class="form-group">
         <label for="username">Username</label>
-        <input type="text" id="username" name="username" required autofocus placeholder="GT username">
+        <input type="text" id="username" name="username" required autofocus placeholder="Username">
       </div>
       <div class="form-group">
         <label for="password">Password</label>

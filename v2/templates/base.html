@@ -11,45 +11,86 @@
 </head>
 <body>
 
-<nav class="navbar">
-  <span class="navbar-brand">Deep2Lead V2</span>
-  <div class="navbar-links">
-    <a href="{{ url_for('feed.feed_page') }}" class="{% if request.endpoint == 'feed.feed_page' %}active{% endif %}">Feed</a>
-    <a href="{{ url_for('experiments.run_page') }}" class="{% if request.endpoint == 'experiments.run_page' %}active{% endif %}">Run Experiment</a>
-    <a href="/run-3d" class="{% if request.endpoint == 'target.run_3d_page' %}active{% endif %}">3D Experiment</a>
-    <a href="{{ url_for('auto_experiment.auto_exp_page') }}" class="{% if request.endpoint == 'auto_experiment.auto_exp_page' %}active{% endif %}">Auto Experiment</a>
-    <a href="{{ url_for('experiments.dashboard') }}" class="{% if request.endpoint == 'experiments.dashboard' %}active{% endif %}">My Experiments</a>
-    <a href="{{ url_for('gamification.mission_board') }}" class="{% if request.endpoint == 'gamification.mission_board' %}active{% endif %}">🏅 Missions</a>
-    <a href="{{ url_for('tutorial.tutorial_page') }}" class="{% if request.endpoint == 'tutorial.tutorial_page' %}active{% endif %}">Tutorial</a>
-    {% if current_user.role == 'admin' %}
-    <a href="{{ url_for('admin.users_page') }}" class="{% if 'admin' in request.endpoint %}active{% endif %}">Admin</a>
-    {% endif %}
-  </div>
-  <div class="navbar-user">
-    <!-- XP bar -->
-    <div id="xpBarWrapper" style="display:flex;align-items:center;gap:8px;margin-right:12px;">
-      <span id="xpLevelBadge" style="font-size:.75rem;font-weight:700;background:rgba(88,166,255,.15);color:#58a6ff;border:1px solid rgba(88,166,255,.3);border-radius:10px;padding:2px 8px;">Lv 1</span>
-      <div class="xp-bar-outer" style="width:80px;height:6px;">
-        <div class="xp-bar-inner" id="xpBarInner" style="width:0%;"></div>
-      </div>
-      <span id="xpText" style="font-size:.72rem;color:#8b949e;white-space:nowrap;">0 XP</span>
-    </div>
-    <span>{{ current_user.display_name or current_user.username }}</span>
-    {% if current_user.cohort %}<span class="badge badge-draft">{{ current_user.cohort }}</span>{% endif %}
-    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline">Logout</a>
-  </div>
-</nav>
-<!-- Badge toast container -->
-<div id="badgeToastContainer" style="position:fixed;top:72px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
+<div class="app-layout">
 
-<div class="container">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, msg in messages %}
-      <div class="alert alert-{{ category }}">{{ msg }}</div>
-    {% endfor %}
-  {% endwith %}
-  {% block content %}{% endblock %}
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      Deep2Lead
+      <span>Drug Discovery Platform</span>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Lab</div>
+      <a href="{{ url_for('feed.feed_page') }}" class="{% if request.endpoint == 'feed.feed_page' %}active{% endif %}">
+        <span class="nav-icon">📡</span> Feed
+      </a>
+      <a href="{{ url_for('experiments.run_page') }}" class="{% if request.endpoint == 'experiments.run_page' %}active{% endif %}">
+        <span class="nav-icon">🧪</span> Run Experiment
+      </a>
+      <a href="/run-3d" class="{% if request.endpoint == 'target.run_3d_page' %}active{% endif %}">
+        <span class="nav-icon">⚗️</span> 3D Experiment
+      </a>
+      <a href="{{ url_for('auto_experiment.auto_exp_page') }}" class="{% if request.endpoint == 'auto_experiment.auto_exp_page' %}active{% endif %}">
+        <span class="nav-icon">🔁</span> Auto Experiment
+      </a>
+
+      <div class="nav-section-label">My Work</div>
+      <a href="{{ url_for('experiments.dashboard') }}" class="{% if request.endpoint == 'experiments.dashboard' %}active{% endif %}">
+        <span class="nav-icon">📂</span> My Experiments
+      </a>
+      <a href="{{ url_for('gamification.mission_board') }}" class="{% if request.endpoint == 'gamification.mission_board' %}active{% endif %}">
+        <span class="nav-icon">🏅</span> Missions
+      </a>
+
+      <div class="nav-section-label">Learn</div>
+      <a href="{{ url_for('tutorial.tutorial_page') }}" class="{% if request.endpoint == 'tutorial.tutorial_page' %}active{% endif %}">
+        <span class="nav-icon">📖</span> Tutorial
+      </a>
+
+      {% if current_user.role == 'admin' %}
+      <div class="nav-section-label">Admin</div>
+      <a href="{{ url_for('admin.users_page') }}" class="{% if 'admin' in request.endpoint %}active{% endif %}">
+        <span class="nav-icon">👤</span> Users
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- User + XP footer -->
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">{{ (current_user.display_name or current_user.username)[0].upper() }}</div>
+        <div class="sidebar-username">{{ current_user.display_name or current_user.username }}</div>
+      </div>
+      <div class="sidebar-xp">
+        <div class="sidebar-xp-row">
+          <span class="sidebar-xp-level" id="xpLevelBadge">Lv 1</span>
+          <span class="sidebar-xp-pts" id="xpText">0 XP</span>
+        </div>
+        <div class="sidebar-xp-bar">
+          <div class="sidebar-xp-fill" id="xpBarInner"></div>
+        </div>
+      </div>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline" style="width:100%;justify-content:center;">Logout</a>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <div class="main-area">
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
 </div>
+
+<!-- Badge toast container -->
+<div id="badgeToastContainer" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
 
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
