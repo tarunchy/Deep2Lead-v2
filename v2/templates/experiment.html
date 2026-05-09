@@ -65,7 +65,23 @@
 
     {% if current_user.id == experiment.author.id %}
     <hr class="divider">
-    <p class="section-title">Edit</p>
+    <div class="flex items-center justify-between" style="margin-bottom:10px;">
+      <p class="section-title" style="margin:0;">Edit</p>
+      <button id="ai-suggest-btn" class="btn btn-ai btn-sm" title="Let Gemma4 suggest a title and hypothesis" onclick="suggestMetadata()">
+        <span id="ai-suggest-icon">✨</span>
+        <span id="ai-suggest-label">AI Suggest</span>
+      </button>
+    </div>
+    <div id="ai-suggestion-box" style="display:none;" class="ai-suggestion-box">
+      <p class="text-sm text-muted" style="margin-bottom:6px;">Gemma4 suggestion — accept or edit below:</p>
+      <div class="ai-suggestion-title" id="ai-sug-title"></div>
+      <div class="ai-suggestion-hypothesis" id="ai-sug-hypothesis"></div>
+      <div class="flex gap-8" style="margin-top:8px;">
+        <button class="btn btn-sm btn-primary" onclick="acceptSuggestion()">Accept</button>
+        <button class="btn btn-sm btn-outline" onclick="suggestMetadata()">Retry ✨</button>
+        <button class="btn btn-sm btn-outline" onclick="document.getElementById('ai-suggestion-box').style.display='none'">Dismiss</button>
+      </div>
+    </div>
     <div class="form-group">
       <label>Title</label>
       <input type="text" id="edit-title" value="{{ experiment.title or '' }}" placeholder="Add a title">
@@ -129,6 +145,41 @@
 
 {% block scripts %}
 <script>
+let _lastSuggestion = null;
+
+async function suggestMetadata() {
+  const expId = document.getElementById("experiment-data").dataset.id;
+  const btn = document.getElementById("ai-suggest-btn");
+  const label = document.getElementById("ai-suggest-label");
+  btn.disabled = true;
+  btn.classList.add("loading");
+  label.textContent = "Thinking…";
+  document.getElementById("ai-suggestion-box").style.display = "none";
+  try {
+    const data = await apiFetch("/api/v2/suggest-metadata", {
+      method: "POST",
+      body: JSON.stringify({ experiment_id: expId }),
+    });
+    _lastSuggestion = data;
+    document.getElementById("ai-sug-title").textContent = data.title;
+    document.getElementById("ai-sug-hypothesis").textContent = data.hypothesis;
+    document.getElementById("ai-suggestion-box").style.display = "block";
+  } catch (err) {
+    showAlert(err.message || "AI suggestion failed", "error", document.body);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    label.textContent = "AI Suggest";
+  }
+}
+
+function acceptSuggestion() {
+  if (!_lastSuggestion) return;
+  document.getElementById("edit-title").value = _lastSuggestion.title;
+  document.getElementById("edit-hypothesis").value = _lastSuggestion.hypothesis;
+  document.getElementById("ai-suggestion-box").style.display = "none";
+}
+
 async function saveEdit() {
   const expId = document.getElementById("experiment-data").dataset.id;
   try {
