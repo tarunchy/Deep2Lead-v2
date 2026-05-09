@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deep2Lead v3 — Enhancement Plan</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #d2a8ff;
+      --accent4: #ffa657;
+      --accent5: #ff7b72;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --pill-blue: rgba(88,166,255,0.15);
+      --pill-green: rgba(63,185,80,0.15);
+      --pill-purple: rgba(210,168,255,0.15);
+      --pill-orange: rgba(255,166,87,0.15);
+      --pill-red: rgba(255,123,114,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; }
+
+    /* ── Layout ── */
+    .wrapper { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+    header { text-align: center; padding: 60px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+    header h1 { font-size: 2.6rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent3), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    header .subtitle { color: var(--muted); margin-top: 10px; font-size: 1.05rem; }
+    header .meta { display: flex; justify-content: center; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+    header .meta span { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px; font-size: 0.82rem; color: var(--muted); }
+
+    /* ── Section headings ── */
+    h2 { font-size: 1.5rem; font-weight: 600; margin: 48px 0 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    h2 .num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; font-size: 0.85rem; font-weight: 700; flex-shrink: 0; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 10px; color: var(--accent); }
+    h4 { font-size: 0.95rem; font-weight: 600; margin: 16px 0 6px; color: var(--accent3); }
+
+    /* ── Cards ── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; margin-bottom: 16px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .card-sm { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+
+    /* ── Pills / badges ── */
+    .pill { display: inline-block; border-radius: 12px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600; margin: 2px; }
+    .pill-blue { background: var(--pill-blue); color: var(--accent); }
+    .pill-green { background: var(--pill-green); color: var(--accent2); }
+    .pill-purple { background: var(--pill-purple); color: var(--accent3); }
+    .pill-orange { background: var(--pill-orange); color: var(--accent4); }
+    .pill-red { background: var(--pill-red); color: var(--accent5); }
+
+    /* ── Feature flag ── */
+    .flag { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+    .flag-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+    .flag-body strong { display: block; font-size: 0.95rem; }
+    .flag-body span { color: var(--muted); font-size: 0.87rem; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+    th { background: var(--surface2); color: var(--muted); text-align: left; padding: 8px 12px; font-weight: 600; border-bottom: 2px solid var(--border); }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Code ── */
+    code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.84rem; background: var(--surface2); border-radius: 4px; padding: 1px 6px; color: var(--accent4); }
+    pre { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 18px; overflow-x: auto; margin: 12px 0; }
+    pre code { background: none; padding: 0; color: var(--text); font-size: 0.83rem; }
+
+    /* ── Pipeline flow ── */
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 16px 0; }
+    .flow-step { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 0.85rem; font-weight: 500; }
+    .flow-arrow { color: var(--muted); font-size: 1.1rem; }
+
+    /* ── Phase timeline ── */
+    .timeline { border-left: 2px solid var(--border); padding-left: 24px; margin: 16px 0; }
+    .timeline-item { position: relative; margin-bottom: 24px; }
+    .timeline-item::before { content: ''; position: absolute; left: -30px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+    .timeline-item.phase2::before { background: var(--accent3); }
+    .timeline-item.phase3::before { background: var(--accent2); }
+    .timeline-label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .tl-blue { color: var(--accent); }
+    .tl-purple { color: var(--accent3); }
+    .tl-green { color: var(--accent2); }
+
+    /* ── Score box ── */
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin: 12px 0; }
+    .score-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
+    .score-box .score-val { font-size: 1.6rem; font-weight: 700; }
+    .score-box .score-label { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .score-box .score-sub { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── Warning / note ── */
+    .note { background: rgba(255,166,87,0.08); border-left: 3px solid var(--accent4); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .note strong { color: var(--accent4); }
+    .info { background: rgba(88,166,255,0.08); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .info strong { color: var(--accent); }
+
+    /* ── Loop diagram ── */
+    .loop-box { border: 2px solid var(--border); border-radius: 12px; padding: 24px; position: relative; margin: 16px 0; }
+    .loop-box h4 { text-align: center; color: var(--accent2); font-size: 1.1rem; margin-bottom: 16px; }
+    .loop-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .loop-step { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+    .loop-step .ls-icon { font-size: 1.5rem; }
+    .loop-step .ls-title { font-size: 0.82rem; font-weight: 600; margin-top: 4px; }
+    .loop-step .ls-desc { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    ul { padding-left: 18px; }
+    li { margin-bottom: 5px; font-size: 0.9rem; color: var(--text); }
+    p { margin-bottom: 10px; font-size: 0.93rem; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 40px; }
+    .toc h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 12px; }
+    .toc ol { padding-left: 18px; }
+    .toc li { margin-bottom: 6px; }
+    .toc a { font-size: 0.9rem; }
+
+    .highlight-box { background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(210,168,255,0.08)); border: 1px solid rgba(88,166,255,0.3); border-radius: 10px; padding: 20px 24px; margin: 16px 0; }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.8rem; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ══════════════════════════════════════════════════════════════ HEADER -->
+  <header>
+    <h1>Deep2Lead v3 — Enhancement Plan</h1>
+    <p class="subtitle">Educational AI Drug Discovery Platform · High School Edition</p>
+    <div class="meta">
+      <span>Version 3.0 Draft</span>
+      <span>Date: 2026-05-09</span>
+      <span>Author: Tarun Chawdhury</span>
+      <span>GitHub: tarunchy/Deep2Lead-v2</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════ TOC -->
+  <div class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#overview">Product Overview &amp; Vision</a></li>
+      <li><a href="#current">Current v2 Baseline</a></li>
+      <li><a href="#features">New Feature Summary</a></li>
+      <li><a href="#target-discovery">Target &amp; Pathogen Discovery Pipeline</a></li>
+      <li><a href="#mode2">3D Structure Experiment Mode</a></li>
+      <li><a href="#autoexp">Auto Experiment (Autonomous Loop)</a></li>
+      <li><a href="#gamification">Gamification System</a></li>
+      <li><a href="#tech">Technical Stack Decisions</a></li>
+      <li><a href="#architecture">Architecture &amp; File Layout</a></li>
+      <li><a href="#phases">Phased Roadmap</a></li>
+      <li><a href="#safety">Safety &amp; Educational Guardrails</a></li>
+    </ol>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ 1. OVERVIEW -->
+  <h2 id="overview"><span class="num" style="background:rgba(88,166,255,0.2);color:var(--accent)">1</span> Product Overview &amp; Vision</h2>
+  <div class="card">
+    <p>Deep2Lead v3 transforms the existing Georgia Tech graduate tool into a <strong>hands-on educational AI drug discovery platform for high school students</strong>. The platform lets students move from protein sequences and SMILES strings through 3D structure prediction, molecular docking, AI-generated candidate molecules, novelty checking, and responsible scientific interpretation.</p>
+    <div class="highlight-box">
+      <strong>Core Educational Message:</strong>
+      <blockquote style="margin:8px 0 0 0;padding:0 0 0 14px;border-left:3px solid var(--accent);color:var(--muted);font-style:italic;">
+        "AI can help scientists explore ideas faster — but every computational prediction must eventually be validated through real experiments, safety testing, and clinical studies."
+      </blockquote>
+    </div>
+    <h4>Target Users</h4>
+    <ul>
+      <li>High school students (grades 9–12) interested in AI, biology, chemistry, medicine</li>
+      <li>Summer STEM program participants</li>
+      <li>Secondary: parents, teachers, college applicants seeking research exposure</li>
+    </ul>
+    <h4>Lock-and-Key Analogy (runs throughout the app)</h4>
+    <ul>
+      <li><strong>Protein target</strong> = the lock (3D shape determines what fits)</li>
+      <li><strong>Drug molecule</strong> = the key (must fit the binding pocket)</li>
+      <li><strong>Structure prediction</strong> = turning the sequence instructions into a 3D lock</li>
+      <li><strong>Molecular docking</strong> = testing whether the key fits and how tightly</li>
+      <li><strong>AI generation</strong> = a robot designing thousands of new key shapes overnight</li>
+    </ul>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ 2. CURRENT -->
+  <h2 id="current"><span class="num" style="background:rgba(63,185,80,0.2);color:var(--accent2)">2</span> Current v2 Baseline (What Already Works)</h2>
+  <div class="card-grid">
+    <div class="card-sm">
+      <h4>Core Pipeline ✅</h4>
+      <ul>
+        <li>Amino acid sequence input + validation</li>
+        <li>Seed SMILES input + RDKit canonicalization</li>
+        <li>Gemma4 (DGX Spark) molecule generation</li>
+        <li>QED, SAS, LogP, MW, Tanimoto scoring</li>
+        <li>Composite score ranking</li>
+        <li>Experiment save + publish to class feed</li>
+      </ul>
+    </div>
+    <div class="card-sm">
+      <h4>Social / Collaboration ✅</h4>
+      <ul>
+        <li>Like / comment on published experiments</li>
+        <li>AI-generated title + hypothesis (Gemma4)</li>
+        <li>Admin dashboard + student management</li>
+        <li>ChEMBL + PubChem enrichment panel</li>
+        <li>MCP-style tool use (novelty, properties, validation)</li>
+      </ul>
+    </div>
+    <div class="card-sm">
+      <h4>What's Missing 🔴</h4>
+      <ul>
+        <li>3D protein structure visualization</li>
+        <li>Molecular docking (Vina)</li>
+        <li>Pathogen / target discovery pipeline</li>
+        <li>Auto Experiment iterative loop</li>
+        <li>Gamification (badges, XP, missions)</li>
+        <li>High-school-friendly UX and explanations</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ 3. FEATURES -->
+  <h2 id="features"><span class="num" style="background:rgba(210,168,255,0.2);color:var(--accent3)">3</span> New Feature Summary</h2>
+  <table>
+    <thead>
+      <tr><th>Feature</th><th>Priority</th><th>Phase</th><th>Complexity</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Target &amp; Pathogen Discovery Pipeline</strong><br><span style="color:var(--muted);font-size:0.82rem">RCSB PDB search, UniProt lookup, curated target library</span></td>
+        <td><span class="pill pill-red">Critical</span></td><td>1</td><td>Medium</td>
+      </tr>
+      <tr>
+        <td><strong>3D Structure Experiment Mode</strong><br><span style="color:var(--muted);font-size:0.82rem">AlphaFold EBI + ESMFold + AutoDock Vina + 3Dmol.js</span></td>
+        <td><span class="pill pill-red">Critical</span></td><td>1–2</td><td>High</td>
+      </tr>
+      <tr>
+        <td><strong>Auto Experiment (Autonomous Loop)</strong><br><span style="color:var(--muted);font-size:0.82rem">Karpathy-style generate→dock→score→keep/discard loop</span></td>
+        <td><span class="pill pill-orange">High</span></td><td>2</td><td>High</td>
+      </tr>
+      <tr>
+        <td><strong>Gamification System</strong><br><span style="color:var(--muted);font-size:0.82rem">Missions, badges, XP, leaderboard, boss health bar</span></td>
+        <td><span class="pill pill-orange">High</span></td><td>1–2</td><td>Medium</td>
+      </tr>
+      <tr>
+        <td><strong>High School UX Overhaul</strong><br><span style="color:var(--muted);font-size:0.82rem">Curated target picker, plain-English explanations, guided flow</span></td>
+        <td><span class="pill pill-orange">High</span></td><td>1</td><td>Medium</td>
+      </tr>
+      <tr>
+        <td><strong>Student Report Export</strong><br><span style="color:var(--muted);font-size:0.82rem">PDF/HTML report with results, scores, reflection prompts</span></td>
+        <td><span class="pill pill-blue">Medium</span></td><td>2</td><td>Low</td>
+      </tr>
+      <tr>
+        <td><strong>Molecule Lineage Graph</strong><br><span style="color:var(--muted);font-size:0.82rem">Family tree of generated molecules across Auto Experiment rounds</span></td>
+        <td><span class="pill pill-blue">Medium</span></td><td>3</td><td>Medium</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════════════ 4. TARGET DISCOVERY -->
+  <h2 id="target-discovery"><span class="num" style="background:rgba(255,166,87,0.2);color:var(--accent4)">4</span> Target &amp; Pathogen Discovery Pipeline</h2>
+  <p>Before running any experiment, students need to find or confirm a real biological target. This pipeline gives them three paths.</p>
+
+  <h3>Path A — Curated Target Library (Default for Beginners)</h3>
+  <div class="card">
+    <p>Pre-loaded library of 20–30 educationally appropriate targets. Each entry has: plain-English explanation, disease context, UniProt ID, known PDB structures, and a starter SMILES.</p>
+    <div class="card-grid">
+      <div class="card-sm">
+        <strong style="color:var(--accent5)">🦠 Viral / Pathogen Targets</strong>
+        <ul>
+          <li>SARS-CoV-2 Main Protease (6LU7)</li>
+          <li>Influenza Neuraminidase (2HU4)</li>
+          <li>HIV Protease (1HSG)</li>
+          <li>SARS-CoV-2 Spike RBD (7BZ5)</li>
+        </ul>
+      </div>
+      <div class="card-sm">
+        <strong style="color:var(--accent3)">🧬 Cancer Targets</strong>
+        <ul>
+          <li>EGFR kinase (1IEP)</li>
+          <li>BCR-ABL kinase (2HIW)</li>
+          <li>BRAF V600E (3OG7)</li>
+          <li>CDK2 (1HCL)</li>
+        </ul>
+      </div>
+      <div class="card-sm">
+        <strong style="color:var(--accent2)">🔬 Aging / Longevity</strong>
+        <ul>
+          <li>SIRT1 sirtuin (4ZZJ)</li>
+          <li>mTOR kinase (4JSV)</li>
+          <li>p53 tumor suppressor (2OCJ)</li>
+          <li>NLRP3 inflammasome (6NPY)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Path B — Live Database Search (Intermediate)</h3>
+  <div class="card">
+    <p>Students search by protein name or keyword. The app queries multiple databases in parallel:</p>
+    <div class="flow">
+      <div class="flow-step">Student types "coronavirus protease"</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">UniProt REST Search<br><code style="font-size:0.72rem">rest.uniprot.org/uniprotkb/search</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">RCSB PDB Search<br><code style="font-size:0.72rem">search.rcsb.org/rcsbsearch/v2/query</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">AlphaFold EBI<br><code style="font-size:0.72rem">alphafold.ebi.ac.uk/api/prediction/{uniprot_id}</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Show results card with 3D preview</div>
+    </div>
+    <div class="info"><strong>New Flask endpoint:</strong> <code>GET /api/v3/target/search?q=coronavirus+protease</code> — proxies UniProt + RCSB, returns ranked protein cards with PDB IDs, resolution, organism, and AlphaFold availability flag.</div>
+  </div>
+
+  <h3>Path C — Custom Sequence (Advanced)</h3>
+  <div class="card">
+    <p>Students paste any amino acid sequence. The app runs <strong>ESMFold</strong> in real-time to predict the 3D structure (free API, no GPU needed on our server, sequences up to ~400 AA). Result is cached server-side by sequence hash.</p>
+    <div class="flow">
+      <div class="flow-step">Custom AA sequence</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">ESMFold API<br><code style="font-size:0.72rem">api.esmatlas.com/foldSequence/v1/pdb/</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">PDB text returned</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Cache by SHA-256(seq)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">3Dmol.js viewer</div>
+    </div>
+    <div class="note"><strong>Limitation to show students:</strong> ESMFold is fast but less accurate than AlphaFold2 for complex proteins. Show pLDDT confidence coloring — blue = confident, yellow/red = uncertain. Educate: "Red regions might not fold as predicted."</div>
+  </div>
+
+  <h3>New Flask Blueprint: <code>api/target.py</code></h3>
+  <pre><code>GET  /api/v3/target/search?q={query}          → UniProt + RCSB parallel search
+GET  /api/v3/target/{uniprot_id}/structure    → AlphaFold PDB URL or ESMFold
+GET  /api/v3/target/{pdb_id}/download        → proxied PDB file download
+GET  /api/v3/target/curated                  → curated library JSON
+POST /api/v3/target/fold                     → ESMFold custom sequence
+GET  /api/v3/target/{uniprot_id}/alphafold   → AlphaFold metadata + pdbUrl</code></pre>
+
+  <!-- ══════════════════════════════════════════════════════════════ 5. 3D EXPERIMENT -->
+  <h2 id="mode2"><span class="num" style="background:rgba(63,185,80,0.2);color:var(--accent2)">5</span> 3D Structure Experiment Mode</h2>
+  <p>The new flagship experiment mode. Students see the protein in 3D, dock molecules, and understand <em>why</em> molecules bind — not just a score.</p>
+
+  <h3>Full Pipeline</h3>
+  <div class="flow">
+    <div class="flow-step">① Select target<br>(curated/search/custom)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">② Fetch / predict<br>3D structure (PDB)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">③ Prepare receptor<br>PDB → PDBQT<br>(OpenBabel)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">④ Enter seed SMILES<br>+ generate candidates<br>(Gemma4)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">⑤ SMILES → 3D<br>(RDKit ETKDGv3)<br>→ Meeko → PDBQT</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">⑥ AutoDock Vina<br>docking score<br>(kcal/mol)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">⑦ Multi-objective<br>composite score</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">⑧ 3D visualization<br>protein + best pose</div>
+  </div>
+
+  <h3>Protein Structure Services</h3>
+  <table>
+    <thead>
+      <tr><th>Service</th><th>When to Use</th><th>API Call</th><th>Accuracy</th><th>Speed</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>RCSB PDB download</strong></td>
+        <td>Protein has experimentally solved crystal structure</td>
+        <td><code>files.rcsb.org/download/{id}.pdb</code></td>
+        <td>Highest (experimental)</td>
+        <td>Fast (&lt;1s)</td>
+      </tr>
+      <tr>
+        <td><strong>AlphaFold EBI</strong></td>
+        <td>UniProt-known protein, no crystal structure needed</td>
+        <td><code>alphafold.ebi.ac.uk/api/prediction/{uniprot_id}</code></td>
+        <td>Very High (AF2)</td>
+        <td>Fast (pre-computed)</td>
+      </tr>
+      <tr>
+        <td><strong>ESMFold API</strong></td>
+        <td>Custom / novel sequence, real-time prediction needed</td>
+        <td><code>POST api.esmatlas.com/foldSequence/v1/pdb/</code></td>
+        <td>Good (ESM-2)</td>
+        <td>~30–90s (depends on length)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info"><strong>Discovery order:</strong> App checks in this priority: (1) Is there an experimental PDB from RCSB? → use it. (2) Is there an AlphaFold prediction? → use it. (3) Neither → offer ESMFold with caveat. Students see <em>why</em> each source is chosen.</div>
+
+  <h3>AutoDock Vina Integration</h3>
+  <pre><code># pip install vina meeko rdkit openbabel-wheel
+# New service: v2/services/docking_service.py
+
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from meeko import MoleculePreparation
+from vina import Vina
+import subprocess, tempfile, os
+
+def prepare_ligand_pdbqt(smiles: str) -> str:
+    mol = Chem.AddHs(Chem.MolFromSmiles(smiles))
+    AllChem.EmbedMolecule(mol, AllChem.ETKDGv3())
+    prep = MoleculePreparation()
+    prep.prepare(mol)
+    return prep.write_pdbqt_string()
+
+def prepare_receptor_pdbqt(pdb_path: str) -> str:
+    out_path = pdb_path.replace(".pdb", ".pdbqt")
+    subprocess.run(
+        ["obabel", pdb_path, "-O", out_path, "-xr", "-p", "7.4"],
+        check=True, capture_output=True
+    )
+    return out_path
+
+def dock_molecule(receptor_pdbqt: str, ligand_pdbqt_str: str,
+                  center: list, box_size: list = [25, 25, 25],
+                  exhaustiveness: int = 8) -> dict:
+    v = Vina(sf_name="vina", verbosity=0)
+    v.set_receptor(receptor_pdbqt)
+    v.set_ligand_from_string(ligand_pdbqt_str)
+    v.compute_vina_maps(center=center, box_size=box_size)
+    v.dock(exhaustiveness=exhaustiveness, n_poses=5)
+    score = v.score()[0]   # kcal/mol, more negative = better
+    return {"docking_score_kcal": score, "poses_pdbqt": v.poses(n_poses=1)}</code></pre>
+
+  <h3>3D Visualization with 3Dmol.js</h3>
+  <pre><code>&lt;!-- In templates/experiment_3d.html --&gt;
+&lt;script src="https://3Dmol.org/build/3Dmol-min.js"&gt;&lt;/script&gt;
+
+&lt;div id="protein-viewer" style="width:100%;height:480px;position:relative;"&gt;&lt;/div&gt;
+&lt;div id="docked-viewer"  style="width:100%;height:480px;position:relative;"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+// Load protein from Flask route that returns PDB text
+fetch('/api/v3/target/{{ experiment.uniprot_id }}.pdb')
+  .then(r => r.text())
+  .then(pdbText =&gt; {
+    let viewer = $3Dmol.createViewer("protein-viewer", {backgroundColor:"#0d1117"});
+    viewer.addModel(pdbText, "pdb");
+    viewer.setStyle({}, { cartoon: { colorscheme: "ssJmol" } });
+    viewer.zoomTo(); viewer.render();
+  });
+
+// Load docked pose (protein + best ligand)
+fetch('/api/v3/dock/{{ candidate.id }}/pose')
+  .then(r =&gt; r.json())
+  .then(data =&gt; {
+    let v = $3Dmol.createViewer("docked-viewer", {backgroundColor:"#0d1117"});
+    v.addModel(data.protein_pdb, "pdb");
+    v.setStyle({chain:'A'}, { cartoon: { color: "#58a6ff", opacity: 0.6 } });
+    v.addModel(data.ligand_pdbqt, "pdbqt");
+    v.setStyle({hetflag:true}, { stick: { colorscheme: "Jmol" }, sphere: {radius:0.3} });
+    v.zoomTo({hetflag:true}); v.render();
+  });
+&lt;/script&gt;</code></pre>
+
+  <h3>Updated Composite Score (3D Mode)</h3>
+  <div class="score-grid">
+    <div class="score-box"><div class="score-val" style="color:var(--accent5)">35%</div><div class="score-label">Docking Score</div><div class="score-sub">kcal/mol normalized</div></div>
+    <div class="score-box"><div class="score-val" style="color:var(--accent)">20%</div><div class="score-label">QED Drug-likeness</div><div class="score-sub">RDKit QED [0–1]</div></div>
+    <div class="score-box"><div class="score-val" style="color:var(--accent2)">20%</div><div class="score-label">Novelty</div><div class="score-sub">vs PubChem InChIKey</div></div>
+    <div class="score-box"><div class="score-val" style="color:var(--accent3)">15%</div><div class="score-label">Lipinski / ADMET</div><div class="score-sub">drug-likeness rules</div></div>
+    <div class="score-box"><div class="score-val" style="color:var(--accent4)">10%</div><div class="score-label">SA Score</div><div class="score-sub">synthetic accessibility</div></div>
+  </div>
+
+  <h3>New Flask Blueprint: <code>api/structure.py</code></h3>
+  <pre><code>POST /api/v3/structure/fold           → ESMFold prediction (custom sequence)
+GET  /api/v3/structure/{id}/pdb       → serve cached PDB file
+GET  /api/v3/structure/{id}/meta      → pLDDT confidence, resolution, source
+POST /api/v3/dock/run                 → run AutoDock Vina job (async)
+GET  /api/v3/dock/{job_id}/status     → job status (pending/running/done)
+GET  /api/v3/dock/{candidate_id}/pose → docked pose PDB/PDBQT for viewer</code></pre>
+
+  <!-- ══════════════════════════════════════════════════════════════ 6. AUTO EXPERIMENT -->
+  <h2 id="autoexp"><span class="num" style="background:rgba(255,123,114,0.2);color:var(--accent5)">6</span> Auto Experiment — Autonomous Optimization Loop</h2>
+  <p>Inspired by Karpathy's <a href="https://github.com/karpathy/autoresearch">autoresearch</a> project: an AI agent autonomously iterates on a single editable surface (there: <code>train.py</code>; here: <em>molecule generation prompt + parameters</em>) and keeps changes only when the objective metric improves.</p>
+  <p>The drug discovery equivalent: <strong>Generate → Validate → Dock → Score → Keep best → Seed next round.</strong></p>
+
+  <div class="loop-box">
+    <h4>Auto Experiment Loop</h4>
+    <div class="loop-steps">
+      <div class="loop-step"><div class="ls-icon">🎯</div><div class="ls-title">Set Target &amp; Baseline</div><div class="ls-desc">Select protein + seed SMILES. Run round 0.</div></div>
+      <div class="loop-step"><div class="ls-icon">🧪</div><div class="ls-title">Generate Candidates</div><div class="ls-desc">Gemma4 LLM generates N SMILES from current best seed.</div></div>
+      <div class="loop-step"><div class="ls-icon">✅</div><div class="ls-title">Validate</div><div class="ls-desc">RDKit: syntax, valency, MW, Lipinski filters.</div></div>
+      <div class="loop-step"><div class="ls-icon">⚗️</div><div class="ls-title">Prepare &amp; Dock</div><div class="ls-desc">Meeko → PDBQT. AutoDock Vina. Get kcal/mol score.</div></div>
+      <div class="loop-step"><div class="ls-icon">📊</div><div class="ls-title">Score</div><div class="ls-desc">Composite = docking + QED + novelty + SAS + Lipinski.</div></div>
+      <div class="loop-step"><div class="ls-icon">🏆</div><div class="ls-title">Keep or Discard</div><div class="ls-desc">If improved → keep as next seed. Else → revert.</div></div>
+      <div class="loop-step"><div class="ls-icon">🔁</div><div class="ls-title">Repeat</div><div class="ls-desc">Run N rounds or until budget reached.</div></div>
+      <div class="loop-step"><div class="ls-icon">📝</div><div class="ls-title">Report</div><div class="ls-desc">Show round-by-round score trend + best molecule.</div></div>
+    </div>
+  </div>
+
+  <h3>Key Design Decisions (from autoresearch)</h3>
+  <div class="card-grid">
+    <div class="card-sm">
+      <h4>Fixed Compute Budget</h4>
+      <p>Each round has a max time limit (e.g., 5 min per round). No unbounded loops. Students set max rounds (2–10) and molecules per round (5–20). Budget shown as progress bar.</p>
+    </div>
+    <div class="card-sm">
+      <h4>Single Editable Surface</h4>
+      <p>Only the <em>Gemma4 prompt + generation parameters</em> (temperature, noise_level, similarity_constraint) change between rounds, not the scoring logic. Diffs are reviewable.</p>
+    </div>
+    <div class="card-sm">
+      <h4>Transparent Logging</h4>
+      <p>Every round logged: iteration, seed SMILES, best score, status (keep/discard), short rationale. Students see the reasoning, not just the result.</p>
+    </div>
+    <div class="card-sm">
+      <h4>Direction: Higher is Better</h4>
+      <p>Composite score goes from 0→1. More negative docking kcal/mol = better. App normalizes docking to [0,1] using sigmoid. Students see one unified "mission score".</p>
+    </div>
+  </div>
+
+  <h3>AutoExperimentRun Data Model</h3>
+  <pre><code># New DB table: auto_experiment_run
+auto_run_id      UUID PK
+experiment_id    FK → Experiment
+strategy         ENUM(conservative, explorer, safety_first, novelty, balanced)
+rounds_planned   INT
+rounds_completed INT
+molecules_per_round INT
+objective_config JSONB       # weights for composite score
+best_candidate_id FK → Candidate
+best_score       FLOAT
+status           ENUM(pending, running, complete, failed, stopped)
+cost_estimate    FLOAT       # compute minutes used
+created_at       TIMESTAMP
+
+# New DB table: auto_experiment_round
+round_id         UUID PK
+auto_run_id      FK
+round_num        INT
+seed_smiles      TEXT        # best molecule entering this round
+candidates_tried INT
+best_score       FLOAT
+improved         BOOL
+rationale        TEXT        # AI-generated explanation
+created_at       TIMESTAMP</code></pre>
+
+  <h3>Student Strategy Choices</h3>
+  <table>
+    <thead><tr><th>Strategy</th><th>What it Does</th><th>Good For</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Conservative</strong></td><td>Tanimoto similarity ≥ 0.7 to seed. Small steps.</td><td>Optimizing a known drug lead</td></tr>
+      <tr><td><strong>Explorer</strong></td><td>Tanimoto 0.3–0.7. More diverse candidates.</td><td>Finding structurally novel hits</td></tr>
+      <tr><td><strong>Safety First</strong></td><td>Penalizes SAS > 5, boosts Lipinski weight.</td><td>Realistic drug-likeness</td></tr>
+      <tr><td><strong>Novelty Hunter</strong></td><td>Boosts novelty weight 3×. PubChem check on every round.</td><td>Discovering new chemical space</td></tr>
+      <tr><td><strong>Balanced Scientist</strong></td><td>Equal weights across all objectives.</td><td>Default / beginner mode</td></tr>
+    </tbody>
+  </table>
+
+  <h3>New Flask Blueprint: <code>api/auto_experiment.py</code></h3>
+  <pre><code>POST /api/v3/auto-experiment/run          → start async loop (Celery task)
+GET  /api/v3/auto-experiment/{id}/status  → SSE stream of round-by-round progress
+POST /api/v3/auto-experiment/{id}/stop    → stop gracefully after current round
+GET  /api/v3/auto-experiment/{id}/report  → final ranked list + score trend JSON</code></pre>
+
+  <div class="note"><strong>Async approach:</strong> Docking jobs take 10–120s each. Use Python <code>threading.Thread</code> (same pattern as autoresearch's <code>AutoResearchRunner</code>) with Server-Sent Events (SSE) to stream round updates to the frontend without blocking gunicorn. No Celery needed for MVP.</div>
+
+  <!-- ══════════════════════════════════════════════════════════════ 7. GAMIFICATION -->
+  <h2 id="gamification"><span class="num" style="background:rgba(210,168,255,0.2);color:var(--accent3)">7</span> Gamification System</h2>
+  <p>Turn the drug discovery workflow into a mission-based game. The game must reinforce scientific thinking, not just make high scores feel good.</p>
+
+  <h3>Mission Flow (7 Levels)</h3>
+  <table>
+    <thead><tr><th>Level</th><th>Mission</th><th>What Student Does</th><th>XP Reward</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill pill-blue">L1</span></td><td>Molecule Basics</td><td>Enter SMILES, view 2D structure, see properties</td><td>50 XP</td></tr>
+      <tr><td><span class="pill pill-green">L2</span></td><td>Target Basics</td><td>Choose target, view AA sequence, see 3D structure</td><td>75 XP</td></tr>
+      <tr><td><span class="pill pill-purple">L3</span></td><td>First Docking Battle</td><td>Dock a known molecule, interpret score, view binding pose</td><td>100 XP</td></tr>
+      <tr><td><span class="pill pill-orange">L4</span></td><td>AI Molecule Upgrade</td><td>Generate 5 candidates, compare scores, pick best</td><td>150 XP</td></tr>
+      <tr><td><span class="pill pill-red">L5</span></td><td>Mutation Challenge</td><td>Target mutates; generate molecule that works better vs. mutated target</td><td>200 XP</td></tr>
+      <tr><td><span class="pill pill-purple">L6</span></td><td>Auto Experiment Arena</td><td>Run 3-round loop, track score over time, explain improvement</td><td>300 XP</td></tr>
+      <tr><td><span class="pill pill-green">L7</span></td><td>Research Defense</td><td>Submit best molecule, show docking + novelty + limitations + next steps</td><td>500 XP</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Badge System (10 Launch Badges)</h3>
+  <div class="card-grid">
+    <div class="card-sm"><strong>🧬 Sequence Explorer</strong><br><span style="color:var(--muted);font-size:0.82rem">Validated first AA sequence</span></div>
+    <div class="card-sm"><strong>⚗️ Molecule Builder</strong><br><span style="color:var(--muted);font-size:0.82rem">Submitted first valid SMILES</span></div>
+    <div class="card-sm"><strong>🔬 Structure Seeker</strong><br><span style="color:var(--muted);font-size:0.82rem">Viewed first 3D protein structure</span></div>
+    <div class="card-sm"><strong>🎯 Docking Rookie</strong><br><span style="color:var(--muted);font-size:0.82rem">Completed first docking run</span></div>
+    <div class="card-sm"><strong>🤖 AI Chemist</strong><br><span style="color:var(--muted);font-size:0.82rem">Generated first candidate molecule</span></div>
+    <div class="card-sm"><strong>🦠 Mutation Defender</strong><br><span style="color:var(--muted);font-size:0.82rem">Improved molecule vs. mutated target</span></div>
+    <div class="card-sm"><strong>🔭 Novelty Hunter</strong><br><span style="color:var(--muted);font-size:0.82rem">Found molecule not in PubChem</span></div>
+    <div class="card-sm"><strong>🛡️ Safety Scientist</strong><br><span style="color:var(--muted);font-size:0.82rem">Chose safer molecule over higher-scoring risky one</span></div>
+    <div class="card-sm"><strong>📢 Research Communicator</strong><br><span style="color:var(--muted);font-size:0.82rem">Wrote strong final experiment explanation</span></div>
+    <div class="card-sm"><strong>🔁 Loop Master</strong><br><span style="color:var(--muted);font-size:0.82rem">Completed 5-round Auto Experiment</span></div>
+  </div>
+
+  <h3>Scorecard (Student-Friendly Names)</h3>
+  <table>
+    <thead><tr><th>Scientific Metric</th><th>Game Name</th><th>Icon</th><th>Explanation Shown to Student</th></tr></thead>
+    <tbody>
+      <tr><td>Docking Score (kcal/mol)</td><td>Attack Power</td><td>⚔️</td><td>"How tightly your molecule fits the protein's binding pocket in simulation"</td></tr>
+      <tr><td>QED Drug-likeness</td><td>Health Balance</td><td>💊</td><td>"Whether your molecule has the right properties to be absorbed by the body"</td></tr>
+      <tr><td>Novelty (vs PubChem)</td><td>Discovery Bonus</td><td>✨</td><td>"Whether your molecule appears to be new compared with known compounds"</td></tr>
+      <tr><td>Lipinski / SA Score</td><td>Safety Shield</td><td>🛡️</td><td>"Whether obvious drug-likeness and safety rules are met"</td></tr>
+      <tr><td>Tanimoto Similarity</td><td>Evolution Control</td><td>🧬</td><td>"How different your molecule is from the starting molecule"</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Boss Health Bar Concept</h3>
+  <div class="card">
+    <p>The protein target is presented as a "challenge boss". The boss health bar represents the simulation's binding score.</p>
+    <div class="note"><strong>Critical wording rule:</strong> Always say "simulation health" or "model score." Never say "you cured the disease" or "you destroyed the virus." Example text: <em>"Your molecule reduced the target's simulation health by 62%. This means your candidate scored better in the computational model. It does not mean the molecule is a real medicine."</em></div>
+    <h4>Frontend Snippet</h4>
+    <pre><code>&lt;div class="boss-bar-container"&gt;
+  &lt;div class="boss-name"&gt;🦠 SARS-CoV-2 Main Protease&lt;/div&gt;
+  &lt;div class="boss-bar-bg"&gt;
+    &lt;div class="boss-bar" id="bossBar" style="width: {{ boss_hp }}%"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="boss-hp-text"&gt;Simulation Health: {{ boss_hp | round(1) }}%&lt;/div&gt;
+  &lt;small class="disclaimer"&gt;
+    This is a computer simulation score — not a real-world result.
+  &lt;/small&gt;
+&lt;/div&gt;</code></pre>
+  </div>
+
+  <h3>Gamification DB Models</h3>
+  <pre><code># v2/models/gamification.py  (new file)
+
+class UserXP(db.Model):
+    user_id    = Column(String(64), primary_key=True)
+    total_xp   = Column(Integer, default=0)
+    level      = Column(Integer, default=1)
+
+class Badge(db.Model):
+    slug        = Column(String(64), primary_key=True)
+    name        = Column(String(128))
+    description = Column(Text)
+    icon        = Column(String(8))    # emoji
+    xp_reward   = Column(Integer, default=50)
+
+class UserBadge(db.Model):
+    id         = Column(Integer, primary_key=True)
+    user_id    = Column(String(64), ForeignKey('user.id'))
+    badge_slug = Column(String(64), ForeignKey('badge.slug'))
+    earned_at  = Column(DateTime, default=datetime.utcnow)
+
+class MissionProgress(db.Model):
+    user_id    = Column(String(64), ForeignKey('user.id'))
+    level      = Column(Integer)       # 1–7
+    status     = Column(String(16))    # locked/available/complete
+    completed_at = Column(DateTime)</code></pre>
+
+  <!-- ══════════════════════════════════════════════════════════════ 8. TECH STACK -->
+  <h2 id="tech"><span class="num" style="background:rgba(88,166,255,0.2);color:var(--accent)">8</span> Technical Stack Decisions</h2>
+  <table>
+    <thead><tr><th>Layer</th><th>Current v2</th><th>v3 Addition</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr><td>Protein Structure</td><td>—</td><td>AlphaFold EBI REST + ESMFold API + RCSB PDB</td><td>Free, no API key, production-grade</td></tr>
+      <tr><td>3D Viewer</td><td>RDKit SVG (2D)</td><td>3Dmol.js (CDN) + PDBe Molstar for full view</td><td>3Dmol: easiest Flask integration (load from string)</td></tr>
+      <tr><td>Molecular Docking</td><td>Heuristic DTI</td><td>AutoDock Vina (<code>pip install vina</code>) + Meeko</td><td>Fully pip-installable, CPU-only, real docking scores</td></tr>
+      <tr><td>Receptor Prep</td><td>—</td><td>OpenBabel (<code>pip install openbabel-wheel</code>)</td><td>PDB → PDBQT conversion for Vina</td></tr>
+      <tr><td>Async Jobs</td><td>Synchronous</td><td>Python threading + SSE (Server-Sent Events)</td><td>No Celery/Redis needed for MVP; same pattern as autoresearch</td></tr>
+      <tr><td>Gamification</td><td>—</td><td>Custom SQLAlchemy models (no external lib)</td><td>Flask-Gamification abandoned; ~50 lines custom = full control</td></tr>
+      <tr><td>Caching</td><td>In-memory</td><td>File-system cache for PDB/fold results (SHA-256 key)</td><td>Avoid hammering free APIs; ESMFold is expensive to repeat</td></tr>
+    </tbody>
+  </table>
+
+  <h3>New pip Dependencies</h3>
+  <pre><code># Add to v2/requirements.txt
+vina>=1.2.3          # AutoDock Vina Python bindings
+meeko>=0.5.0         # SMILES/SDF → PDBQT ligand preparation
+openbabel-wheel      # PDB → PDBQT receptor preparation
+scipy                # Vina dependency
+rcsb-api             # RCSB PDB search (optional; can use raw requests)</code></pre>
+
+  <h3>JavaScript CDNs (no npm/build step)</h3>
+  <pre><code">&lt;!-- 3D molecule + protein viewer --&gt;
+&lt;script src="https://3Dmol.org/build/3Dmol-min.js"&gt;&lt;/script&gt;
+
+&lt;!-- Full-featured PDBe Molstar (for dedicated structure explorer page) --&gt;
+&lt;link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.3.0/build/pdbe-molstar.css"&gt;
+&lt;script
+  src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.3.0/build/pdbe-molstar-component.js"&gt;
+&lt;/script&gt;</code></pre>
+
+  <!-- ══════════════════════════════════════════════════════════════ 9. ARCHITECTURE -->
+  <h2 id="architecture"><span class="num" style="background:rgba(63,185,80,0.2);color:var(--accent2)">9</span> Architecture &amp; File Layout</h2>
+  <pre><code">v2/
+├── api/
+│   ├── auth.py                 # existing
+│   ├── experiments.py          # existing
+│   ├── feed.py                 # existing
+│   ├── admin.py                # existing
+│   ├── enrich.py               # existing (ChEMBL, PubChem)
+│   ├── target.py               # NEW — target search, AlphaFold, ESMFold, RCSB
+│   ├── structure.py            # NEW — 3D structure service, PDB file serving
+│   ├── docking.py              # NEW — AutoDock Vina job management
+│   ├── auto_experiment.py      # NEW — autonomous loop endpoints + SSE
+│   └── gamification.py         # NEW — XP awards, badges, mission progress
+│
+├── services/
+│   ├── molecule_generator.py   # existing (Gemma4)
+│   ├── molecule_validator.py   # existing
+│   ├── property_calculator.py  # existing
+│   ├── dti_predictor.py        # existing (heuristic, kept for 2D mode)
+│   ├── docking_service.py      # NEW — Vina docking, receptor/ligand prep
+│   ├── structure_service.py    # NEW — AlphaFold / ESMFold / RCSB fetch + cache
+│   ├── target_service.py       # NEW — UniProt search, curated library
+│   ├── auto_exp_runner.py      # NEW — AutoResearch-style threaded loop runner
+│   └── xp_service.py           # NEW — XP + badge award logic
+│
+├── models/
+│   ├── db_models.py            # existing
+│   └── gamification.py         # NEW — UserXP, Badge, UserBadge, MissionProgress
+│
+├── templates/
+│   ├── base.html               # UPDATE — XP bar, mission badge in navbar
+│   ├── run.html                # existing (2D mode)
+│   ├── run_3d.html             # NEW — 3D experiment setup page
+│   ├── experiment_3d.html      # NEW — 3D experiment results with viewers
+│   ├── auto_experiment.html    # NEW — Auto Experiment control + live updates
+│   ├── target_picker.html      # NEW — curated target library browser
+│   ├── mission_board.html      # NEW — gamification hub, badges, levels
+│   └── admin/                  # existing
+│
+└── static/
+    ├── css/
+    │   ├── style.css           # existing
+    │   ├── 3d_viewer.css       # NEW
+    │   ├── auto_experiment.css # NEW
+    │   └── gamification.css    # NEW
+    └── js/
+        ├── app.js              # existing
+        ├── target_picker.js    # NEW
+        ├── structure_viewer.js # NEW — 3Dmol.js integration
+        ├── docking_results.js  # NEW — pose viewer, score display
+        ├── auto_experiment.js  # NEW — SSE progress stream, round-by-round UI
+        └── gamification.js     # NEW — XP bar animations, badge toasts</code></pre>
+
+  <!-- ══════════════════════════════════════════════════════════════ 10. PHASES -->
+  <h2 id="phases"><span class="num" style="background:rgba(255,166,87,0.2);color:var(--accent4)">10</span> Phased Roadmap</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-label tl-blue">Phase 1 — Foundation (4–6 weeks)</div>
+      <div class="card-sm">
+        <strong>Goal: Working 3D experiment with curated targets</strong>
+        <ul>
+          <li>Curated target library (20 proteins, JSON + DB seed)</li>
+          <li>Target picker UI (<code>target_picker.html</code>)</li>
+          <li>AlphaFold EBI + RCSB PDB fetch + file cache</li>
+          <li>3Dmol.js integration for protein viewer</li>
+          <li>AutoDock Vina docking service (CPU, exhaustiveness=8)</li>
+          <li>Meeko + OpenBabel ligand/receptor prep</li>
+          <li>3D experiment results page with docking scores</li>
+          <li>Updated composite score (docking replaces heuristic DTI)</li>
+          <li>Basic gamification: XP model, 5 launch badges</li>
+          <li>High-school UX: plain-English score explanations, lock-key analogy cards</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="timeline-item phase2">
+      <div class="timeline-label tl-purple">Phase 2 — Auto Experiment (4–5 weeks)</div>
+      <div class="card-sm">
+        <strong>Goal: Autonomous iterative loop + full gamification</strong>
+        <ul>
+          <li>ESMFold API integration for custom sequences</li>
+          <li>Auto Experiment runner (threading + SSE stream)</li>
+          <li>Round-by-round progress UI + score trend chart</li>
+          <li>Strategy selector (Conservative / Explorer / Balanced)</li>
+          <li>Mission board (all 7 levels)</li>
+          <li>Boss health bar + balanced scorecard UI</li>
+          <li>Full 10-badge system</li>
+          <li>AI hints after each experiment (Gemma4-powered)</li>
+          <li>Student report export (HTML → PDF via WeasyPrint)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="timeline-item phase3">
+      <div class="timeline-label tl-green">Phase 3 — Advanced &amp; Polish (ongoing)</div>
+      <div class="card-sm">
+        <strong>Goal: Full course platform, team modes, teacher dashboard</strong>
+        <ul>
+          <li>Leaderboard (classroom tournament mode)</li>
+          <li>Molecule lineage graph (D3.js family tree)</li>
+          <li>Mutation challenge: mutate target sequence, compare docking before/after</li>
+          <li>Teacher dashboard: track student progress, lock/unlock levels</li>
+          <li>Open Targets / UniProt auto-enrichment on target page</li>
+          <li>Story Campaign mode (7-mission storyline)</li>
+          <li>DiffDock integration (if public API becomes available)</li>
+          <li>ESM-2 protein embedding DTI model (Phase 2 DTI from existing roadmap)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ 11. SAFETY -->
+  <h2 id="safety"><span class="num" style="background:rgba(255,123,114,0.2);color:var(--accent5)">11</span> Safety &amp; Educational Guardrails</h2>
+  <div class="card-grid">
+    <div class="card-sm">
+      <h4>Language Rules</h4>
+      <ul>
+        <li>✅ "simulation score" / "model prediction" / "computational estimate"</li>
+        <li>✅ "candidate molecule" / "educational experiment"</li>
+        <li>❌ "cure" / "destroy virus" / "real medicine" / "approved drug"</li>
+        <li>❌ Any claim that a high score means a molecule is a real drug</li>
+      </ul>
+    </div>
+    <div class="card-sm">
+      <h4>Compute Budget Limits</h4>
+      <ul>
+        <li>Max 10 candidates per round (beginner), 20 (advanced)</li>
+        <li>Max 5 rounds per Auto Experiment</li>
+        <li>Docking exhaustiveness capped at 16 per candidate</li>
+        <li>ESMFold: max 400 AA, 1 fold per experiment per student</li>
+        <li>Rate limiting: 10 docking jobs / hour per user</li>
+      </ul>
+    </div>
+    <div class="card-sm">
+      <h4>Required Disclaimers</h4>
+      <ul>
+        <li>Every experiment results page: "These are computer simulation results only."</li>
+        <li>Docking scores always shown with: "Lower kcal/mol = better simulated fit — not proof of real binding."</li>
+        <li>Before Auto Experiment starts: explanation of what each round means</li>
+        <li>Boss health bar always shows the disclaimer sentence</li>
+      </ul>
+    </div>
+    <div class="card-sm">
+      <h4>Target Library Curation</h4>
+      <ul>
+        <li>No dual-use pathogen targets (no enhanced-pathogen work)</li>
+        <li>Only use well-characterized, publicly known targets</li>
+        <li>Advanced mode (custom sequence) requires admin unlock by teacher</li>
+        <li>Molecule generation prompt includes safety filter in system prompt</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="highlight-box" style="margin-top:40px;">
+    <strong>Summary in one sentence:</strong>
+    <p style="margin-top:8px;">Deep2Lead v3 takes a working graduate drug-discovery tool and rebuilds it as a mission-driven, 3D-enabled, autonomously-looping educational game — where every score comes with an explanation, every claim comes with a disclaimer, and every student leaves understanding that real drug discovery is a marathon, not a keyboard shortcut.</p>
+  </div>
+
+  <div style="text-align:center;margin-top:48px;color:var(--muted);font-size:0.82rem;">
+    enhancement_plan.html · Deep2Lead v3 · Generated 2026-05-09 · <a href="https://github.com/tarunchy/Deep2Lead-v2">github.com/tarunchy/Deep2Lead-v2</a>
+  </div>
+
+</div>
+</body>
+</html>
