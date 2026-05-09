@@ -186,6 +186,16 @@
 }
 .chat-chip:hover { background: #bee3f8; }
 
+.chat-tools-badge {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: var(--accent-light);
+  border-radius: 8px;
+  padding: 2px 8px;
+  display: inline-block;
+}
+
 @media (max-width: 420px) {
   #chat-panel { right: 8px; left: 8px; width: auto; }
 }

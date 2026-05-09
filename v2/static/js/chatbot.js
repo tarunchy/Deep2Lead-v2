@@ -13,9 +13,16 @@
   const CHIPS = [
     "Show my latest experiment",
     "What is my top scoring molecule?",
+    "Is CC(=O)Oc1ccccc1C(=O)O a novel molecule?",
     "Explain QED and SAS",
     "What makes a good drug candidate?",
   ];
+
+  const TOOL_LABELS = {
+    novelty: "🔍 Novelty checked",
+    properties: "⚗️ Properties computed",
+    validate: "✓ SMILES validated",
+  };
 
   function open() {
     panel.classList.add("open");
@@ -91,7 +98,13 @@
         body: JSON.stringify({ message: text, history: history.slice(-8) }),
       });
       hideTyping();
-      appendBubble(data.reply, "bot");
+      const bubble = appendBubble(data.reply, "bot");
+      if (data.tools_used && data.tools_used.length) {
+        const badge = document.createElement("div");
+        badge.className = "chat-tools-badge";
+        badge.innerHTML = data.tools_used.map(t => TOOL_LABELS[t] || t).join(" · ");
+        bubble.appendChild(badge);
+      }
       history.push({ role: "assistant", content: data.reply });
     } catch (err) {
       hideTyping();

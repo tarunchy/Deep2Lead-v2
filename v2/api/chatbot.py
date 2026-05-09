@@ -1,25 +1,25 @@
-"""Gemma-powered chatbot for natural language exploration of the app."""
+"""Gemma-powered chatbot with server-side tool use (novelty, properties, validation)."""
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 import requests as http
 
 from models.db_models import Experiment
 from config.settings import DGX_BASE_URL, DGX_TIMEOUT
+from api.chatbot_tools import extract_smiles, detect_intents, run_tools
 
 bp = Blueprint("chatbot", __name__)
 
 SYSTEM = """You are a helpful AI assistant embedded in Deep2Lead, a drug discovery platform for students.
-Help users explore their experiments, understand molecular properties, and learn drug discovery concepts.
+Help users explore experiments, understand molecular properties, and learn drug discovery.
 
 Platform facts:
-- Molecules are described using SMILES notation (e.g. CC(=O)Oc1ccccc1C(=O)O is Aspirin)
-- Properties: QED 0-1 (drug-likeness, higher=better), SAS 1-10 (synthesizability, lower=easier),
-  LogP (lipophilicity, ideal 0-3), MW in Daltons (ideal <500), Tanimoto 0-1 (similarity to seed)
+- Molecules use SMILES notation (e.g. CC(=O)Oc1ccccc1C(=O)O is Aspirin)
+- QED 0-1 (drug-likeness, higher=better), SAS 1-10 (synthesizability, lower=easier)
+- LogP ideal 0-3 (oral bioavailability), MW ideal <500 Da, Tanimoto 0-1 (seed similarity)
 - Composite score = 35% DTI + 30% QED + 20% inverse-SAS + 15% Tanimoto
 - Lipinski rule of 5: MW<500, LogP<5, H-donors<5, H-acceptors<10
-- Gemma4 AI runs on NVIDIA DGX hardware to generate candidates in seconds
 
-Be concise. Show SMILES strings in backticks. Answer directly without restating the question."""
+Be concise. Show SMILES in backticks. Reference tool results as facts — do not speculate beyond them."""
 
 
 def _build_context(user_id) -> str:
@@ -55,6 +55,17 @@ def chat():
     if not message:
         return jsonify({"error": "Empty message"}), 400
 
+    # ── Tool use: extract SMILES, detect intent, run tools ───────────
+    smiles_found = extract_smiles(message)
+    tool_output = ""
+    tool_names_used = []
+    if smiles_found:
+        smiles = smiles_found[0]
+        intents = detect_intents(message, smiles_found)
+        tool_output = run_tools(smiles, intents)
+        tool_names_used = intents
+
+    # ── Build prompt ─────────────────────────────────────────────────
     context = _build_context(current_user.id)
     username = current_user.display_name or current_user.username
 
@@ -63,25 +74,30 @@ def chat():
         role = "User" if h.get("role") == "user" else "Assistant"
         hist_str += f"\n{role}: {h.get('content', '')}"
 
-    prompt = f"""{SYSTEM}
+    tools_section = ""
+    if tool_output:
+        tools_section = f"\n\n--- TOOL RESULTS (real data, use these facts in your answer) ---\n{tool_output}\n---"
 
-Current user: {username}
-User's experiments:
-{context}
-{hist_str}
-User: {message}
-Assistant:"""
+    prompt = (
+        f"{SYSTEM}\n\n"
+        f"Current user: {username}\n"
+        f"User experiments:\n{context}"
+        f"{tools_section}"
+        f"{hist_str}\n"
+        f"User: {message}\n"
+        f"Assistant:"
+    )
 
     try:
         resp = http.post(
             f"{DGX_BASE_URL}/v1/text",
-            json={"prompt": prompt, "max_tokens": 400, "temperature": 0.7},
+            json={"prompt": prompt, "max_tokens": 500, "temperature": 0.7},
             timeout=DGX_TIMEOUT,
         )
         resp.raise_for_status()
         reply = resp.json().get("response", "").strip()
         if not reply:
             return jsonify({"error": "Empty response from Gemma4"}), 502
-        return jsonify({"reply": reply})
+        return jsonify({"reply": reply, "tools_used": tool_names_used})
     except Exception as e:
         return jsonify({"error": f"Gemma4 unavailable: {e}"}), 503
