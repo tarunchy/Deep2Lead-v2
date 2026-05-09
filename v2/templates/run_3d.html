@@ -227,9 +227,9 @@ window.PAGE_GUIDE = {
     const payload = {
       target_id: TARGET_ID,
       amino_acid_seq: document.getElementById("amino_acid_seq").value.trim(),
-      seed_smile: document.getElementById("seed_smiles").value.trim(),
-      num_requested: parseInt(document.getElementById("num_candidates").value),
-      noise_level: parseFloat(document.getElementById("noise_level").value),
+      smile: document.getElementById("seed_smiles").value.trim(),
+      num_candidates: parseInt(document.getElementById("num_candidates").value),
+      noise: parseFloat(document.getElementById("noise_level").value),
       enable_docking: document.getElementById("enable_docking").checked,
       mode: "3d",
       uniprot_id: UNIPROT_ID,

@@ -97,7 +97,7 @@ def generate():
         return jsonify({"error": e.messages}), 400
 
     aa_seq = clean_sequence(data["amino_acid_seq"])
-    if not is_valid_sequence(aa_seq):
+    if aa_seq and not is_valid_sequence(aa_seq):
         return jsonify({"error": "Invalid amino acid sequence"}), 400
 
     canon_seed = validate_and_canonicalize(data["smile"])

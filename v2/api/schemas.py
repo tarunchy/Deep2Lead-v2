@@ -2,7 +2,7 @@ from marshmallow import Schema, fields, validate, ValidationError
 
 
 class GenerateSchema(Schema):
-    amino_acid_seq = fields.Str(required=True, validate=validate.Length(min=5))
+    amino_acid_seq = fields.Str(load_default="")
     smile = fields.Str(required=True, validate=validate.Length(min=2))
     noise = fields.Float(load_default=0.5, validate=validate.Range(min=0.0, max=1.0))
     num_candidates = fields.Int(load_default=10, validate=validate.Range(min=1, max=50))
