@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Deep2Lead V2{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -38,5 +39,26 @@
 
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 {% block scripts %}{% endblock %}
+
+<!-- Gemma chatbot widget -->
+<button id="chat-fab" title="Ask Gemma">💬</button>
+<div id="chat-panel">
+  <div class="chat-header">
+    <div class="chat-header-title">
+      <span>🤖</span>
+      <div>
+        <div>Gemma Assistant</div>
+        <div style="font-size:0.7rem;opacity:.8;font-weight:400;">Drug discovery AI</div>
+      </div>
+    </div>
+    <button class="chat-header-close" id="chat-close">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-row">
+    <textarea id="chat-input" placeholder="Ask about your experiments…" rows="1"></textarea>
+    <button id="chat-send" title="Send">➤</button>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
 </body>
 </html>

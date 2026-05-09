@@ -35,6 +35,7 @@ def create_app() -> Flask:
     from api.admin import bp as admin_bp
     from api.tutorial import bp as tutorial_bp
     from api.enrich import bp as enrich_bp
+    from api.chatbot import bp as chatbot_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(exp_bp)
@@ -42,6 +43,7 @@ def create_app() -> Flask:
     app.register_blueprint(admin_bp)
     app.register_blueprint(tutorial_bp)
     app.register_blueprint(enrich_bp)
+    app.register_blueprint(chatbot_bp)
 
     @app.cli.command("create-admin")
     @click.argument("username")
