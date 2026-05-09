@@ -149,6 +149,45 @@
 <script src="{{ url_for('static', filename='js/auto_experiment.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
 <script>
+window.PAGE_GUIDE = {
+  title: "How Auto Experiment Works",
+  character: "🤖",
+  voice: "af_heart",
+  steps: [
+    {
+      bubble: "Welcome! Auto Experiment runs an AI loop — generate molecules, score them, keep the best, repeat. Inspired by Karpathy's autoresearch.",
+      text: "Welcome to Auto Experiment! This is your AI-powered molecule optimization loop. Just like a scientist runs multiple rounds of experiments, the AI here generates candidate drug molecules, scores them on drug-likeness and binding strength, keeps the best performer as the new seed, and then repeats. It's inspired by Andrej Karpathy's autoresearch concept, adapted here for drug discovery.",
+      highlight: ".page-header"
+    },
+    {
+      bubble: "Step 1 — Select an experiment. This gives the AI a seed molecule — a starting structure to evolve from.",
+      text: "Start by selecting one of your previous experiments from this dropdown. Each experiment contains a seed SMILES molecule, which is the chemical structure the AI will use as its starting point. Think of it as choosing which molecule to evolve. If you haven't run an experiment yet, go to Run Experiment first.",
+      highlight: "#expSelect"
+    },
+    {
+      bubble: "Step 2 — Choose a strategy. Balanced is a safe default. Explorer tries diverse chemistry. Safety First focuses on drug-likeness.",
+      text: "Now choose your optimization strategy. Balanced weights all objectives equally and works well for most cases. Conservative stays close to your starting molecule with small chemical changes. Explorer tries structurally diverse molecules to cover more chemical space. Novelty Hunter prioritizes molecules not yet seen in chemical databases. Safety First focuses heavily on Lipinski drug-likeness rules, which predict whether a molecule could survive as an oral medicine.",
+      highlight: ".strategy-grid"
+    },
+    {
+      bubble: "Step 3 — Set rounds (up to 5) and molecules per round (up to 10). More rounds means deeper optimization.",
+      text: "Configure how many optimization rounds to run — up to 5 — and how many candidate molecules to generate each round, up to 10. Each round, the AI generates this many molecules, scores all of them, and picks the best one as the new seed. More rounds gives more chances to find a better molecule, but also takes longer. Start with 3 rounds and 5 molecules to get a feel for it.",
+      highlight: "#rounds"
+    },
+    {
+      bubble: "Hit Start Loop! Watch the score chart and log update in real time as the AI iterates round by round.",
+      text: "Press Start Loop to begin the optimization! You'll see a live log at the bottom showing exactly what the AI is doing at each step. The score chart tracks improvement round by round. Each round card shows whether the round was Kept — meaning the best score improved — or Discarded — meaning no better molecule was found that round. Don't worry if early rounds discard; the AI keeps the best overall score across all rounds.",
+      highlight: "#startAutoBtn"
+    },
+    {
+      bubble: "The Boss Health Bar shows your best molecule vs the target. Lower health = better binding. This is a simulation!",
+      text: "Watch the Boss Health Bar as you run rounds! As your molecules get better composite scores, the boss health drops — a fun way to visualize optimization progress. One hundred percent health means your molecules aren't binding well. Zero would mean perfect computational binding. The round history on the right shows kept versus discarded rounds, and the score trend chart shows your improvement trajectory. Remember: this is an educational computer simulation. Real drug candidates must be validated in laboratory experiments before they mean anything medically.",
+      highlight: "#bossCard"
+    }
+  ]
+};
+</script>
+<script>
   let selectedStrategy = "balanced";
 
   // Load user's experiments into dropdown

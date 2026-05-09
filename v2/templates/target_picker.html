@@ -37,6 +37,35 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/target_picker.js') }}"></script>
 <script>
+window.PAGE_GUIDE = {
+  title: "Choosing a Target",
+  character: "🎯",
+  voice: "af_heart",
+  steps: [
+    {
+      bubble: "A biological target is the protein your drug molecules will try to bind to. Choose wisely — it defines your whole experiment.",
+      text: "Welcome to the Target Picker! A biological target is a protein in the body that plays a key role in a disease. Drug molecules work by binding to these proteins and blocking or changing their activity. Choosing the right target is the first step in drug discovery — it defines everything else about your experiment, from which molecules will work to how you'll score them.",
+      highlight: ".page-header"
+    },
+    {
+      bubble: "Search by name, disease, or organism — for example 'COVID', 'cancer', or 'HIV protease'.",
+      text: "Use the search bar to find any protein target. You can search by the protein name, the disease it's associated with, or the organism it comes from. For example, try typing COVID to find the SARS-CoV-2 main protease, or cancer to see kinase targets. The search looks through both our curated library and the full UniProt database of over 200 million proteins.",
+      highlight: ".target-search-bar"
+    },
+    {
+      bubble: "Browse by category — viral, cancer, neurological, inflammation, and more. Curated for high school learners.",
+      text: "The category tabs let you filter targets by disease area. We have curated 20 targets specifically for educational use — covering viral infections like COVID-19 and influenza, cancer targets like EGFR kinase, neurological diseases like Alzheimer's, inflammation targets, antibiotic-resistant bacteria, and cardiovascular disease. Each target has a plain-language analogy to explain what it does.",
+      highlight: "#categoryTabs"
+    },
+    {
+      bubble: "Click any target card to see its details — then hit Continue with Selected Target to go to 3D Experiment.",
+      text: "Click any target card in the grid to see its full details on the right side — including the UniProt and PDB identifiers used to fetch its 3D structure, the known drug that binds it, a difficulty rating, and key binding residues. When you're ready, hit Continue with Selected Target to load it into the 3D Experiment page, where you'll view its structure and generate candidate molecules.",
+      highlight: "#targetGrid"
+    }
+  ]
+};
+</script>
+<script>
   document.getElementById("continueBtn").style.pointerEvents = "auto";
   document.getElementById("continueBtn").style.opacity = "1";
   function handleContinue(e) {
