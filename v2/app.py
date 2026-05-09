@@ -19,7 +19,7 @@ def create_app() -> Flask:
     db.init_app(app)
     Migrate(app, db)
     CORS(app)
-    Limiter(app, key_func=get_remote_address, default_limits=["200/hour"])
+    Limiter(get_remote_address, app=app, default_limits=["200/hour"])
 
     login_manager = LoginManager(app)
     login_manager.login_view = "auth.login"

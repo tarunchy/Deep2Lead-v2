@@ -1,0 +1,80 @@
+{
+  "admin": {
+    "username": "prof_tarun",
+    "password": "admin123",
+    "display_name": "Prof. Tarun Chawdhury",
+    "cohort": "Faculty"
+  },
+  "students": [
+    {
+      "username": "alice_gt",
+      "password": "student123",
+      "display_name": "Alice Johnson",
+      "cohort": "CS8803-Spring2026"
+    },
+    {
+      "username": "bob_gt",
+      "password": "student123",
+      "display_name": "Bob Martinez",
+      "cohort": "CS8803-Spring2026"
+    },
+    {
+      "username": "carol_gt",
+      "password": "student123",
+      "display_name": "Carol Chen",
+      "cohort": "CS8803-Spring2026"
+    }
+  ],
+  "experiments": [
+    {
+      "by": "alice_gt",
+      "amino_acid_seq": "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDGTQDNLSGAEKAVQVKVKALPDAQ",
+      "smile": "C1CNP(=O)(OC1)N(CCCl)CCCl",
+      "noise": 0.5,
+      "num_candidates": 5,
+      "title": "Chlorambucil Analogs — EGFR Target Study",
+      "hypothesis": "Exploring structural neighbors of Chlorambucil to find improved alkylating agents with better EGFR binding and reduced toxicity.",
+      "publish": true
+    },
+    {
+      "by": "bob_gt",
+      "amino_acid_seq": "MVLSPADKTNVKAAWGKVGAHAGEYGAEALERMFLSFPTTKTYFPHFDLSHGSAQVKGHGKKVADALTNAVAHVDDMPNALSALSDLHAHKLRVDPVNFKLLSHCLLVTLAAHLPAEFTPAVHASLDKFLASVSTVLTSKYR",
+      "smile": "CC1=CC=C(C=C1)S(=O)(=O)NC2=CC=CC=C2",
+      "noise": 0.4,
+      "num_candidates": 5,
+      "title": "Sulfonamide Series — Hemoglobin Binding",
+      "hypothesis": "Investigating sulfonamide derivatives for potential hemoglobin interactions in sickle cell drug discovery.",
+      "publish": true
+    },
+    {
+      "by": "carol_gt",
+      "amino_acid_seq": "MTEYKLVVVGAGGVGKSALTIQLIQNHFVDEYDPTIEDSY",
+      "smile": "c1ccc2c(c1)cc1ccc3cccc4ccc2c1c34",
+      "noise": 0.6,
+      "num_candidates": 5,
+      "title": "KRAS G12C Inhibitor Search",
+      "hypothesis": "Using pyrene as a scaffold seed to find flat aromatic systems that could fit the KRAS G12C allosteric pocket.",
+      "publish": false
+    }
+  ],
+  "comments": [
+    {
+      "on_experiment_by": "alice_gt",
+      "by": "bob_gt",
+      "body": "Great work Alice! Have you checked the Tanimoto similarity of candidates 2 and 3? They look very similar to each other.",
+      "tag": "question"
+    },
+    {
+      "on_experiment_by": "alice_gt",
+      "by": "carol_gt",
+      "body": "The DTI score on candidate 1 is impressive. I'd suggest also running it against the EGFR kinase domain specifically.",
+      "tag": "suggestion"
+    },
+    {
+      "on_experiment_by": "bob_gt",
+      "by": "alice_gt",
+      "body": "Really interesting scaffold choice. Sulfonamides are well-tolerated — good Lipinski scores on most candidates too!",
+      "tag": "praise"
+    }
+  ]
+}

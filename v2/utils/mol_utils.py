@@ -5,14 +5,19 @@ RDLogger.DisableLog("rdApp.*")
 
 
 def canonicalize(smiles: str) -> str | None:
-    mol = Chem.MolFromSmiles(smiles)
-    if mol is None:
+    if not smiles or not smiles.strip():
+        return None
+    mol = Chem.MolFromSmiles(smiles.strip())
+    if mol is None or mol.GetNumAtoms() == 0:
         return None
     return Chem.MolToSmiles(mol, canonical=True)
 
 
 def is_valid(smiles: str) -> bool:
-    return Chem.MolFromSmiles(smiles) is not None
+    if not smiles or not smiles.strip():
+        return False
+    mol = Chem.MolFromSmiles(smiles.strip())
+    return mol is not None and mol.GetNumAtoms() > 0
 
 
 def mol_to_svg(smiles: str, size: tuple = (300, 200)) -> str | None:
