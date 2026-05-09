@@ -1,0 +1,41 @@
+pip install Flask
+pip install Flask-Limiter
+pip install flask-restful
+pip install flasgger
+pip install flask-restful-swagger-3
+
+
+
+
+class MyApi(Resource):
+
+    decorators = [limiter.limit('20/day')]
+    def get(self, smile):
+        print("Predicting new Drug....",smile)
+        smiles_1 = mu.canon_smiles(str(smile))
+        X_1 = vae.smiles_to_hot(smiles_1, canonize_smiles=True)
+        z_1 = vae.encode(X_1)
+        X_r = vae.decode(z_1)
+        new_smile= vae.hot_to_smiles(X_r,strip=True)[0]
+
+        print(new_smile)
+
+        return {
+            "new_smile": str(new_smile)
+        }
+
+
+    print('Loading Pre-Trained Model...')
+    vae = VAEUtils(directory='./model/pre-train/with_property')
+    print('Model Loaded successfully..')
+    print("Predicting new Drug in Main")
+    smiles_1 = mu.canon_smiles('C1CNP(=O)(OC1)N(CCCl)CCCl')
+    print('cannonical Smike',smiles_1)
+    X_1 = vae.smiles_to_hot(smiles_1, canonize_smiles=True)
+    print('After X_1')
+    z_1 = vae.encode(X_1)
+    print('After z_1')
+    X_r = vae.decode(z_1)
+    print('After X_r')
+    new_smile = vae.hot_to_smiles(X_r, strip=True)[0]
+    print('After new_smile',new_smile)

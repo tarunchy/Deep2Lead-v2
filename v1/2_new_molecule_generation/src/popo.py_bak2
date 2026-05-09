@@ -1,0 +1,94 @@
+from flask_restful_swagger_2 import Schema
+
+class EmailModel(Schema):
+    type = 'string'
+    format = 'email'
+
+
+class KeysModel(Schema):
+    type = 'object'
+    properties = {
+        'name': {
+            'type': 'string'
+        }
+    }
+
+
+class UserModel(Schema):
+    type = 'object'
+    properties = {
+        'id': {
+            'type': 'integer',
+            'format': 'int64'
+        },
+        'name': {
+            'type': 'string'
+        },
+        'mail': EmailModel,
+        'keys': KeysModel.array()
+    }
+    required = ['name']
+
+
+class ErrorModel(Schema):
+    type = 'object'
+    properties = {
+        'message': {
+            'type': 'string'
+        }
+    }
+
+
+class SmileRequest(Schema):
+    type = 'object'
+    properties = {
+        'smile': {
+            'type': 'string'
+        },
+        'noise': {
+            'type': 'integer',
+            'format': 'int64'
+        }
+    }
+
+class SmileSet(Schema):
+    type = 'object'
+    properties = {
+        'uniqueMoleculeCount': {
+            'type': 'integer',
+            'format': 'int64'
+        },
+        'randomSmiles': {
+            'type': 'list'
+        }
+    }
+
+class SmileString(Schema):
+    type = 'object'
+    properties = {
+        'smile': {
+            'type': 'string'
+        },
+        'qed': {
+            'type': 'string'
+        },
+        'sas': {
+            'type': 'string'
+        },
+        'logp': {
+            'type': 'string'
+        },
+        'i_smile': {
+            'type': 'string'
+        },
+        'i_qed': {
+            'type': 'string'
+        },
+        'i_sas': {
+            'type': 'string'
+        },
+        'i_logp': {
+            'type': 'string'
+        }
+    }
+

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep2Lead V2 — Design, Architecture & Implementation Plan</title>
+<link rel="stylesheet" href="deep2lead_v2_plan.css">
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Deep2Lead V2</h1>
+  <p class="subtitle">Design, Architecture &amp; Implementation Plan</p>
+  <p class="meta">Georgia Institute of Technology &nbsp;|&nbsp; Drug Discovery Pipeline &nbsp;|&nbsp; May 2026</p>
+</div>
+
+<nav class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#overview">Project Overview</a></li>
+    <li><a href="#v1-analysis">V1 System Analysis</a></li>
+    <li><a href="#v2-goals">V2 Goals &amp; Principles</a></li>
+    <li><a href="#pipeline">Drug Discovery Pipeline</a></li>
+    <li><a href="#architecture">System Architecture</a></li>
+    <li><a href="#folder-structure">Folder Structure</a></li>
+    <li><a href="#api-design">API Design</a></li>
+    <li><a href="#gemma4">Gemma4 Integration</a></li>
+    <li><a href="#dti">DTI Replacement Strategy</a></li>
+    <li><a href="#infrastructure">Infrastructure</a></li>
+    <li><a href="#phases">Implementation Phases</a></li>
+    <li><a href="#finetuning">Fine-Tuning Plan</a></li>
+    <li><a href="#tech-stack">Technology Stack</a></li>
+    <li><a href="#risks">Risks &amp; Mitigations</a></li>
+  </ol>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="overview">
+  <h2>1. Project Overview</h2>
+
+  <p>
+    Deep2Lead is a drug discovery pipeline developed at Georgia Tech. The research (arXiv:2108.05183)
+    demonstrates that a Variational Autoencoder (VAE) trained on the ZINC drug database can generate
+    novel drug-like molecules from a seed SMILES string by perturbing the latent space with Gaussian noise.
+    Candidate molecules are then scored for Drug-Target Interaction (DTI) using Stanford's DeepPurpose library.
+  </p>
+
+  <p>
+    <strong>V2 replaces all external dependencies with fully self-owned components</strong> running on
+    in-house infrastructure (DGX Spark), making the pipeline suitable for confidential research, offline
+    use, and student teaching without relying on third-party APIs or licenses.
+  </p>
+
+  <table>
+    <thead><tr><th>Aspect</th><th>V1</th><th>V2</th></tr></thead>
+    <tbody>
+      <tr><td>Molecule Generation</td><td>ZINC-pretrained Keras VAE</td><td>Gemma4-E4B (local LLM on DGX)</td></tr>
+      <tr><td>DTI Prediction</td><td>Stanford DeepPurpose (external)</td><td>ESM-2 + ECFP MLP (self-trained)</td></tr>
+      <tr><td>Backend Framework</td><td>Flask + Python 3.6 + TF 1.x</td><td>Flask + Python 3.11 + PyTorch 2.x</td></tr>
+      <tr><td>API Documentation</td><td>Swagger via flask-restful-swagger-2</td><td>OpenAPI 3.0 via Flasgger</td></tr>
+      <tr><td>Frontend</td><td>Redirect to Swagger UI</td><td>Clean web UI (HTML/CSS/JS)</td></tr>
+      <tr><td>Infrastructure</td><td>Single server (dlyog01)</td><td>Flask (Mac/Linux) + Gemma4 (DGX)</td></tr>
+      <tr><td>Fine-tuning</td><td>Not supported</td><td>Unsloth on DGX GB10 GPU</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="v1-analysis">
+  <h2>2. V1 System Analysis</h2>
+
+  <h3>2.1 What V1 Does</h3>
+  <p>The V1 system exposes three REST endpoints:</p>
+  <table>
+    <thead><tr><th>Endpoint</th><th>Method</th><th>Input</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td><code>/api/smile</code></td><td>POST</td><td>SMILES string + noise float</td><td>Single perturbed SMILES + QED, SAS, LogP scores</td></tr>
+      <tr><td><code>/api/random/smiles</code></td><td>GET</td><td>None</td><td>Set of up to 6 random valid SMILES from ZINC distribution</td></tr>
+      <tr><td><code>/api/random/smiles/v2</code></td><td>POST</td><td>SMILES + noise + attempts + seed</td><td>Set of N perturbed SMILES molecules</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 V1 Core Algorithm</h3>
+  <ol>
+    <li>Canonicalize input SMILES using RDKit</li>
+    <li>One-hot encode SMILES → character matrix</li>
+    <li>Pass through pre-trained Keras encoder → 196-dim latent vector <code>z</code></li>
+    <li>Add Gaussian noise to <code>z</code> (noise magnitude controlled by user)</li>
+    <li>Pass noisy <code>z</code> through Keras decoder → one-hot matrix</li>
+    <li>Convert one-hot back to SMILES string</li>
+    <li>Validate with RDKit; retry if invalid</li>
+    <li>Compute QED (drug-likeness), SAS (synthetic accessibility), LogP (lipophilicity)</li>
+  </ol>
+
+  <h3>2.3 V1 Problems</h3>
+  <ul>
+    <li><strong>Python 3.6 + TensorFlow 1.x</strong> — both end-of-life, security vulnerabilities, incompatible with modern libraries</li>
+    <li><strong>Keras .h5 model files</strong> — no versioning, format deprecated in TF2</li>
+    <li><strong>DeepPurpose external dependency</strong> — requires internet access, version-locked, no customization</li>
+    <li><strong>Hardcoded paths</strong> — <code>/Users/user/Documents/BD4H/...</code> in production code</li>
+    <li><strong>No amino acid sequence input</strong> — DTI is implicit via DeepPurpose only</li>
+    <li><strong>Monolithic app.py</strong> — all logic in one 460-line file</li>
+    <li><strong>No UI</strong> — redirects to Swagger petstore (external URL)</li>
+    <li><strong>No protein target input in API</strong> — the drug.py file is incomplete/unused</li>
+  </ul>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="v2-goals">
+  <h2>3. V2 Goals &amp; Principles</h2>
+
+  <h3>3.1 Primary Goals</h3>
+  <ul>
+    <li>Full vertical ownership — no external API calls during inference</li>
+    <li>Accept amino acid sequence (protein target) + seed SMILES as joint input</li>
+    <li>Use Gemma4-E4B on DGX for SMILES generation (replace VAE)</li>
+    <li>Custom DTI predictor replacing DeepPurpose</li>
+    <li>Modern Python stack (3.11+, PyTorch 2.x)</li>
+    <li>Modular codebase suitable for Georgia Tech student teaching</li>
+    <li>Self-contained web UI, no redirects to external tools</li>
+  </ul>
+
+  <h3>3.2 Design Principles</h3>
+  <ul>
+    <li><strong>Service isolation</strong> — each concern (generation, validation, DTI) lives in its own module</li>
+    <li><strong>Fail loudly</strong> — no silent fallbacks; errors surface to the UI with clear messages</li>
+    <li><strong>Stateless API</strong> — no session state, each request is self-contained</li>
+    <li><strong>Incremental deployment</strong> — Phase 1 works without fine-tuning; Phase 2 adds fine-tuned models</li>
+    <li><strong>Separate static assets</strong> — all HTML, CSS, JS in separate files per project convention</li>
+  </ul>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="pipeline">
+  <h2>4. Drug Discovery Pipeline</h2>
+
+  <p>The V2 pipeline for a single request:</p>
+
+  <div class="pipeline">
+    <div class="step">
+      <span class="step-num">1</span>
+      <div>
+        <strong>User Input</strong><br>
+        Amino acid sequence (protein target)<br>
+        Seed SMILES string<br>
+        Parameters: noise level, num candidates
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="step">
+      <span class="step-num">2</span>
+      <div>
+        <strong>Input Validation</strong><br>
+        Validate SMILES with RDKit<br>
+        Validate amino acid sequence (20 standard AA chars)<br>
+        Canonicalize SMILES
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="step">
+      <span class="step-num">3</span>
+      <div>
+        <strong>Molecule Generation (Gemma4)</strong><br>
+        Send prompt to Gemma4 API on DGX (port 9001)<br>
+        Prompt includes: seed SMILES, protein context, noise guidance<br>
+        Request N candidate SMILES strings in structured output format
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="step">
+      <span class="step-num">4</span>
+      <div>
+        <strong>SMILES Filtering</strong><br>
+        Parse Gemma4 output to extract SMILES<br>
+        Validate each with RDKit (discard invalid)<br>
+        Deduplicate; remove seed molecule
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="step">
+      <span class="step-num">5</span>
+      <div>
+        <strong>Property Calculation</strong><br>
+        QED — drug-likeness (0–1, higher = better)<br>
+        SAS — synthetic accessibility score (1–10, lower = easier to make)<br>
+        LogP — lipophilicity (Crippen method)<br>
+        Tanimoto similarity to seed (Morgan fingerprint)<br>
+        Molecular weight, H-bond donors/acceptors (Lipinski filter)
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="step">
+      <span class="step-num">6</span>
+      <div>
+        <strong>DTI Prediction</strong><br>
+        Encode protein: ESM-2 (150M) → 640-dim embedding<br>
+        Encode drug: RDKit ECFP4 → 2048-bit fingerprint<br>
+        MLP classifier → binding affinity score (0–1)<br>
+        (Phase 1: rule-based scoring; Phase 2: trained MLP)
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="step">
+      <span class="step-num">7</span>
+      <div>
+        <strong>Ranking &amp; Response</strong><br>
+        Score = w1×DTI + w2×QED − w3×SAS + w4×Tanimoto<br>
+        Return top-K candidates sorted by composite score<br>
+        Include all property values and DTI score per candidate
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="architecture">
+  <h2>5. System Architecture</h2>
+
+  <h3>5.1 Component Diagram</h3>
+  <pre class="diagram">
+┌─────────────────────────────────────────────────────────────────────┐
+│                         User Browser                                │
+│                    (HTML + CSS + JS frontend)                       │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │ HTTP (port 5000)
+┌──────────────────────────────▼──────────────────────────────────────┐
+│                     Flask Application Server                        │
+│                     (Mac/Linux — dlyog01)                           │
+│                                                                     │
+│   ┌─────────────┐   ┌──────────────────┐   ┌────────────────────┐  │
+│   │  api/routes │   │ services/         │   │ services/          │  │
+│   │  Blueprint  │──▶│ molecule_         │   │ dti_predictor.py   │  │
+│   │             │   │ generator.py      │   │                    │  │
+│   └─────────────┘   └────────┬─────────┘   └─────────┬──────────┘  │
+│                              │                        │             │
+│   ┌──────────────────────────▼──────────────────┐    │             │
+│   │         services/molecule_validator.py       │    │             │
+│   │         services/property_calculator.py      │    │             │
+│   │         utils/mol_utils.py (RDKit)           │    │             │
+│   └──────────────────────────────────────────────┘    │             │
+└──────────────────────────────────────────────┬─────────┴────────────┘
+                                               │                │
+                    SSH tunnel / LAN           │                │
+           ┌───────────────────────────────────▼─┐   ┌─────────▼──────┐
+           │  DGX Spark (dgx1)                    │   │ ESM-2 (local)  │
+           │  Gemma4-E4B API (port 9001)          │   │ 150M param     │
+           │  FastAPI + Unsloth + 4-bit quant     │   │ protein embed  │
+           │  NVIDIA GB10 GPU (72GB VRAM)         │   └────────────────┘
+           └──────────────────────────────────────┘
+  </pre>
+
+  <h3>5.2 Request Flow</h3>
+  <pre class="diagram">
+Browser → POST /api/v2/generate
+         {amino_acid_seq, smile, noise, num_candidates}
+           │
+           ▼
+      Flask route (api/routes.py)
+           │
+           ├── validate_inputs() ─────────────────── RDKit + regex
+           │
+           ├── MoleculeGenerator.generate()
+           │     └── POST http://dgx1:9001/v1/text
+           │           prompt: "Given seed SMILES {smile} for target
+           │                    protein {seq[:50]}..., generate {N}
+           │                    structurally similar drug-like SMILES..."
+           │           returns: raw text with SMILES list
+           │
+           ├── MoleculeValidator.filter()
+           │     └── RDKit parse + deduplicate
+           │
+           ├── PropertyCalculator.compute_all()
+           │     └── QED, SAS, LogP, MW, Tanimoto, Lipinski
+           │
+           ├── DTIPredictor.predict_batch()
+           │     ├── ESM-2 encode(amino_acid_seq) → protein_vec
+           │     └── ECFP4 encode(smiles) × N → drug_vecs
+           │           → MLP(concat) → scores[N]
+           │
+           └── rank_and_return(candidates, scores)
+                 → JSON response
+  </pre>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="folder-structure">
+  <h2>6. Folder Structure</h2>
+
+  <pre class="code">
+deep2lead_v2/
+│
+├── app.py                         # Flask entry point, registers blueprints
+├── config/
+│   ├── __init__.py
+│   └── settings.py                # DGX host/port, model params, scoring weights
+│
+├── api/
+│   ├── __init__.py
+│   ├── routes.py                  # Flask Blueprint — all REST endpoints
+│   └── schemas.py                 # Request/response dataclasses (Marshmallow)
+│
+├── services/
+│   ├── __init__.py
+│   ├── molecule_generator.py      # Calls Gemma4 API, parses SMILES from response
+│   ├── molecule_validator.py      # RDKit validation, canonicalization, dedup
+│   ├── property_calculator.py     # QED, SAS, LogP, Tanimoto, MW, Lipinski
+│   └── dti_predictor.py           # ESM-2 protein encode + ECFP drug encode + MLP
+│
+├── models/
+│   ├── __init__.py
+│   ├── dti_mlp.py                 # PyTorch MLP architecture for DTI
+│   └── weights/
+│       └── dti_model_v1.pt        # Trained weights (committed after training)
+│
+├── utils/
+│   ├── __init__.py
+│   ├── mol_utils.py               # SMILES parsing helpers (RDKit wrappers)
+│   └── protein_utils.py           # Amino acid sequence validation helpers
+│
+├── static/
+│   ├── css/
+│   │   └── style.css              # UI stylesheet
+│   └── js/
+│       └── app.js                 # Frontend logic
+│
+├── templates/
+│   └── index.html                 # Single-page application shell
+│
+├── tests/
+│   ├── test_validator.py
+│   ├── test_properties.py
+│   ├── test_dti.py
+│   └── test_api.py
+│
+├── scripts/
+│   ├── train_dti.py               # Training script (runs on DGX or local)
+│   └── prepare_dti_dataset.py     # Download BindingDB + prepare train/val split
+│
+├── requirements.txt
+├── Dockerfile
+└── run.sh                         # Start gunicorn
+  </pre>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="api-design">
+  <h2>7. API Design</h2>
+
+  <h3>7.1 Endpoints</h3>
+  <table>
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td><code>/</code></td><td>Serve web UI (index.html)</td></tr>
+      <tr><td>GET</td><td><code>/api/health</code></td><td>System health + DGX Gemma4 status</td></tr>
+      <tr><td>POST</td><td><code>/api/v2/generate</code></td><td>Main pipeline: input → ranked candidates</td></tr>
+      <tr><td>POST</td><td><code>/api/v2/validate</code></td><td>Validate a single SMILES string</td></tr>
+      <tr><td>POST</td><td><code>/api/v2/properties</code></td><td>Compute properties for a SMILES string</td></tr>
+      <tr><td>POST</td><td><code>/api/v2/dti</code></td><td>DTI score for a (SMILES, amino_acid_seq) pair</td></tr>
+      <tr><td>GET</td><td><code>/api/swagger.json</code></td><td>OpenAPI 3.0 spec (auto-generated by Flasgger)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.2 Main Request Schema — <code>POST /api/v2/generate</code></h3>
+  <pre class="code">
+{
+  "amino_acid_seq": "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDGTQDNLSGAEKAVQVKVKALPDAQFEVVHSLAKWKRQTLGQHDFSAGEGLYTHMKALRPDEDRLSPLHSVYVDQWDWERVMGDGERQFSTLKSTVEAIWAGIKATEAAVSEEFGLAPFLPDQIHFVHSQELLSRYPDLDAKGRERAIAKDLGAVFLVGIGGKLSDGHRHDVRAPDYDDWSTPSELGHAGLNGDILVWNPVLEDAFELSSMGIRVDADTLKHQLALTGEDEDtokenized",
+  "smile": "C1CNP(=O)(OC1)N(CCCl)CCCl",
+  "noise": 0.5,
+  "num_candidates": 10,
+  "top_k": 5
+}
+  </pre>
+
+  <h3>7.3 Response Schema</h3>
+  <pre class="code">
+{
+  "seed_smile": "C1CNP(=O)(OC1)N(CCCl)CCCl",
+  "seed_properties": {
+    "qed": 0.54, "sas": 3.2, "logp": 1.8, "mw": 230.1
+  },
+  "candidates": [
+    {
+      "smile": "CC1CNP(=O)(OC1)N(CCCl)CCCl",
+      "rank": 1,
+      "composite_score": 0.81,
+      "properties": {
+        "qed": 0.61, "sas": 2.9, "logp": 2.1, "mw": 244.1,
+        "tanimoto": 0.87, "lipinski_pass": true
+      },
+      "dti_score": 0.74,
+      "valid": true
+    }
+  ],
+  "meta": {
+    "generated": 25,
+    "valid": 18,
+    "returned": 5,
+    "gemma4_latency_ms": 1240
+  }
+}
+  </pre>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="gemma4">
+  <h2>8. Gemma4 Integration</h2>
+
+  <h3>8.1 Connection Details</h3>
+  <table>
+    <thead><tr><th>Property</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Host</td><td><code>dgx1</code> (SSH alias, LAN: 192.168.86.107)</td></tr>
+      <tr><td>Port</td><td>9001</td></tr>
+      <tr><td>Model</td><td>unsloth/gemma-4-E4B-it-unsloth-bnb-4bit</td></tr>
+      <tr><td>GPU</td><td>NVIDIA GB10 (Blackwell), 72GB VRAM</td></tr>
+      <tr><td>Serving</td><td>FastAPI + Uvicorn (screen session <code>gemma4_api</code>)</td></tr>
+      <tr><td>Status endpoint</td><td><code>GET http://dgx1:9001/health</code></td></tr>
+      <tr><td>Text endpoint</td><td><code>POST http://dgx1:9001/v1/text</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.2 Prompt Engineering Strategy</h3>
+  <p>
+    Gemma4 does not natively understand molecular chemistry without fine-tuning.
+    For Phase 1 (pre-fine-tuning), we use structured prompting to guide it toward
+    valid SMILES generation:
+  </p>
+
+  <pre class="code">
+SYSTEM:
+You are a computational chemistry assistant specializing in drug discovery.
+Generate structurally similar but novel drug-like molecules.
+Rules:
+- Output ONLY valid SMILES strings, one per line, no explanations
+- Generated molecules must be structurally similar to the seed (Tanimoto > 0.4)
+- Obey Lipinski's Rule of Five: MW < 500, LogP < 5, HBD ≤ 5, HBA ≤ 10
+- Make small structural modifications: substitute atoms, add/remove small groups
+- Do not simply copy the seed molecule
+
+USER:
+Seed SMILES: {canonicalized_smile}
+Target protein (first 50 AA): {amino_acid_seq[:50]}
+Noise level: {noise} (0=minimal change, 1=large change)
+
+Generate exactly {num_candidates} novel SMILES strings:
+  </pre>
+
+  <h3>8.3 Response Parsing</h3>
+  <p>
+    Gemma4 output will be free text. The <code>molecule_generator.py</code> service
+    extracts SMILES using:
+  </p>
+  <ol>
+    <li>Regex to find lines matching common SMILES patterns (atoms, bonds, brackets)</li>
+    <li>RDKit <code>MolFromSmiles()</code> as the final validity gate</li>
+    <li>If fewer than requested valid SMILES are returned, retry the API call up to 3 times</li>
+  </ol>
+
+  <h3>8.4 Fallback (When DGX Is Unavailable)</h3>
+  <p>
+    If the DGX health check fails, the system falls back to the V1 VAE method
+    (if the Keras model files are present) or returns an error with a clear message.
+    This ensures the app remains useful for students even during GPU downtime.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="dti">
+  <h2>9. DTI Replacement Strategy</h2>
+
+  <h3>9.1 Why Replace DeepPurpose?</h3>
+  <p>
+    DeepPurpose (Stanford, 2020) is an excellent library but it requires downloading
+    pretrained models from the internet, has pinned dependencies that conflict with
+    modern Python, and cannot be fine-tuned without forking the repo. V2 needs a DTI
+    component that can be retrained on new data, runs fully offline, and integrates
+    cleanly into the Flask service layer.
+  </p>
+
+  <h3>9.2 Chosen Approach: ESM-2 + ECFP + MLP</h3>
+  <table>
+    <thead><tr><th>Component</th><th>Role</th><th>Output Dimension</th></tr></thead>
+    <tbody>
+      <tr><td>ESM-2 (150M, Facebook)</td><td>Protein sequence encoder</td><td>640-dim vector (mean pooled)</td></tr>
+      <tr><td>RDKit ECFP4</td><td>Drug SMILES encoder (Morgan fingerprint, radius=2)</td><td>2048-bit binary vector</td></tr>
+      <tr><td>MLP Classifier</td><td>Predict binding affinity</td><td>Scalar score 0–1</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9.3 MLP Architecture</h3>
+  <pre class="code">
+Input: concat(protein_vec[640], drug_vec[2048]) = 2688-dim
+
+MLP:
+  Linear(2688, 1024) → BatchNorm → ReLU → Dropout(0.3)
+  Linear(1024, 256)  → BatchNorm → ReLU → Dropout(0.2)
+  Linear(256, 64)    → ReLU
+  Linear(64, 1)      → Sigmoid
+
+Output: binding probability ∈ [0, 1]
+  </pre>
+
+  <h3>9.4 Training Data</h3>
+  <table>
+    <thead><tr><th>Dataset</th><th>Size</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>BindingDB (Ki)</td><td>~1.8M pairs</td><td>Primary training data</td></tr>
+      <tr><td>Davis</td><td>~30K pairs</td><td>Validation / benchmark</td></tr>
+      <tr><td>KIBA</td><td>~118K pairs</td><td>Additional training</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Training runs on the DGX using the existing Unsloth Python environment.
+    Scripts placed in <code>scripts/train_dti.py</code>.
+    Expected training time: ~4–8 hours on GB10 GPU.
+  </p>
+
+  <h3>9.5 Phase 1 Interim: Rule-Based DTI</h3>
+  <p>
+    Before the MLP is trained, the DTI service returns a heuristic score based on:
+    Lipinski compliance (pass/fail), QED, and Tanimoto similarity to a set of known
+    active compounds from the ZINC database. This gives students a working pipeline
+    on day one.
+  </p>
+
+  <h3>9.6 ESM-2 Availability</h3>
+  <p>
+    ESM-2 (150M parameters) is available via HuggingFace (<code>facebook/esm2_t30_150M_UR50D</code>).
+    The model and tokenizer are downloaded once to the DGX server and cached locally,
+    then served as a Python import in <code>dti_predictor.py</code>.
+    No internet required after initial setup.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="infrastructure">
+  <h2>10. Infrastructure</h2>
+
+  <h3>10.1 Servers</h3>
+  <table>
+    <thead><tr><th>Server</th><th>Role</th><th>Access</th></tr></thead>
+    <tbody>
+      <tr><td><code>dlyog01</code></td><td>Flask app server, model weight storage</td><td><code>ssh dlyog1@dlyog01</code></td></tr>
+      <tr><td><code>dgx1</code></td><td>Gemma4 API, ESM-2, DTI training, fine-tuning</td><td><code>ssh dlyog@dgx1</code></td></tr>
+      <tr><td>Mac (local)</td><td>Development, testing</td><td>Local</td></tr>
+    </tbody>
+  </table>
+
+  <h3>10.2 DGX Server Layout</h3>
+  <pre class="code">
+/home/dlyog/
+├── unsloth/
+│   ├── .unsloth/          # Python venv (activate before all scripts)
+│   ├── gemma4/
+│   │   ├── gemma4_api_server.py   # Already running on port 9001
+│   │   └── start_gemma4_api.sh
+│   ├── ai4echo_lora/      # Existing LoRA fine-tune example (reference)
+│   └── finetune_qwen3.py  # Reference fine-tune script
+│
+└── deep2lead_v2/          # New — deploy here for DGX training jobs
+    ├── scripts/
+    │   ├── train_dti.py
+    │   └── finetune_gemma4_smiles.py   # Phase 2
+    └── data/
+        └── bindingdb_processed.csv
+  </pre>
+
+  <h3>10.3 Port Map</h3>
+  <table>
+    <thead><tr><th>Service</th><th>Host</th><th>Port</th></tr></thead>
+    <tbody>
+      <tr><td>Flask V2 App</td><td>dlyog01</td><td>5001</td></tr>
+      <tr><td>Gemma4 API</td><td>dgx1</td><td>9001</td></tr>
+      <tr><td>Flask V1 App (legacy)</td><td>dlyog01</td><td>5000</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="phases">
+  <h2>11. Implementation Phases</h2>
+
+  <h3>Phase 1 — Working App Without Fine-Tuning</h3>
+  <p class="phase-label">Target: 2–3 weeks</p>
+  <table>
+    <thead><tr><th>#</th><th>Task</th><th>File(s)</th></tr></thead>
+    <tbody>
+      <tr><td>1.1</td><td>Project scaffold, requirements.txt, config</td><td><code>app.py</code>, <code>config/settings.py</code></td></tr>
+      <tr><td>1.2</td><td>Input validation (SMILES + amino acid)</td><td><code>services/molecule_validator.py</code>, <code>utils/protein_utils.py</code></td></tr>
+      <tr><td>1.3</td><td>Gemma4 client service with retry logic</td><td><code>services/molecule_generator.py</code></td></tr>
+      <tr><td>1.4</td><td>SMILES parser / extractor from LLM output</td><td><code>services/molecule_generator.py</code></td></tr>
+      <tr><td>1.5</td><td>Property calculator (QED, SAS, LogP, Tanimoto)</td><td><code>services/property_calculator.py</code></td></tr>
+      <tr><td>1.6</td><td>Heuristic DTI scorer (Lipinski + QED proxy)</td><td><code>services/dti_predictor.py</code></td></tr>
+      <tr><td>1.7</td><td>Flask API routes and schemas</td><td><code>api/routes.py</code>, <code>api/schemas.py</code></td></tr>
+      <tr><td>1.8</td><td>Web UI (HTML + CSS + JS)</td><td><code>templates/index.html</code>, <code>static/</code></td></tr>
+      <tr><td>1.9</td><td>Unit tests</td><td><code>tests/</code></td></tr>
+      <tr><td>1.10</td><td>Deploy on dlyog01 via gunicorn</td><td><code>run.sh</code>, <code>Dockerfile</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Phase 2 — Train DTI Model</h3>
+  <p class="phase-label">Target: 4–6 weeks after Phase 1</p>
+  <table>
+    <thead><tr><th>#</th><th>Task</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>2.1</td><td>Download BindingDB + Davis datasets</td><td>Scripts in <code>scripts/prepare_dti_dataset.py</code></td></tr>
+      <tr><td>2.2</td><td>Cache ESM-2 model on DGX</td><td>One-time: <code>huggingface-cli download facebook/esm2_t30_150M_UR50D</code></td></tr>
+      <tr><td>2.3</td><td>Train MLP on DGX</td><td><code>scripts/train_dti.py</code>, ~4–8h on GB10</td></tr>
+      <tr><td>2.4</td><td>Evaluate on Davis benchmark (CI index)</td><td>Target: CI &gt; 0.85 (DeepPurpose baseline: 0.886)</td></tr>
+      <tr><td>2.5</td><td>Swap heuristic DTI for trained MLP</td><td><code>services/dti_predictor.py</code> model path change</td></tr>
+      <tr><td>2.6</td><td>Commit weights to <code>models/weights/</code></td><td>Version with date in filename</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Phase 3 — Fine-Tune Gemma4 for SMILES Generation</h3>
+  <p class="phase-label">Target: 8–12 weeks after Phase 1</p>
+  <table>
+    <thead><tr><th>#</th><th>Task</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>3.1</td><td>Build SMILES fine-tune dataset</td><td>ZINC pairs: (seed, similar molecule) using Tanimoto &gt; 0.5 filter</td></tr>
+      <tr><td>3.2</td><td>Format as instruction-following JSON</td><td>Follow <code>ai4echo_sample_v1.jsonl</code> format on DGX</td></tr>
+      <tr><td>3.3</td><td>Fine-tune Gemma4-E4B with Unsloth LoRA</td><td>Reference: <code>finetune_qwen3.py</code> on DGX</td></tr>
+      <tr><td>3.4</td><td>Evaluate: % valid SMILES, Tanimoto distribution, diversity</td><td>Compare to Phase 1 base model</td></tr>
+      <tr><td>3.5</td><td>Save LoRA adapter, update config to point to fine-tuned model</td><td>New screen session or replace port 9001</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="finetuning">
+  <h2>12. Fine-Tuning Plan (Phase 3 Detail)</h2>
+
+  <h3>12.1 Dataset Construction</h3>
+  <p>
+    Use the existing ZINC dataset (<code>250k_rndm_zinc_drugs_clean_3.csv</code> already in V1 model files)
+    to build instruction-response pairs:
+  </p>
+  <pre class="code">
+Instruction: "Given the SMILES string {seed}, generate a structurally
+              similar drug-like molecule with slight modifications.
+              Return only the SMILES string."
+
+Response: "{similar_smiles}"
+  </pre>
+  <p>
+    Pairs are selected where Tanimoto(seed, response) ∈ [0.4, 0.9],
+    ensuring the model learns to make meaningful but not trivial changes.
+    Target: 50,000–100,000 training pairs.
+  </p>
+
+  <h3>12.2 Training Configuration</h3>
+  <table>
+    <thead><tr><th>Hyperparameter</th><th>Value</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td>Base model</td><td>gemma-4-E4B-it (already on DGX)</td><td>Saves download time</td></tr>
+      <tr><td>Method</td><td>LoRA (rank=16, alpha=32)</td><td>Matches ai4echo precedent on DGX</td></tr>
+      <tr><td>Quantization</td><td>4-bit (bnb)</td><td>Fits in DGX VRAM alongside other processes</td></tr>
+      <tr><td>Batch size</td><td>4 (with gradient accumulation 8)</td><td>Effective batch 32</td></tr>
+      <tr><td>LR</td><td>2e-4</td><td>Standard LoRA setting</td></tr>
+      <tr><td>Epochs</td><td>3</td><td>Start conservative, extend if validation improves</td></tr>
+      <tr><td>Max seq len</td><td>256</td><td>SMILES strings are short (&lt;120 chars for drug-like)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>12.3 Evaluation Metrics for SMILES Generation</h3>
+  <table>
+    <thead><tr><th>Metric</th><th>Target</th><th>How to Measure</th></tr></thead>
+    <tbody>
+      <tr><td>Validity rate</td><td>&gt; 85%</td><td>% of outputs parseable by RDKit</td></tr>
+      <tr><td>Tanimoto to seed</td><td>Mean 0.5–0.7</td><td>Morgan ECFP4 fingerprint</td></tr>
+      <tr><td>QED &gt; 0.4</td><td>&gt; 70% of valid outputs</td><td>RDKit QED</td></tr>
+      <tr><td>Novelty</td><td>&gt; 80%</td><td>% not in ZINC training set</td></tr>
+      <tr><td>Diversity</td><td>Mean pairwise Tanimoto &lt; 0.6</td><td>Avoid mode collapse</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="tech-stack">
+  <h2>13. Technology Stack</h2>
+
+  <table>
+    <thead><tr><th>Layer</th><th>Library / Tool</th><th>Version</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Runtime</td><td>Python</td><td>3.11</td><td>Language</td></tr>
+      <tr><td>Web framework</td><td>Flask</td><td>3.x</td><td>REST API + HTML serving</td></tr>
+      <tr><td>API docs</td><td>Flasgger</td><td>0.9.x</td><td>OpenAPI 3.0 spec generation</td></tr>
+      <tr><td>CORS</td><td>flask-cors</td><td>4.x</td><td>Cross-origin requests</td></tr>
+      <tr><td>Rate limiting</td><td>flask-limiter</td><td>3.x</td><td>Prevent abuse</td></tr>
+      <tr><td>Cheminformatics</td><td>RDKit</td><td>2024.x</td><td>SMILES validation, fingerprints, QED, SAS, LogP</td></tr>
+      <tr><td>Deep learning</td><td>PyTorch</td><td>2.x</td><td>DTI MLP, ESM-2</td></tr>
+      <tr><td>Protein encoding</td><td>ESM-2 (HuggingFace)</td><td>150M</td><td>Amino acid → embedding</td></tr>
+      <tr><td>Schemas</td><td>Marshmallow</td><td>3.x</td><td>Request/response validation</td></tr>
+      <tr><td>Server</td><td>Gunicorn</td><td>21.x</td><td>Production WSGI server</td></tr>
+      <tr><td>LLM inference</td><td>Unsloth + FastAPI</td><td>—</td><td>Gemma4 API on DGX (already running)</td></tr>
+      <tr><td>Fine-tuning</td><td>Unsloth + LoRA</td><td>—</td><td>SMILES fine-tune on DGX</td></tr>
+      <tr><td>Containerization</td><td>Docker</td><td>—</td><td>Reproducible deploy on dlyog01</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Python Packages (requirements.txt)</h3>
+  <pre class="code">
+flask==3.0.3
+flask-cors==4.0.0
+flask-limiter==3.7.0
+flasgger==0.9.7.1
+marshmallow==3.21.3
+rdkit==2024.3.5
+torch==2.3.1
+transformers==4.42.0         # for ESM-2
+requests==2.32.3             # for Gemma4 API calls
+numpy==1.26.4
+pandas==2.2.2
+gunicorn==22.0.0
+  </pre>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section id="risks">
+  <h2>14. Risks &amp; Mitigations</h2>
+
+  <table>
+    <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Gemma4 generates mostly invalid SMILES before fine-tuning</td>
+        <td>High</td><td>Medium</td>
+        <td>Retry logic (3 attempts); fallback to VAE if &lt;2 valid SMILES returned; improve prompt iteratively</td>
+      </tr>
+      <tr>
+        <td>DGX unavailable / GPU OOM (multiple users)</td>
+        <td>Medium</td><td>High</td>
+        <td>Health check before each request; graceful error message to UI; V1 VAE fallback mode</td>
+      </tr>
+      <tr>
+        <td>ESM-2 slow for long sequences</td>
+        <td>Low</td><td>Low</td>
+        <td>Cache protein embeddings by sequence hash; truncate to first 512 AA (standard practice)</td>
+      </tr>
+      <tr>
+        <td>DTI model generalization (new protein families)</td>
+        <td>Medium</td><td>Medium</td>
+        <td>Show confidence interval in UI; label as "research estimate, not clinical prediction"</td>
+      </tr>
+      <tr>
+        <td>Fine-tune dataset quality (ZINC SMILES pairs too similar)</td>
+        <td>Medium</td><td>Medium</td>
+        <td>Filter: require Tanimoto ∈ [0.4, 0.9]; include scaffold-hopped pairs from ChEMBL</td>
+      </tr>
+      <tr>
+        <td>Students misuse app for clinical claims</td>
+        <td>Low</td><td>High</td>
+        <td>Prominent disclaimer in UI: "Research tool only — not for clinical decision-making"</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="footer">
+  <p>Deep2Lead V2 — Georgia Institute of Technology</p>
+  <p>Document version 1.0 &nbsp;|&nbsp; May 2026</p>
+  <p>Covers Phase 1 (no fine-tuning) through Phase 3 (Gemma4 LoRA fine-tune)</p>
+</div>
+
+</body>
+</html>
