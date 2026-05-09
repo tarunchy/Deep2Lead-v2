@@ -37,6 +37,16 @@ config/local_settings.py
 # Logs
 *.log
 gunicorn*.log
+v2/logs/
+
+# Virtual environment (created by run.sh setup)
+v2/.venv/
+
+# PID file
+v2/.gunicorn.pid
+
+# Local .env (has secrets)
+v2/.env
 
 # Model weights (large binary — manage separately)
 *.h5

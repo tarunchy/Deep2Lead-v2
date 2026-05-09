@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Manage Users — Admin{% endblock %}
+
+{% block content %}
+<h1 class="page-title">User Management</h1>
+
+<div class="grid-2">
+  <!-- Create user form -->
+  <div class="card">
+    <p class="section-title">Create Account</p>
+    <form id="create-user-form">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="new-username" placeholder="gtusername" required>
+      </div>
+      <div class="form-group">
+        <label>Display Name</label>
+        <input type="text" id="new-display" placeholder="Jane Smith">
+      </div>
+      <div class="form-group">
+        <label>Email (optional)</label>
+        <input type="email" id="new-email" placeholder="jane@gatech.edu">
+      </div>
+      <div class="form-group">
+        <label>Cohort / Section</label>
+        <input type="text" id="new-cohort" placeholder="CS8803-Spring2026">
+      </div>
+      <div class="form-group">
+        <label>Temporary Password</label>
+        <input type="text" id="new-password" placeholder="Min 6 characters" required>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="new-role">
+          <option value="student">Student</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Create Account</button>
+      <div id="create-result" class="mt-8"></div>
+    </form>
+  </div>
+
+  <!-- Stats -->
+  <div>
+    <a href="{{ url_for('admin.overview') }}" class="card card-sm" style="display:block;margin-bottom:12px;">
+      <p class="section-title">System Overview →</p>
+    </a>
+    <div class="card card-sm">
+      <p class="section-title">Quick Stats</p>
+      <p class="text-sm">Total users: <strong>{{ users|length }}</strong></p>
+      <p class="text-sm">Active students: <strong>{{ users|selectattr('role','eq','student')|selectattr('is_active')|list|length }}</strong></p>
+      <p class="text-sm">Admins: <strong>{{ users|selectattr('role','eq','admin')|list|length }}</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- User table -->
+<div class="card mt-24">
+  <p class="section-title">All Users</p>
+  <table class="results-table">
+    <thead>
+      <tr><th>Username</th><th>Display Name</th><th>Role</th><th>Cohort</th><th>Last Login</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr id="user-row-{{ u.id }}">
+        <td><code>{{ u.username }}</code></td>
+        <td>{{ u.display_name or "—" }}</td>
+        <td><span class="badge {% if u.role == 'admin' %}badge-published{% else %}badge-draft{% endif %}">{{ u.role }}</span></td>
+        <td>{{ u.cohort or "—" }}</td>
+        <td class="text-muted">{{ u.last_login.strftime('%b %d, %Y') if u.last_login else "Never" }}</td>
+        <td>{% if u.is_active %}<span class="pass">Active</span>{% else %}<span class="fail">Inactive</span>{% endif %}</td>
+        <td>
+          {% if u.id != current_user.id %}
+          <button class="btn btn-sm btn-outline"
+            onclick="toggleActive('{{ u.id }}', {{ 'false' if u.is_active else 'true' }})">
+            {{ "Deactivate" if u.is_active else "Activate" }}
+          </button>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById("create-user-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector("button[type=submit]");
+  setLoading(btn, true);
+  try {
+    await apiFetch("/api/admin/users", {
+      method: "POST",
+      body: JSON.stringify({
+        username: document.getElementById("new-username").value.trim(),
+        display_name: document.getElementById("new-display").value.trim(),
+        email: document.getElementById("new-email").value.trim(),
+        cohort: document.getElementById("new-cohort").value.trim(),
+        password: document.getElementById("new-password").value,
+        role: document.getElementById("new-role").value,
+      }),
+    });
+    document.getElementById("create-result").innerHTML = '<div class="alert alert-success">Account created. Reload to see in table.</div>';
+    e.target.reset();
+  } catch (err) {
+    document.getElementById("create-result").innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+async function toggleActive(userId, newState) {
+  try {
+    await apiFetch(`/api/admin/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_active: newState === "true" }),
+    });
+    location.reload();
+  } catch (err) {
+    showAlert(err.message, "error", document.body);
+  }
+}
+</script>
+{% endblock %}

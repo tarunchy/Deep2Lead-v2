@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}{{ experiment.title or "Experiment" }} — Deep2Lead V2{% endblock %}
+
+{% block content %}
+<div id="experiment-data" data-id="{{ experiment.id }}" style="display:none;"></div>
+
+<!-- Header -->
+<div class="flex items-center justify-between" style="margin-bottom:6px;">
+  <h1 class="page-title" style="margin:0;">{{ experiment.title or "Untitled Experiment" }}</h1>
+  <span class="badge badge-{{ experiment.status }}">{{ experiment.status }}</span>
+</div>
+<div class="text-muted text-sm" style="margin-bottom:20px;">
+  By <strong>{{ experiment.author.display_name or experiment.author.username }}</strong>
+  {% if experiment.author.cohort %} · {{ experiment.author.cohort }}{% endif %}
+  {% if experiment.published_at %} · Published {{ experiment.published_at.strftime('%b %d, %Y') }}{% endif %}
+  {% if experiment.version > 1 %} · v{{ experiment.version }}{% endif %}
+</div>
+
+<!-- Actions bar -->
+<div class="flex gap-8 items-center" style="margin-bottom:24px;">
+  {% if experiment.status == 'published' %}
+  <button id="like-btn" class="like-btn" data-exp="{{ experiment.id }}">
+    <span class="heart"></span>
+    <span class="like-count">{{ experiment.like_count }}</span>
+    <span style="margin-left:2px;">likes</span>
+  </button>
+  <span class="text-muted text-sm">💬 {{ experiment.comment_count }} comments</span>
+  {% endif %}
+  {% if current_user.id == experiment.author.id %}
+    {% if experiment.status == 'draft' %}
+    <button class="btn btn-sm btn-primary" onclick="publishExp()">Publish to Feed</button>
+    {% elif experiment.status == 'published' %}
+    <button class="btn btn-sm btn-outline btn-danger" onclick="retractExp()">Retract</button>
+    {% endif %}
+  {% endif %}
+</div>
+
+<div class="grid-2" style="margin-bottom:24px;">
+  <!-- Experiment info -->
+  <div class="card">
+    <p class="section-title">Input Parameters</p>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td class="text-muted" style="width:140px;padding:4px 0;">Seed SMILES</td><td><code>{{ experiment.seed_smile }}</code></td></tr>
+      <tr><td class="text-muted" style="padding:4px 0;">Diversity Level</td><td>{{ experiment.noise_level }}</td></tr>
+      <tr><td class="text-muted" style="padding:4px 0;">Candidates Requested</td><td>{{ experiment.num_requested }}</td></tr>
+      <tr><td class="text-muted" style="padding:4px 0;">Valid Generated</td><td>{{ experiment.num_valid_generated or "—" }}</td></tr>
+      <tr><td class="text-muted" style="padding:4px 0;">Gemma4 Latency</td><td>{{ experiment.gemma4_latency_ms or "—" }} ms</td></tr>
+    </table>
+
+    <hr class="divider">
+    <p class="section-title">Protein Sequence</p>
+    <p class="text-sm" style="font-family:monospace;word-break:break-all;background:var(--bg);padding:8px;border-radius:4px;">
+      {{ experiment.amino_acid_seq[:200] }}{% if experiment.amino_acid_seq|length > 200 %}…{% endif %}
+    </p>
+  </div>
+
+  <!-- Hypothesis -->
+  <div class="card">
+    <p class="section-title">Hypothesis &amp; Notes</p>
+    {% if experiment.hypothesis %}
+    <p style="font-size:0.9rem;line-height:1.6;">{{ experiment.hypothesis }}</p>
+    {% else %}
+    <p class="text-muted text-sm">No hypothesis provided.</p>
+    {% endif %}
+
+    {% if current_user.id == experiment.author.id %}
+    <hr class="divider">
+    <p class="section-title">Edit</p>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="edit-title" value="{{ experiment.title or '' }}" placeholder="Add a title">
+    </div>
+    <div class="form-group">
+      <label>Hypothesis</label>
+      <textarea id="edit-hypothesis" rows="4">{{ experiment.hypothesis or '' }}</textarea>
+    </div>
+    <button class="btn btn-sm btn-outline" onclick="saveEdit()">Save Changes</button>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Candidates table -->
+<div class="card" style="margin-bottom:24px;">
+  <p class="section-title">Candidate Molecules (ranked by composite score)</p>
+  <div style="overflow-x:auto;">
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>#</th><th>SMILES</th><th>Score</th><th>DTI</th>
+          <th>QED</th><th>SAS</th><th>LogP</th><th>MW</th>
+          <th>Tanimoto</th><th>Lipinski</th><th>Structure</th>
+        </tr>
+      </thead>
+      <tbody id="candidates-body">
+        <tr><td colspan="11" style="text-align:center;padding:20px;" class="text-muted">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Comments -->
+{% if experiment.status == 'published' %}
+<div class="card">
+  <p class="section-title">Discussion</p>
+
+  <div id="comments-list" class="comment-thread" style="margin-bottom:20px;"></div>
+
+  <hr class="divider">
+  <p class="section-title">Add Comment</p>
+  <div id="reply-indicator" class="text-sm text-muted" style="display:none;margin-bottom:8px;"></div>
+  <form id="comment-form">
+    <div class="form-group">
+      <textarea id="comment-body" rows="3" placeholder="Share your thoughts, ask a question, or suggest improvements…" required></textarea>
+    </div>
+    <div class="flex gap-8 items-center">
+      <select id="comment-tag" style="width:auto;">
+        <option value="">No tag</option>
+        <option value="question">Question</option>
+        <option value="suggestion">Suggestion</option>
+        <option value="correction">Correction</option>
+        <option value="praise">Praise</option>
+      </select>
+      <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function saveEdit() {
+  const expId = document.getElementById("experiment-data").dataset.id;
+  try {
+    await apiFetch(`/api/v2/experiments/${expId}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        title: document.getElementById("edit-title").value.trim(),
+        hypothesis: document.getElementById("edit-hypothesis").value.trim(),
+      }),
+    });
+    showAlert("Saved successfully", "success", document.body);
+  } catch (err) {
+    showAlert(err.message, "error", document.body);
+  }
+}
+async function publishExp() {
+  const expId = document.getElementById("experiment-data").dataset.id;
+  const title = document.getElementById("edit-title")?.value.trim();
+  if (!title) { alert("Please add a title before publishing."); return; }
+  await saveEdit();
+  try {
+    await apiFetch(`/api/v2/experiments/${expId}/publish`, { method: "POST" });
+    location.reload();
+  } catch (err) {
+    showAlert(err.message, "error", document.body);
+  }
+}
+async function retractExp() {
+  if (!confirm("Retract this experiment from the feed?")) return;
+  const expId = document.getElementById("experiment-data").dataset.id;
+  try {
+    await apiFetch(`/api/v2/experiments/${expId}/retract`, { method: "POST" });
+    location.reload();
+  } catch (err) {
+    showAlert(err.message, "error", document.body);
+  }
+}
+</script>
+<script src="{{ url_for('static', filename='js/experiment.js') }}"></script>
+{% endblock %}

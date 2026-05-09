@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Deep2Lead V2</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="card login-card">
+    <div class="login-logo">Deep2Lead V2</div>
+    <div class="login-sub">Georgia Institute of Technology · Drug Discovery Platform</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, msg in messages %}
+        <div class="alert alert-{{ category }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autofocus placeholder="GT username">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required placeholder="Password">
+      </div>
+      <button type="submit" class="btn btn-primary w-full" style="justify-content:center;">Sign In</button>
+    </form>
+
+    <p class="text-muted text-sm mt-16" style="text-align:center;">
+      Contact your instructor to get an account.
+    </p>
+  </div>
+</div>
+</body>
+</html>

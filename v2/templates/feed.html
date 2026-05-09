@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Feed — Deep2Lead V2{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between" style="margin-bottom:20px;">
+  <h1 class="page-title" style="margin:0;">Class Feed</h1>
+  <div class="flex gap-8 items-center">
+    <span class="text-muted text-sm">Sort:</span>
+    <button class="btn btn-sm btn-outline active" data-sort="newest">Newest</button>
+    <button class="btn btn-sm btn-outline" data-sort="likes">Most Liked</button>
+    <button class="btn btn-sm btn-outline" data-sort="comments">Most Discussed</button>
+  </div>
+</div>
+
+<div id="feed-grid" class="feed-grid"></div>
+<div id="pagination" class="flex gap-8 mt-24" style="justify-content:center;"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/feed.js') }}"></script>
+{% endblock %}

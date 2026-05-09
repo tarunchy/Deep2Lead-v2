@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Run Experiment — Deep2Lead V2{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Run New Experiment</h1>
+
+<div class="run-layout">
+  <!-- Left: Input form -->
+  <div>
+    <div class="card">
+      <form id="run-form">
+        <div class="form-group">
+          <label for="amino_acid_seq">Protein Target (Amino Acid Sequence)</label>
+          <textarea id="amino_acid_seq" name="amino_acid_seq" rows="5"
+            placeholder="MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDGTQDNLSGAEKAVQVKV…"
+            required></textarea>
+          <div class="form-hint">Standard single-letter amino acid codes (A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y)</div>
+        </div>
+
+        <div class="form-group">
+          <label for="seed_smile">Seed SMILES</label>
+          <input type="text" id="seed_smile" name="seed_smile"
+            placeholder="C1CNP(=O)(OC1)N(CCCl)CCCl" required>
+          <div class="form-hint">Starting molecule for neighborhood search</div>
+          <div id="seed-preview" class="mol-preview mt-8" style="min-height:80px;"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="noise">Diversity Level: <strong id="noise-val">0.50</strong></label>
+          <input type="range" id="noise" name="noise" min="0" max="1" step="0.05" value="0.5">
+          <div class="form-hint">Low = close analogs &nbsp;|&nbsp; High = larger structural changes</div>
+        </div>
+
+        <div class="form-group">
+          <label for="num_candidates">Number of Candidates</label>
+          <select id="num_candidates" name="num_candidates">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full" style="justify-content:center;">
+          Generate Candidates
+        </button>
+      </form>
+    </div>
+
+    <!-- Save panel (shown after generation) -->
+    <div id="save-panel" class="card mt-16" style="display:none;">
+      <p class="section-title">Save &amp; Publish</p>
+      <input type="hidden" id="experiment-id">
+      <div class="form-group">
+        <label for="exp-title">Title <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="exp-title" placeholder="e.g. Chlorambucil analog search — target EGFR">
+      </div>
+      <div class="form-group">
+        <label for="exp-hypothesis">Hypothesis / Notes</label>
+        <textarea id="exp-hypothesis" rows="3" placeholder="Describe your scientific rationale…"></textarea>
+      </div>
+      <button id="publish-btn" class="btn btn-primary">Publish to Class Feed</button>
+    </div>
+  </div>
+
+  <!-- Right: Results -->
+  <div id="results-section" style="display:none;">
+    <div class="card">
+      <div class="flex items-center justify-between" style="margin-bottom:12px;">
+        <p class="section-title" style="margin:0;">Results</p>
+        <span id="meta-info" class="text-muted text-sm"></span>
+      </div>
+
+      <!-- Seed properties -->
+      <div style="margin-bottom:16px;">
+        <p class="text-sm text-muted" style="margin-bottom:6px;">Seed molecule properties:</p>
+        <div class="flex gap-8">
+          <span class="score-badge">QED <span id="seed-qed">-</span></span>
+          <span class="score-badge sas">SAS <span id="seed-sas">-</span></span>
+          <span class="score-badge">LogP <span id="seed-logp">-</span></span>
+          <span class="score-badge">MW <span id="seed-mw">-</span> Da</span>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>#</th><th>SMILES</th><th>Score</th><th>DTI</th>
+              <th>QED</th><th>SAS</th><th>LogP</th><th>MW</th>
+              <th>Tanimoto</th><th>Lipinski</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Molecule viewer modal -->
+<div id="mol-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div class="card" style="max-width:400px;width:90%;text-align:center;">
+    <button id="mol-modal-close" class="btn btn-sm btn-outline" style="float:right;">✕</button>
+    <img id="mol-modal-img" alt="molecule" style="max-width:100%;margin:20px 0;">
+    <p id="mol-modal-smiles" class="text-sm" style="font-family:monospace;word-break:break-all;"></p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/run.js') }}"></script>
+{% endblock %}
