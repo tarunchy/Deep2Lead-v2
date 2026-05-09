@@ -10,7 +10,7 @@ APP_DIR="$(pwd)"
 VENV_DIR="$APP_DIR/.venv"
 PID_FILE="$APP_DIR/.gunicorn.pid"
 LOG_FILE="$APP_DIR/logs/app.log"
-PORT=5001
+PORT=5018
 WORKERS=2
 TIMEOUT=120
 

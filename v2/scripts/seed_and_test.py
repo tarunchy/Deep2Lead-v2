@@ -8,7 +8,7 @@ import sys
 import time
 import requests
 
-BASE = "http://localhost:5001"
+BASE = "http://localhost:5018"
 DATA = json.load(open("test_data.json"))
 
 PASS = "\033[92m✓\033[0m"
@@ -258,7 +258,7 @@ else:
     print(f"\n  {PASS} All checks passed!")
 
 print(f"""
-  App URL:    http://localhost:5001
+  App URL:    http://localhost:5018
   Login:      username=prof_tarun  password=admin123 (admin)
               username=alice_gt    password=student123
               username=bob_gt      password=student123
