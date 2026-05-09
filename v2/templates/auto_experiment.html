@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Auto Experiment — Deep2Lead{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auto_experiment.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gamification.css') }}">
+{% endblock %}
+{% block content %}
+
+<div class="page-header" style="margin-bottom:20px;">
+  <h1 style="font-size:1.6rem;font-weight:700;">🔁 Auto Experiment</h1>
+  <p style="color:#8b949e;margin-top:4px;">Let the AI iterate autonomously — generate, score, keep the best, repeat. Inspired by <a href="https://github.com/karpathy/autoresearch" target="_blank" style="color:#58a6ff;">Karpathy's autoresearch</a>.</p>
+</div>
+
+<div class="auto-exp-layout">
+  <!-- Config panel -->
+  <div>
+    <div class="auto-exp-config">
+      <h3 style="font-size:.95rem;margin-bottom:14px;">⚙️ Configuration</h3>
+
+      <div class="form-group">
+        <label>Experiment to run</label>
+        <select id="expSelect" class="form-control">
+          <option value="">Loading experiments…</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Strategy</label>
+        <div class="strategy-grid">
+          <div class="strategy-btn selected" data-strategy="balanced" onclick="selectStrategy(this)">
+            <div class="sb-icon">⚖️</div>
+            <div class="sb-name">Balanced</div>
+            <div class="sb-desc">Equal weights across all objectives</div>
+          </div>
+          <div class="strategy-btn" data-strategy="conservative" onclick="selectStrategy(this)">
+            <div class="sb-icon">🛡️</div>
+            <div class="sb-name">Conservative</div>
+            <div class="sb-desc">Stay close to seed molecule</div>
+          </div>
+          <div class="strategy-btn" data-strategy="explorer" onclick="selectStrategy(this)">
+            <div class="sb-icon">🔭</div>
+            <div class="sb-name">Explorer</div>
+            <div class="sb-desc">Try diverse chemical space</div>
+          </div>
+          <div class="strategy-btn" data-strategy="novelty" onclick="selectStrategy(this)">
+            <div class="sb-icon">✨</div>
+            <div class="sb-name">Novelty Hunter</div>
+            <div class="sb-desc">Prioritize unknown molecules</div>
+          </div>
+          <div class="strategy-btn" data-strategy="safety_first" onclick="selectStrategy(this)">
+            <div class="sb-icon">💊</div>
+            <div class="sb-name">Safety First</div>
+            <div class="sb-desc">Prioritize drug-likeness</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group">
+          <label>Rounds (max 5)</label>
+          <input type="number" id="rounds" class="form-control" value="3" min="1" max="5">
+        </div>
+        <div class="form-group">
+          <label>Molecules/round (max 10)</label>
+          <input type="number" id="molsPerRound" class="form-control" value="5" min="1" max="10">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button id="startAutoBtn" class="btn btn-primary" style="flex:1;" onclick="startAutoExp()">
+          ▶ Start Loop
+        </button>
+        <button id="stopAutoBtn" class="btn btn-outline" disabled onclick="AutoExp.stop()">
+          ■ Stop
+        </button>
+      </div>
+      <input type="hidden" id="currentRunId" value="">
+    </div>
+
+    <!-- Best molecule box -->
+    <div class="best-mol-box" id="bestMolBox" style="display:none;">
+      <div style="font-size:.8rem;color:#8b949e;margin-bottom:4px;">Best molecule found</div>
+      <div class="best-mol-score" id="bestMolScore">—</div>
+      <div style="font-family:monospace;font-size:.75rem;word-break:break-all;color:#8b949e;margin-top:6px;" id="bestMolSmiles"></div>
+    </div>
+
+    <!-- Boss bar -->
+    <div class="boss-card" style="margin-top:16px;" id="bossCard" style="display:none;">
+      <div class="boss-name" id="bossName">🎯 Target</div>
+      <div class="boss-category" id="bossCategory"></div>
+      <div class="boss-bar-bg">
+        <div class="boss-bar-fill" id="bossBarFill" style="width:100%;"></div>
+      </div>
+      <div class="boss-hp-label">
+        <span>Fully Active</span>
+        <span id="bossHpLabel">Simulation Health: 100%</span>
+      </div>
+      <div class="boss-disclaimer">
+        This is a computer simulation score — not a real-world result. A lower health means a better computational binding score.
+      </div>
+    </div>
+  </div>
+
+  <!-- Monitor panel -->
+  <div>
+    <div class="auto-exp-monitor">
+      <div class="monitor-header">
+        <div class="monitor-status">
+          <div class="status-dot idle" id="statusDot"></div>
+          <span id="statusText">Idle</span>
+        </div>
+        <div style="font-size:.8rem;color:#8b949e;">
+          Rounds: <strong id="roundsCompletedLabel">0</strong> &nbsp;|&nbsp; Best: <strong id="bestScoreLabel">—</strong>
+        </div>
+      </div>
+
+      <!-- Score chart -->
+      <div class="score-chart">
+        <div style="font-size:.78rem;color:#8b949e;margin-bottom:8px;">Score trend per round</div>
+        <div class="chart-bars" id="chartBars">
+          <div style="color:#555;font-size:.75rem;align-self:center;">No data yet</div>
+        </div>
+      </div>
+
+      <!-- Round cards -->
+      <div style="padding:12px 18px;border-bottom:1px solid #30363d;">
+        <div style="font-size:.82rem;color:#8b949e;margin-bottom:8px;">Round history</div>
+      </div>
+      <div class="round-feed" id="roundFeed">
+        <div style="color:#555;font-size:.83rem;padding:16px 0;text-align:center;">
+          Start the loop to see round-by-round results here.
+        </div>
+      </div>
+
+      <!-- Log console -->
+      <div class="log-console" id="logConsole">
+        <div class="log-line">Ready. Configure settings and press Start Loop.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer-box" style="margin-top:24px;">
+  <strong>⚠️ Auto Experiment is a simulation loop.</strong> The "improvement" is based on a composite computational score — not real laboratory results. Every promising candidate must eventually be validated through real chemistry and biological experiments.
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/auto_experiment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
+<script>
+  let selectedStrategy = "balanced";
+
+  // Load user's experiments into dropdown
+  document.addEventListener("DOMContentLoaded", async () => {
+    const sel = document.getElementById("expSelect");
+    try {
+      const res = await apiFetch("/api/v2/experiments");
+      const exps = res.experiments || [];
+      sel.innerHTML = exps.length
+        ? exps.map(e => `<option value="${e.id}">${e.title || "Untitled"} (${e.status})</option>`).join("")
+        : `<option value="">No experiments yet — run one first</option>`;
+    } catch (e) { sel.innerHTML = `<option value="">Error loading experiments</option>`; }
+  });
+
+  function selectStrategy(el) {
+    document.querySelectorAll(".strategy-btn").forEach(b => b.classList.remove("selected"));
+    el.classList.add("selected");
+    selectedStrategy = el.dataset.strategy;
+  }
+
+  async function startAutoExp() {
+    const expId = document.getElementById("expSelect").value;
+    if (!expId) { showAlert("Please select an experiment first.", "warning"); return; }
+    const rounds = parseInt(document.getElementById("rounds").value);
+    const mols = parseInt(document.getElementById("molsPerRound").value);
+    document.getElementById("bestMolBox").style.display = "block";
+    document.getElementById("bossCard").style.display = "block";
+    AutoExp.start({
+      experiment_id: expId,
+      strategy: selectedStrategy,
+      rounds: rounds,
+      molecules_per_round: mols,
+    });
+  }
+</script>
+{% endblock %}

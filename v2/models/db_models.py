@@ -59,6 +59,13 @@ class Experiment(db.Model):
     seed_smile = db.Column(db.String(512), nullable=False)
     noise_level = db.Column(db.Float, default=0.5)
     num_requested = db.Column(db.Integer, default=10)
+    # v3 fields — mode + target identity
+    mode = db.Column(db.String(8), default="2d", nullable=False)   # 2d | 3d
+    target_id = db.Column(db.String(64), nullable=True)            # curated target id
+    target_name = db.Column(db.String(256), nullable=True)
+    uniprot_id = db.Column(db.String(32), nullable=True)
+    pdb_id = db.Column(db.String(16), nullable=True)
+    protein_structure_id = db.Column(UUID(as_uuid=True), nullable=True)
     status = db.Column(db.String(16), default="draft", nullable=False)
     version = db.Column(db.Integer, default=1)
     published_at = db.Column(db.DateTime(timezone=True))
@@ -132,6 +139,9 @@ class Candidate(db.Model):
     lipinski_pass = db.Column(db.Boolean)
     composite_score = db.Column(db.Float)
     rank = db.Column(db.Integer)
+    # v3 docking fields
+    docking_score_kcal = db.Column(db.Float, nullable=True)
+    novelty_status = db.Column(db.String(16), nullable=True)  # novel | known | unknown
 
     def to_dict(self):
         return {
@@ -146,6 +156,8 @@ class Candidate(db.Model):
             "lipinski_pass": self.lipinski_pass,
             "composite_score": round(self.composite_score, 3) if self.composite_score is not None else None,
             "rank": self.rank,
+            "docking_score_kcal": round(self.docking_score_kcal, 3) if self.docking_score_kcal is not None else None,
+            "novelty_status": self.novelty_status,
         }
 
 

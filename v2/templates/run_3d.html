@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}3D Experiment — Deep2Lead{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/3d_viewer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gamification.css') }}">
+{% endblock %}
+{% block content %}
+
+<div class="page-header" style="margin-bottom:24px;">
+  <h1 style="font-size:1.6rem;font-weight:700;">⚗️ 3D Structure Experiment</h1>
+  <p style="color:#8b949e;margin-top:4px;">Predict a protein's 3D shape, generate candidate molecules, and dock them to find the best fit.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+  <!-- Left: Target + structure -->
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <h3 style="font-size:1rem;margin-bottom:12px;">🎯 Step 1: Target</h3>
+      {% if target %}
+        <div style="font-weight:600;font-size:1rem;">{{ target.name }}</div>
+        <div style="color:#8b949e;font-size:.85rem;margin:4px 0;">{{ target.disease }} · {{ target.organism }}</div>
+        <div style="background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);border-radius:8px;padding:10px;font-size:.83rem;margin-top:8px;">
+          🔑 {{ target.analogy }}
+        </div>
+        <div class="struct-info" style="margin-top:12px;">
+          <div class="struct-info-item"><div class="si-label">UniProt</div><div class="si-val">{{ target.uniprot_id }}</div></div>
+          <div class="struct-info-item"><div class="si-label">PDB</div><div class="si-val">{{ target.pdb_id }}</div></div>
+        </div>
+        <a href="{{ url_for('target.target_picker_page') }}" class="btn btn-sm btn-outline" style="margin-top:10px;">Change Target</a>
+      {% else %}
+        <p style="color:#8b949e;">No target selected yet.</p>
+        <a href="{{ url_for('target.target_picker_page') }}" class="btn btn-primary">Choose a Target →</a>
+      {% endif %}
+    </div>
+
+    <!-- Structure viewer -->
+    <div class="card">
+      <h3 style="font-size:1rem;margin-bottom:10px;">🔬 Step 2: 3D Protein Structure</h3>
+      <div class="viewer-container" style="height:300px;position:relative;">
+        <div id="structureViewer" style="width:100%;height:100%;"></div>
+        <div class="viewer-label">Protein Structure</div>
+        <div id="sourceBadge" class="viewer-source-badge source-alphafold" style="display:none;"></div>
+        <div id="viewerLoadingLabel" class="viewer-loading">
+          <div>⏳ Loading structure…</div>
+          <div style="font-size:.8rem;">Fetching from AlphaFold / RCSB PDB</div>
+        </div>
+      </div>
+      <div id="viewerWarning" class="viewer-warning" style="display:none;"></div>
+      <div id="structMeta" class="struct-info" style="margin-top:10px;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-sm btn-outline" onclick="StructureViewer.setStyle('cartoon')">Cartoon</button>
+        <button class="btn btn-sm btn-outline" onclick="StructureViewer.setStyle('stick')">Stick</button>
+        <button class="btn btn-sm btn-outline" onclick="StructureViewer.setStyle('confidence')">Confidence</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Molecule generation form -->
+  <div>
+    <div class="card">
+      <h3 style="font-size:1rem;margin-bottom:12px;">🧪 Step 3: Generate & Dock</h3>
+      <form id="run3dForm">
+        <input type="hidden" id="target_id" name="target_id" value="{{ target.id if target else '' }}">
+        <input type="hidden" id="uniprot_id" name="uniprot_id" value="{{ target.uniprot_id if target else '' }}">
+        <input type="hidden" id="pdb_id" name="pdb_id" value="{{ target.pdb_id if target else '' }}">
+
+        <div class="form-group">
+          <label>Protein Sequence (first 80 AA are used for generation)</label>
+          <textarea id="amino_acid_seq" name="amino_acid_seq" rows="3" placeholder="MKTIIALSYIFCLVFA…"
+            class="form-control" style="font-family:monospace;font-size:.82rem;">{{ target.amino_acid_seq if target and target.amino_acid_seq else '' }}</textarea>
+          <small class="form-text">Leave blank to use the default sequence for this target.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Seed SMILES (starting molecule)</label>
+          <input type="text" id="seed_smiles" name="seed_smiles" class="form-control" style="font-family:monospace;"
+            placeholder="CC(=O)Oc1ccccc1C(=O)O"
+            value="{{ target.known_drug_smiles if target else '' }}">
+          <small class="form-text">Pre-filled with a known drug for this target.</small>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Candidates to generate</label>
+            <select id="num_candidates" name="num_candidates" class="form-control">
+              <option value="5">5 (fast)</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Diversity level</label>
+            <select id="noise_level" name="noise_level" class="form-control">
+              <option value="0.2">Low (similar)</option>
+              <option value="0.4" selected>Medium</option>
+              <option value="0.7">High (diverse)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="enable_docking" checked>
+            Enable molecular docking (slower but more accurate)
+          </label>
+        </div>
+
+        <button type="button" id="run3dBtn" class="btn btn-primary" style="width:100%;" onclick="run3DExperiment()">
+          🚀 Generate &amp; Score Candidates
+        </button>
+      </form>
+
+      <div id="run3dProgress" style="display:none;margin-top:14px;">
+        <div class="progress-bar-container" style="background:#1c2128;border-radius:6px;overflow:hidden;height:6px;margin-bottom:8px;">
+          <div id="progressBar" style="height:100%;background:linear-gradient(90deg,#58a6ff,#3fb950);width:0%;transition:width .5s;"></div>
+        </div>
+        <div id="progressLabel" style="font-size:.82rem;color:#8b949e;text-align:center;"></div>
+      </div>
+    </div>
+
+    <!-- Results appear here -->
+    <div id="resultsSection" style="display:none;margin-top:16px;">
+      <div class="card">
+        <h3 style="font-size:1rem;margin-bottom:12px;">📊 Candidate Results</h3>
+        <div id="candidateTable"></div>
+        <div class="disclaimer-box" style="margin-top:16px;">
+          <strong>⚠️ Educational simulation only.</strong> These scores come from a computer model. Docking scores are approximations — a high score does not mean a molecule is a real medicine. Real drugs require laboratory testing, clinical trials, and regulatory approval.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/structure_viewer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
+<script>
+  const TARGET_ID = "{{ target.id if target else '' }}";
+  const UNIPROT_ID = "{{ target.uniprot_id if target else '' }}";
+  const PDB_ID = "{{ target.pdb_id if target else '' }}";
+
+  // Load structure on page load
+  document.addEventListener("DOMContentLoaded", async () => {
+    StructureViewer.init("structureViewer");
+    if (!TARGET_ID) return;
+
+    const res = await apiFetch("/api/v3/structure/best", {
+      method: "POST",
+      body: JSON.stringify({ target_id: TARGET_ID, uniprot_id: UNIPROT_ID, pdb_id: PDB_ID })
+    });
+
+    if (res.pdb_url) {
+      StructureViewer.loadPdbUrl(res.pdb_url, res.source === "esmfold" ? "confidence" : "cartoon");
+      const badge = document.getElementById("sourceBadge");
+      if (badge) {
+        badge.textContent = res.source_label || res.source;
+        badge.className = "viewer-source-badge source-" + (res.source || "rcsb");
+        badge.style.display = "block";
+      }
+      if (res.warning) {
+        const w = document.getElementById("viewerWarning");
+        if (w) { w.textContent = "⚠️ " + res.warning; w.style.display = "block"; }
+      }
+    }
+  });
+
+  async function run3DExperiment() {
+    const btn = document.getElementById("run3dBtn");
+    const progress = document.getElementById("run3dProgress");
+    const bar = document.getElementById("progressBar");
+    const lbl = document.getElementById("progressLabel");
+    btn.disabled = true;
+    progress.style.display = "block";
+
+    const steps = [
+      { label: "Validating inputs…", pct: 10 },
+      { label: "Generating candidates with Gemma4…", pct: 35 },
+      { label: "Computing drug-likeness scores…", pct: 60 },
+      { label: "Running molecular docking…", pct: 85 },
+      { label: "Ranking candidates…", pct: 95 },
+    ];
+    let stepIdx = 0;
+    const stepTimer = setInterval(() => {
+      if (stepIdx < steps.length) {
+        bar.style.width = steps[stepIdx].pct + "%";
+        lbl.textContent = steps[stepIdx].label;
+        stepIdx++;
+      }
+    }, 2000);
+
+    const payload = {
+      target_id: TARGET_ID,
+      amino_acid_seq: document.getElementById("amino_acid_seq").value.trim(),
+      seed_smile: document.getElementById("seed_smiles").value.trim(),
+      num_requested: parseInt(document.getElementById("num_candidates").value),
+      noise_level: parseFloat(document.getElementById("noise_level").value),
+      enable_docking: document.getElementById("enable_docking").checked,
+      mode: "3d",
+      uniprot_id: UNIPROT_ID,
+      pdb_id: PDB_ID,
+      target_name: "{{ target.name if target else '' }}",
+    };
+
+    try {
+      const res = await apiFetch("/api/v2/generate", { method: "POST", body: JSON.stringify(payload) });
+      clearInterval(stepTimer);
+      bar.style.width = "100%";
+      lbl.textContent = "Done!";
+      if (res.error) { showAlert(res.error, "danger"); btn.disabled = false; return; }
+      renderCandidates(res.candidates || []);
+      document.getElementById("resultsSection").style.display = "block";
+      showAlert(`Generated ${res.candidates.length} candidates!`, "success");
+    } catch (e) {
+      clearInterval(stepTimer);
+      showAlert("Error: " + e.message, "danger");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderCandidates(candidates) {
+    if (!candidates.length) { document.getElementById("candidateTable").innerHTML = "<p>No valid candidates generated.</p>"; return; }
+    const SCORE_COLOR = s => s >= 0.7 ? "#3fb950" : s >= 0.4 ? "#ffa657" : "#ff7b72";
+    const rows = candidates.map((c, i) => `
+      <tr>
+        <td>${c.rank || i + 1}</td>
+        <td><span style="font-family:monospace;font-size:.78rem;cursor:pointer;" title="${c.smiles}">${c.smiles.length > 35 ? c.smiles.slice(0, 35) + "…" : c.smiles}</span></td>
+        <td style="color:${SCORE_COLOR(c.composite_score || 0)};font-weight:600;">${((c.composite_score || 0) * 100).toFixed(0)}%</td>
+        <td>${c.qed != null ? c.qed.toFixed(2) : "—"}</td>
+        <td>${c.sas != null ? c.sas.toFixed(1) : "—"}</td>
+        <td>${c.docking_score_kcal != null ? c.docking_score_kcal.toFixed(1) + " kcal" : "—"}</td>
+        <td>${c.lipinski_pass ? "✅" : "❌"}</td>
+        <td><span style="font-size:.75rem;padding:2px 8px;border-radius:10px;background:${c.novelty_status === 'novel' ? 'rgba(63,185,80,.15)' : 'rgba(255,166,87,.15)'};color:${c.novelty_status === 'novel' ? '#3fb950' : '#ffa657'}">${c.novelty_status || "—"}</span></td>
+      </tr>`).join("");
+    document.getElementById("candidateTable").innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:.83rem;">
+        <thead><tr style="color:#8b949e;border-bottom:1px solid #30363d;">
+          <th style="padding:6px;">#</th><th>SMILES</th><th>Score</th><th>QED</th><th>SAS</th><th>Docking</th><th>Lipinski</th><th>Novelty</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+</script>
+{% endblock %}

@@ -1,3 +1,4 @@
+# Core web
 flask==3.0.3
 flask-login==0.6.3
 flask-cors==4.0.0
@@ -20,3 +21,10 @@ click==8.1.7
 # torch==2.3.1
 # transformers==4.42.0
 # pandas==2.2.2
+
+# v3 — 3D structure + docking
+vina>=1.2.3
+meeko>=0.5.0
+openbabel-wheel
+scipy
+weasyprint>=62.0

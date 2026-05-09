@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Mission Board — Deep2Lead{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gamification.css') }}">
+{% endblock %}
+{% block content %}
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;">
+
+  <!-- Left: Missions + Badges -->
+  <div>
+    <!-- XP Header -->
+    <div style="background:linear-gradient(135deg,#161b22,#1c2128);border:1px solid #30363d;border-radius:12px;padding:24px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="font-size:3rem;" id="headerLevelIcon">🧪</div>
+        <div style="flex:1;">
+          <div style="font-size:1.3rem;font-weight:700;" id="headerTitle">Scientist Level <span id="headerLevel">1</span></div>
+          <div style="color:#8b949e;font-size:.85rem;margin:4px 0;" id="headerXp">0 XP total</div>
+          <div class="xp-bar-outer" style="width:100%;height:10px;margin-top:8px;">
+            <div class="xp-bar-inner" id="headerXpBar" style="width:0%;"></div>
+          </div>
+          <div style="font-size:.75rem;color:#555;margin-top:4px;" id="headerXpNext"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mission list -->
+    <h3 style="font-size:1rem;font-weight:600;margin-bottom:14px;">📋 Research Missions</h3>
+    <div id="missionList" class="mission-list">
+      <div style="color:#8b949e;padding:20px;">Loading missions…</div>
+    </div>
+
+    <!-- Badges -->
+    <h3 style="font-size:1rem;font-weight:600;margin:24px 0 14px;">🏅 Badges</h3>
+    <div id="badgeGrid" class="badge-grid">
+      <div style="color:#8b949e;padding:10px;">Loading badges…</div>
+    </div>
+  </div>
+
+  <!-- Right: Stats -->
+  <div style="position:sticky;top:80px;">
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px;margin-bottom:16px;">
+      <h4 style="font-size:.9rem;color:#8b949e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;">Your Stats</h4>
+      <div id="statsPanel">Loading…</div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(88,166,255,.08),rgba(210,168,255,.08));border:1px solid rgba(88,166,255,.2);border-radius:10px;padding:18px;">
+      <div style="font-size:.85rem;font-weight:600;margin-bottom:8px;">⚗️ Next Steps</div>
+      <ul style="padding-left:16px;font-size:.82rem;color:#8b949e;line-height:1.8;">
+        <li><a href="{{ url_for('target.target_picker_page') }}" style="color:#58a6ff;">Choose a target</a></li>
+        <li><a href="/run-3d" style="color:#58a6ff;">Run a 3D experiment</a></li>
+        <li><a href="{{ url_for('auto_experiment.auto_exp_page') }}" style="color:#58a6ff;">Try Auto Experiment</a></li>
+        <li><a href="{{ url_for('feed.feed_page') }}" style="color:#58a6ff;">Share your results</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
+<script>
+const MISSION_LINKS = {
+  1: "{{ url_for('experiments.run_page') }}",
+  2: "{{ url_for('target.target_picker_page') }}",
+  3: "/run-3d",
+  4: "{{ url_for('experiments.run_page') }}",
+  5: "{{ url_for('experiments.run_page') }}",
+  6: "{{ url_for('auto_experiment.auto_exp_page') }}",
+  7: "{{ url_for('feed.feed_page') }}",
+};
+
+document.addEventListener("DOMContentLoaded", async () => {
+  // Load XP
+  const xp = await apiFetch("/api/v3/me/xp");
+  document.getElementById("headerLevel").textContent = xp.level;
+  document.getElementById("headerXp").textContent = xp.total_xp + " XP total";
+  document.getElementById("headerXpBar").style.width = (xp.level_progress_pct || 0) + "%";
+  document.getElementById("headerXpNext").textContent = xp.xp_to_next ? `${xp.xp_to_next} XP to Level ${xp.level + 1}` : "Max level reached!";
+  const lvlIcons = ["🧪","🔬","⚗️","🧬","🎯","🤖","🏆","👑"];
+  document.getElementById("headerLevelIcon").textContent = lvlIcons[Math.min(xp.level - 1, lvlIcons.length - 1)];
+
+  // Load missions
+  const mRes = await apiFetch("/api/v3/me/missions");
+  const missions = mRes.missions || [];
+  document.getElementById("missionList").innerHTML = missions.map(m => {
+    const numCls = m.status === "complete" ? "complete-num" : m.status === "available" ? "available-num" : "locked-num";
+    const numText = m.status === "complete" ? "✓" : m.level;
+    let btnHtml = "";
+    if (m.status === "available") btnHtml = `<a href="${MISSION_LINKS[m.level] || '#'}" class="btn-mission available">Start</a>`;
+    else if (m.status === "complete") btnHtml = `<button class="btn-mission complete-btn" disabled>✓ Done</button>`;
+    else btnHtml = `<button class="btn-mission locked-btn" disabled>🔒 Locked</button>`;
+    return `<div class="mission-item ${m.status}">
+      <div class="mission-num ${numCls}">${numText}</div>
+      <div class="mission-body">
+        <div class="mission-name">${m.name}</div>
+        <div class="mission-desc">${m.description}</div>
+      </div>
+      <div class="mission-action">${btnHtml}</div>
+    </div>`;
+  }).join("");
+
+  // Load badges
+  const bRes = await apiFetch("/api/v3/me/badges");
+  const allBadges = bRes.all || [];
+  document.getElementById("badgeGrid").innerHTML = allBadges.map(b => `
+    <div class="badge-item ${b.earned ? 'earned' : 'locked-badge'}" title="${b.description}">
+      <div class="bi-icon">${b.icon}</div>
+      <div class="bi-name">${b.name}</div>
+      <div class="bi-desc">${b.description}</div>
+      <div class="bi-xp">+${b.xp_reward} XP</div>
+      ${b.earned ? `<div style="font-size:.7rem;color:#3fb950;margin-top:4px;">✓ Earned</div>` : ""}
+    </div>`).join("");
+
+  // Stats panel
+  const earned = allBadges.filter(b => b.earned).length;
+  const complete = missions.filter(m => m.status === "complete").length;
+  document.getElementById("statsPanel").innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:.88rem;">
+        <span style="color:#8b949e;">Total XP</span><strong>${xp.total_xp}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.88rem;">
+        <span style="color:#8b949e;">Level</span><strong>${xp.level}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.88rem;">
+        <span style="color:#8b949e;">Badges earned</span><strong>${earned} / ${allBadges.length}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.88rem;">
+        <span style="color:#8b949e;">Missions complete</span><strong>${complete} / ${missions.length}</strong>
+      </div>
+    </div>`;
+});
+</script>
+{% endblock %}

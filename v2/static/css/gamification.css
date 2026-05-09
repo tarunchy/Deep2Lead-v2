@@ -1,0 +1,60 @@
+/* ── Gamification: XP bar, badges, missions, boss bar ── */
+
+/* XP Bar (in navbar) */
+.xp-bar-wrapper { display: flex; align-items: center; gap: 8px; }
+.xp-level-badge { background: linear-gradient(135deg, #58a6ff, #d2a8ff); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+.xp-bar-outer { width: 80px; height: 6px; background: #30363d; border-radius: 3px; overflow: hidden; }
+.xp-bar-inner { height: 100%; background: linear-gradient(90deg, #58a6ff, #3fb950); border-radius: 3px; transition: width 0.8s ease; }
+.xp-text { font-size: 0.7rem; color: #8b949e; white-space: nowrap; }
+
+/* Badge toast notification */
+.badge-toast { position: fixed; bottom: 24px; right: 24px; background: #1c2128; border: 1px solid #3fb950; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.4); animation: slideIn 0.4s ease; max-width: 300px; }
+.badge-toast-icon { font-size: 2rem; }
+.badge-toast-body strong { display: block; font-size: 0.9rem; color: #3fb950; }
+.badge-toast-body span { font-size: 0.8rem; color: #8b949e; }
+@keyframes slideIn { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Mission board */
+.mission-list { display: flex; flex-direction: column; gap: 12px; }
+.mission-item { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px 20px; display: flex; align-items: center; gap: 16px; }
+.mission-item.available { border-color: rgba(88,166,255,0.4); }
+.mission-item.complete { border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.05); }
+.mission-item.locked { opacity: 0.5; }
+.mission-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+.mission-num.locked-num { background: #30363d; color: #8b949e; }
+.mission-num.available-num { background: rgba(88,166,255,0.2); color: #58a6ff; border: 1px solid #58a6ff; }
+.mission-num.complete-num { background: #3fb950; color: #fff; }
+.mission-body { flex: 1; }
+.mission-name { font-weight: 600; font-size: 0.95rem; }
+.mission-desc { font-size: 0.83rem; color: #8b949e; margin-top: 2px; }
+.mission-action { flex-shrink: 0; }
+.btn-mission { padding: 7px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; }
+.btn-mission.available { background: #58a6ff; color: #fff; }
+.btn-mission.complete-btn { background: transparent; border: 1px solid #3fb950; color: #3fb950; cursor: default; }
+.btn-mission.locked-btn { background: #30363d; color: #555; cursor: not-allowed; }
+
+/* Boss health bar */
+.boss-card { background: linear-gradient(135deg, #1c2128, #161b22); border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.boss-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.boss-category { font-size: 0.78rem; color: #8b949e; margin-bottom: 14px; }
+.boss-bar-bg { height: 18px; background: #0d1117; border-radius: 9px; overflow: hidden; border: 1px solid #30363d; position: relative; }
+.boss-bar-fill { height: 100%; border-radius: 9px; transition: width 1s ease; background: linear-gradient(90deg, #ff7b72, #ffa657, #3fb950); }
+.boss-hp-label { display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.8rem; }
+.boss-disclaimer { margin-top: 10px; font-size: 0.75rem; color: #555; font-style: italic; }
+
+/* Badge grid */
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.badge-item { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 16px; text-align: center; }
+.badge-item.earned { border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.05); }
+.badge-item.locked-badge { opacity: 0.35; }
+.badge-item .bi-icon { font-size: 2rem; }
+.badge-item .bi-name { font-size: 0.85rem; font-weight: 600; margin-top: 6px; }
+.badge-item .bi-desc { font-size: 0.75rem; color: #8b949e; margin-top: 4px; line-height: 1.4; }
+.badge-item .bi-xp { font-size: 0.72rem; color: #58a6ff; margin-top: 6px; }
+
+/* Leaderboard */
+.leaderboard-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; margin-bottom: 6px; background: #161b22; border: 1px solid #30363d; }
+.leaderboard-rank { font-size: 1rem; font-weight: 700; width: 28px; text-align: center; }
+.leaderboard-rank.gold { color: #ffd700; }
+.leaderboard-rank.silver { color: #c0c0c0; }
+.leaderboard-rank.bronze { color: #cd7f32; }

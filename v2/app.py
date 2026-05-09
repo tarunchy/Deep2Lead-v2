@@ -29,6 +29,12 @@ def create_app() -> Flask:
     def load_user(user_id):
         return User.query.get(user_id)
 
+    # Ensure all models are imported so Alembic detects them
+    import models.structure_models       # noqa: F401
+    import models.gamification           # noqa: F401
+    import models.auto_experiment_models # noqa: F401
+
+    # v2 blueprints
     from api.auth import bp as auth_bp
     from api.experiments import bp as exp_bp
     from api.feed import bp as feed_bp
@@ -37,13 +43,19 @@ def create_app() -> Flask:
     from api.enrich import bp as enrich_bp
     from api.chatbot import bp as chatbot_bp
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(exp_bp)
-    app.register_blueprint(feed_bp)
-    app.register_blueprint(admin_bp)
-    app.register_blueprint(tutorial_bp)
-    app.register_blueprint(enrich_bp)
-    app.register_blueprint(chatbot_bp)
+    # v3 blueprints
+    from api.target import bp as target_bp
+    from api.structure import bp as structure_bp
+    from api.docking import bp as docking_bp
+    from api.gamification import bp as gamification_bp
+    from api.auto_experiment import bp as auto_exp_bp
+
+    for blueprint in [
+        auth_bp, exp_bp, feed_bp, admin_bp, tutorial_bp,
+        enrich_bp, chatbot_bp,
+        target_bp, structure_bp, docking_bp, gamification_bp, auto_exp_bp,
+    ]:
+        app.register_blueprint(blueprint)
 
     @app.cli.command("create-admin")
     @click.argument("username")
@@ -65,6 +77,14 @@ def create_app() -> Flask:
             db.session.add(user)
             db.session.commit()
             click.echo(f"Admin '{username}' created successfully.")
+
+    @app.cli.command("seed-badges")
+    def seed_badges_cmd():
+        """Seed the badge table with the default badge definitions."""
+        with app.app_context():
+            from services.xp_service import seed_badges
+            seed_badges()
+            click.echo("Badges seeded.")
 
     return app
 

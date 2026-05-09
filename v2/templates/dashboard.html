@@ -2,9 +2,34 @@
 {% block title %}My Experiments — Deep2Lead V2{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-between" style="margin-bottom:20px;">
+<div class="flex items-center justify-between" style="margin-bottom:16px;">
   <h1 class="page-title" style="margin:0;">My Experiments</h1>
   <a href="{{ url_for('experiments.run_page') }}" class="btn btn-primary">+ New Experiment</a>
+</div>
+
+<!-- Quick-access lab modes -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+  <a href="/run-3d" style="text-decoration:none;">
+    <div style="background:linear-gradient(135deg,rgba(88,166,255,.1),rgba(88,166,255,.04));border:1px solid rgba(88,166,255,.25);border-radius:10px;padding:16px;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(88,166,255,.6)'" onmouseout="this.style.borderColor='rgba(88,166,255,.25)'">
+      <div style="font-size:1.5rem;margin-bottom:6px;">⚗️</div>
+      <div style="font-weight:600;font-size:.9rem;">3D Experiment</div>
+      <div style="font-size:.78rem;color:#8b949e;margin-top:3px;">AlphaFold structure + docking</div>
+    </div>
+  </a>
+  <a href="{{ url_for('auto_experiment.auto_exp_page') }}" style="text-decoration:none;">
+    <div style="background:linear-gradient(135deg,rgba(63,185,80,.1),rgba(63,185,80,.04));border:1px solid rgba(63,185,80,.25);border-radius:10px;padding:16px;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(63,185,80,.6)'" onmouseout="this.style.borderColor='rgba(63,185,80,.25)'">
+      <div style="font-size:1.5rem;margin-bottom:6px;">🔁</div>
+      <div style="font-weight:600;font-size:.9rem;">Auto Experiment</div>
+      <div style="font-size:.78rem;color:#8b949e;margin-top:3px;">AI iterate &amp; optimize loop</div>
+    </div>
+  </a>
+  <a href="{{ url_for('gamification.mission_board') }}" style="text-decoration:none;">
+    <div style="background:linear-gradient(135deg,rgba(210,168,255,.1),rgba(210,168,255,.04));border:1px solid rgba(210,168,255,.25);border-radius:10px;padding:16px;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(210,168,255,.6)'" onmouseout="this.style.borderColor='rgba(210,168,255,.25)'">
+      <div style="font-size:1.5rem;margin-bottom:6px;">🏅</div>
+      <div style="font-weight:600;font-size:.9rem;">Missions &amp; Badges</div>
+      <div style="font-size:.78rem;color:#8b949e;margin-top:3px;">Track your progress &amp; XP</div>
+    </div>
+  </a>
 </div>
 
 <div class="tabs">

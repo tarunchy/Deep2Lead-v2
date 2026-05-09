@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Choose a Target — Deep2Lead{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/3d_viewer.css') }}">
+{% endblock %}
+{% block content %}
+<div class="page-header" style="margin-bottom:24px;">
+  <h1 style="font-size:1.6rem;font-weight:700;">🎯 Choose a Biological Target</h1>
+  <p style="color:#8b949e;margin-top:6px;">Pick the protein your candidate molecules will try to bind to. Start with a curated target or search for any protein.</p>
+</div>
+
+<div class="target-search-bar">
+  <input type="text" id="targetSearch" placeholder="Search by name, disease, or organism…" />
+  <button id="targetSearchBtn">Search</button>
+</div>
+
+<div id="categoryTabs" class="category-tabs"></div>
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;">
+  <div id="targetGrid" class="target-grid">
+    <div style="color:#8b949e;padding:20px;">Loading targets…</div>
+  </div>
+  <div id="targetDetail" style="display:none;position:sticky;top:80px;" class="card">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<div style="margin-top:24px;">
+  <a href="{{ url_for('experiments.run_page') }}" class="btn btn-outline" style="margin-right:10px;">← Back to 2D Mode</a>
+  <a id="continueBtn" href="{{ url_for('structure.best_structure') }}"
+     class="btn btn-primary" style="pointer-events:none;opacity:.5;"
+     onclick="return handleContinue(event);">
+    Continue with Selected Target →
+  </a>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/target_picker.js') }}"></script>
+<script>
+  document.getElementById("continueBtn").style.pointerEvents = "auto";
+  document.getElementById("continueBtn").style.opacity = "1";
+  function handleContinue(e) {
+    e.preventDefault();
+    const tid = document.getElementById("f_target_id") ? document.getElementById("f_target_id").value : null;
+    if (!tid) { alert("Please select a target first."); return false; }
+    window.location.href = "/run-3d?target_id=" + encodeURIComponent(tid);
+    return false;
+  }
+  // Hidden fields for form passing
+</script>
+<input type="hidden" id="f_target_id" />
+<input type="hidden" id="f_target_name" />
+<input type="hidden" id="f_uniprot_id" />
+<input type="hidden" id="f_pdb_id" />
+{% endblock %}
