@@ -1,12 +1,13 @@
 // Lazy enrichment panel — called once when user expands the section
 let _enrichLoaded = false;
+const _enrichExpId = document.getElementById("experiment-data")?.dataset?.id;
 
 function toggleEnrich() {
   const body = document.getElementById("enrich-body");
   const icon = document.getElementById("enrich-toggle-icon");
   const isOpen = body.style.display !== "none";
   body.style.display = isOpen ? "none" : "block";
-  icon.textContent = isOpen ? "▼ Load" : "▲ Hide";
+  icon.textContent = isOpen ? "▲ Hide" : "▼ Load from ChEMBL & PubChem";
   if (!isOpen && !_enrichLoaded) loadEnrichment();
 }
 
@@ -16,10 +17,10 @@ async function loadEnrichment() {
   content.innerHTML = '<p class="text-muted text-sm">Querying ChEMBL and PubChem…</p>';
 
   try {
-    const data = await apiFetch(`/api/v2/enrich/${expId}`);
+    const data = await apiFetch(`/api/v2/enrich/${_enrichExpId}`);
     renderEnrichment(data, content);
   } catch (err) {
-    content.innerHTML = `<p class="text-muted text-sm enrich-error">Could not load enrichment: ${err.message}</p>`;
+    content.innerHTML = `<p class="text-muted text-sm enrich-error">Could not load enrichment data: ${err.message}</p>`;
   }
 }
 
