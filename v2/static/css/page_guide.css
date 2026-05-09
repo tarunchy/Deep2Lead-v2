@@ -177,6 +177,25 @@
 }
 .gp-btn:hover:not(:disabled) { background: var(--bg); }
 .gp-btn:disabled { opacity: .4; cursor: not-allowed; }
-.gp-btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-.gp-btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+
+/* Pause (secondary) */
+.gp-btn-pause {
+  color: var(--accent);
+  border-color: #bee3f8;
+  background: var(--accent-light);
+  font-weight: 600;
+  min-width: 90px;
+}
+.gp-btn-pause:hover:not(:disabled) { background: #dbeafe; }
+
+/* Resume (primary — stands out when paused) */
+.gp-btn-resume {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+  min-width: 90px;
+}
+.gp-btn-resume:hover:not(:disabled) { background: var(--accent-hover); }
+
 .gp-btn-mute { color: var(--text-muted); min-width: 28px; text-align: center; padding: 5px 7px; }
