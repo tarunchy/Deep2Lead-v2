@@ -131,10 +131,40 @@
     <!-- Results appear here -->
     <div id="resultsSection" style="display:none;margin-top:16px;">
       <div class="card">
-        <h3 style="font-size:1rem;margin-bottom:12px;">📊 Candidate Results</h3>
-        <div id="candidateTable"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="font-size:1rem;margin:0;">📊 Step 4: Candidate Results</h3>
+          <span id="candidateCount" style="font-size:.8rem;color:#8b949e;background:#1c2128;padding:3px 10px;border-radius:20px;"></span>
+        </div>
+        <div style="overflow-x:auto;">
+          <div id="candidateTable"></div>
+        </div>
         <div class="disclaimer-box" style="margin-top:16px;">
           <strong>⚠️ Educational simulation only.</strong> These scores come from a computer model. Docking scores are approximations — a high score does not mean a molecule is a real medicine. Real drugs require laboratory testing, clinical trials, and regulatory approval.
+        </div>
+      </div>
+
+      <!-- What's next -->
+      <div class="card" style="margin-top:14px;border:1px solid rgba(88,166,255,.25);background:rgba(88,166,255,.04);">
+        <h3 style="font-size:.95rem;margin-bottom:14px;color:#58a6ff;">🔬 What to do next</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div style="background:#1c2128;border-radius:8px;padding:12px;">
+            <div style="font-size:1.2rem;margin-bottom:6px;">🥇</div>
+            <div style="font-weight:600;font-size:.85rem;margin-bottom:4px;">Pick your lead</div>
+            <div style="font-size:.78rem;color:#8b949e;line-height:1.5;">Click any row to copy its SMILES string. Focus on candidates with Score ≥ 70%, Lipinski ✅, and low SAS (easier to synthesise).</div>
+          </div>
+          <div style="background:#1c2128;border-radius:8px;padding:12px;">
+            <div style="font-size:1.2rem;margin-bottom:6px;">🔁</div>
+            <div style="font-weight:600;font-size:.85rem;margin-bottom:4px;">Refine & iterate</div>
+            <div style="font-size:.78rem;color:#8b949e;line-height:1.5;">Scroll up, paste the best SMILES as your new Seed, increase candidates to 15, and re-run to explore neighbours of your top hit.</div>
+          </div>
+          <div style="background:#1c2128;border-radius:8px;padding:12px;">
+            <div style="font-size:1.2rem;margin-bottom:6px;">📁</div>
+            <div style="font-weight:600;font-size:.85rem;margin-bottom:4px;">Save your work</div>
+            <div style="font-size:.78rem;color:#8b949e;line-height:1.5;">This experiment is saved automatically. Visit <a href="/experiments" style="color:#58a6ff;">My Experiments</a> to add a title, hypothesis, and share with your class.</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px;background:#1c2128;border-radius:8px;font-size:.8rem;color:#8b949e;">
+          💡 <strong style="color:#c9d1d9;">Tip:</strong> In real drug discovery, chemists would now synthesise the top 2–3 candidates in the lab and test them on cells before any animal or human trials.
         </div>
       </div>
     </div>
@@ -282,26 +312,62 @@ window.PAGE_GUIDE = {
   }
 
   function renderCandidates(candidates) {
-    if (!candidates.length) { document.getElementById("candidateTable").innerHTML = "<p>No valid candidates generated.</p>"; return; }
+    const el = document.getElementById("candidateTable");
+    const count = document.getElementById("candidateCount");
+    if (!candidates.length) { el.innerHTML = "<p style='color:#8b949e;padding:12px 0;'>No valid candidates generated.</p>"; return; }
+
+    count.textContent = candidates.length + " candidates";
+
     const SCORE_COLOR = s => s >= 0.7 ? "#3fb950" : s >= 0.4 ? "#ffa657" : "#ff7b72";
-    const rows = candidates.map((c, i) => `
-      <tr>
-        <td>${c.rank || i + 1}</td>
-        <td><span style="font-family:monospace;font-size:.78rem;cursor:pointer;" title="${c.smiles}">${c.smiles.length > 35 ? c.smiles.slice(0, 35) + "…" : c.smiles}</span></td>
-        <td style="color:${SCORE_COLOR(c.composite_score || 0)};font-weight:600;">${((c.composite_score || 0) * 100).toFixed(0)}%</td>
-        <td>${c.qed != null ? c.qed.toFixed(2) : "—"}</td>
-        <td>${c.sas != null ? c.sas.toFixed(1) : "—"}</td>
-        <td>${c.docking_score_kcal != null ? c.docking_score_kcal.toFixed(1) + " kcal" : "—"}</td>
-        <td>${c.lipinski_pass ? "✅" : "❌"}</td>
-        <td><span style="font-size:.75rem;padding:2px 8px;border-radius:10px;background:${c.novelty_status === 'novel' ? 'rgba(63,185,80,.15)' : 'rgba(255,166,87,.15)'};color:${c.novelty_status === 'novel' ? '#3fb950' : '#ffa657'}">${c.novelty_status || "—"}</span></td>
-      </tr>`).join("");
-    document.getElementById("candidateTable").innerHTML = `
-      <table style="width:100%;border-collapse:collapse;font-size:.83rem;">
-        <thead><tr style="color:#8b949e;border-bottom:1px solid #30363d;">
-          <th style="padding:6px;">#</th><th>SMILES</th><th>Score</th><th>QED</th><th>SAS</th><th>Docking</th><th>Lipinski</th><th>Novelty</th>
-        </tr></thead>
+    const TH = "padding:8px 12px;text-align:left;font-weight:600;font-size:.75rem;letter-spacing:.04em;white-space:nowrap;";
+    const TD = "padding:8px 12px;vertical-align:middle;white-space:nowrap;border-bottom:1px solid #21262d;";
+
+    const rows = candidates.map((c, i) => {
+      const smiles = c.smiles || "";
+      const short = smiles.length > 28 ? smiles.slice(0, 28) + "…" : smiles;
+      return `<tr style="cursor:pointer;transition:background .15s;"
+                   onmouseover="this.style.background='rgba(88,166,255,.06)'"
+                   onmouseout="this.style.background=''"
+                   onclick="copySmiles('${smiles.replace(/'/g, "\\'")}',this)"
+                   title="Click to copy SMILES">
+        <td style="${TD}color:#8b949e;font-weight:600;">${c.rank || i + 1}</td>
+        <td style="${TD}font-family:monospace;font-size:.78rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;">${short}</td>
+        <td style="${TD}color:${SCORE_COLOR(c.composite_score || 0)};font-weight:700;">${((c.composite_score || 0) * 100).toFixed(0)}%</td>
+        <td style="${TD}">${c.qed != null ? c.qed.toFixed(2) : "—"}</td>
+        <td style="${TD}">${c.sas != null ? c.sas.toFixed(1) : "—"}</td>
+        <td style="${TD}color:#8b949e;">${c.docking_score_kcal != null ? c.docking_score_kcal.toFixed(1) + " kcal" : "—"}</td>
+        <td style="${TD}text-align:center;">${c.lipinski_pass ? "✅" : "❌"}</td>
+        <td style="${TD}"><span style="font-size:.73rem;padding:2px 8px;border-radius:10px;background:${c.novelty_status === 'novel' ? 'rgba(63,185,80,.15)' : 'rgba(255,166,87,.15)'};color:${c.novelty_status === 'novel' ? '#3fb950' : '#ffa657'}">${c.novelty_status || "—"}</span></td>
+      </tr>`;
+    }).join("");
+
+    el.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:.83rem;min-width:560px;">
+        <thead>
+          <tr style="border-bottom:2px solid #30363d;">
+            <th style="${TH}color:#8b949e;">#</th>
+            <th style="${TH}color:#8b949e;">SMILES</th>
+            <th style="${TH}color:#8b949e;">Score</th>
+            <th style="${TH}color:#8b949e;">QED</th>
+            <th style="${TH}color:#8b949e;">SAS</th>
+            <th style="${TH}color:#8b949e;">Docking</th>
+            <th style="${TH}color:#8b949e;text-align:center;">Lipinski</th>
+            <th style="${TH}color:#8b949e;">Novelty</th>
+          </tr>
+        </thead>
         <tbody>${rows}</tbody>
       </table>`;
+  }
+
+  function copySmiles(smiles, row) {
+    navigator.clipboard.writeText(smiles).then(() => {
+      const orig = row.style.background;
+      row.style.background = "rgba(63,185,80,.15)";
+      setTimeout(() => row.style.background = "", 800);
+      showAlert("SMILES copied — paste it as your new Seed to iterate on this candidate.", "success");
+    }).catch(() => {
+      showAlert("Copy failed — SMILES: " + smiles, "info");
+    });
   }
 </script>
 {% endblock %}
