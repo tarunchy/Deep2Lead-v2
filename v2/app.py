@@ -49,11 +49,13 @@ def create_app() -> Flask:
     from api.docking import bp as docking_bp
     from api.gamification import bp as gamification_bp
     from api.auto_experiment import bp as auto_exp_bp
+    from api.ask_ai import bp as ask_ai_bp
 
     for blueprint in [
         auth_bp, exp_bp, feed_bp, admin_bp, tutorial_bp,
         enrich_bp, chatbot_bp,
         target_bp, structure_bp, docking_bp, gamification_bp, auto_exp_bp,
+        ask_ai_bp,
     ]:
         app.register_blueprint(blueprint)
 

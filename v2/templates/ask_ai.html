@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Ask AI — Deep2Lead{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ask_ai.css') }}">
+{% endblock %}
+{% block content %}
+
+<div class="askai-wrap">
+
+  <!-- Header -->
+  <div class="askai-header">
+    <h1>🤖 Ask AI</h1>
+    <p>Ask any question about drug discovery, molecules, proteins, or science — by voice or text.
+       The AI uses the same Gemma model powering your experiments.</p>
+  </div>
+
+  <!-- Chat feed -->
+  <div class="askai-feed" id="askFeed">
+    <!-- Welcome message -->
+    <div class="ai-msg ai">
+      <div class="ai-avatar">🤖</div>
+      <div class="ai-bubble">
+        Hi! I'm your AI research assistant. You can ask me anything — what a docking score means,
+        how AlphaFold works, what makes a good drug molecule, or anything else about the science here.
+        <br><br>
+        Click the <strong>🎙 mic</strong> to ask by voice, or type your question below.
+        <br><br>
+        <button class="ai-play-btn"
+          onclick="toggleSpeech(this, &quot;Hi! I'm your AI research assistant. You can ask me anything — what a docking score means, how AlphaFold works, what makes a good drug molecule, or anything else about the science here. Click the mic to ask by voice, or type your question below.&quot;)">
+          ▶ Play
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input area -->
+  <div class="askai-input-area">
+    <div class="askai-status" id="askStatus"></div>
+
+    <div class="askai-row">
+      <button class="askai-mic" id="askMic" title="Click to record, click again to stop">🎙</button>
+      <textarea id="askInput" class="askai-textarea" rows="1"
+        placeholder="Ask a question… (Enter to send, Shift+Enter for newline)"></textarea>
+      <button class="askai-send" id="askSend" title="Send">➤</button>
+    </div>
+
+    <!-- Quick hint chips -->
+    <div class="askai-hints">
+      <button class="hint-chip" onclick="askHint('What is molecular docking and why does it matter?')">What is molecular docking?</button>
+      <button class="hint-chip" onclick="askHint('How does AlphaFold predict protein structure?')">How does AlphaFold work?</button>
+      <button class="hint-chip" onclick="askHint('What does QED score mean for a drug molecule?')">What is QED score?</button>
+      <button class="hint-chip" onclick="askHint('Explain the Lipinski Rule of Five in simple terms.')">Lipinski Rule of Five</button>
+      <button class="hint-chip" onclick="askHint('What is the difference between a target and a ligand?')">Target vs Ligand</button>
+      <button class="hint-chip" onclick="askHint('How does the Auto Experiment optimization loop work?')">How Auto Experiment works</button>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ask_ai.js') }}"></script>
+{% endblock %}

@@ -54,6 +54,10 @@ DOCKING_N_POSES = 5
 AUTO_EXP_MAX_ROUNDS = int(_os.getenv("AUTO_EXP_MAX_ROUNDS", "5"))
 AUTO_EXP_MAX_MOLECULES = int(_os.getenv("AUTO_EXP_MAX_MOLECULES", "10"))
 
+# Whisper STT service (dlyog05)
+WHISPER_URL     = _os.getenv("WHISPER_URL",     "http://dlyog05:5002/api/transcribe")
+WHISPER_TIMEOUT = int(_os.getenv("WHISPER_TIMEOUT", "60"))
+
 # Gamification XP values
 XP_EVENTS = {
     "sequence_validated": 10,
