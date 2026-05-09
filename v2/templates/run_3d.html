@@ -138,34 +138,34 @@
 <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
 <script>
 window.PAGE_GUIDE = {
-  title: "How 3D Experiment Works",
+  title: "3D Experiment Demo",
   character: "⚗️",
   voice: "af_heart",
   steps: [
     {
-      bubble: "Welcome! Here you predict a protein's 3D structure using AlphaFold, then dock molecules into its binding pocket.",
-      text: "Welcome to 3D Experiment! This is computational drug discovery at its most visual. You'll load a protein's three-dimensional structure — either from the Protein Data Bank or predicted by AlphaFold — then generate candidate molecules and run molecular docking to see how well each one physically fits into the protein's active site. It's the same approach real researchers use before taking a molecule into the lab.",
-      highlight: ".page-header"
+      bubble: "Here you predict a protein's 3D structure with AlphaFold, then dock molecules into its binding pocket.",
+      text: "Welcome to 3D Experiment! This is computational drug discovery at its most visual. You load a protein's three-dimensional structure from AlphaFold or the Protein Data Bank, then generate candidate molecules and run molecular docking to see how well each one physically fits into the protein's active site. It's the same pipeline real researchers use before taking a molecule into the lab.",
+      target: ".page-header", action: "none"
     },
     {
-      bubble: "Step 1 — Your target protein is shown here. It shows the disease link, UniProt ID, and a known drug for this target.",
-      text: "Your selected target protein appears in this card. It shows the protein name, the disease it's associated with, its UniProt identifier used to fetch the AlphaFold structure, and its PDB identifier for the experimental structure. The key analogy gives you an intuitive way to understand what this protein does in the body. If no target is shown, click Choose a Target first.",
-      highlight: ".card"
+      bubble: "This card shows your target protein — disease link, UniProt ID, and a known drug. Click Change Target to pick a different one.",
+      text: "Your selected target protein appears in this card. It shows the protein name, the disease it's associated with, the UniProt identifier used to fetch the AlphaFold structure, and the PDB identifier for the experimental structure. Click Change Target if you want to switch to a different protein. If no target is shown, click Choose a Target first.",
+      target: ".card", action: "click"
     },
     {
-      bubble: "Step 2 — The 3D viewer loads the protein structure. Blue = high confidence, red = lower confidence. Drag to rotate.",
-      text: "The 3D structure viewer loads automatically using AlphaFold 2 prediction data or the experimental PDB structure. The color represents confidence — dark blue regions are predicted with very high confidence, while orange and red regions are less certain. You can click and drag to rotate the protein, scroll to zoom in and out, and use the Cartoon, Stick, or Confidence buttons to switch visualization styles.",
-      highlight: "#structureViewer"
+      bubble: "The 3D viewer loads the protein structure automatically. Blue = high confidence, red = low. Click and drag to rotate!",
+      text: "The 3D structure viewer loads the protein automatically. The color represents prediction confidence from AlphaFold — dark blue regions are predicted with very high confidence, while orange and red regions are less certain. Click and drag to rotate the protein, scroll to zoom in and out, and use the Cartoon, Stick, or Confidence buttons below to change the visualization style.",
+      target: "#structureViewer", action: "none"
     },
     {
-      bubble: "Step 3 — Enter a seed SMILES, set diversity and candidate count, then hit Generate & Score Candidates.",
-      text: "In the Generate and Dock panel, a known drug for your target is pre-filled as the seed SMILES. You can replace it with any valid SMILES string. Choose how many candidates to generate — 5 is fast, 10 gives better coverage. The diversity slider controls how different the AI-generated molecules are from your seed — low keeps them similar, high explores distant chemical space. Enable docking for more accurate scores, then hit Generate and Score Candidates.",
-      highlight: "#run3dForm"
+      bubble: "A known drug is pre-filled as the seed SMILES. Click Generate & Score Candidates to run the experiment.",
+      text: "In the Generate and Dock panel, a known drug for your target is pre-filled as the seed SMILES molecule. You can replace it with any valid SMILES string. Choose how many candidates to generate — 5 is fast, 10 gives better coverage. The diversity level controls how different the AI-generated molecules are from your seed. Enable docking for more accurate binding scores. Then click Generate and Score Candidates.",
+      target: "#run3dBtn", action: "click"
     },
     {
-      bubble: "Results show Score, QED, SAS, Docking energy, Lipinski pass, and Novelty for each candidate.",
-      text: "Results appear ranked by composite score. QED is drug-likeness from zero to one — higher is better. SAS is synthetic accessibility — lower means easier to make in a real chemistry lab. The docking score in kilocalories per mole measures binding energy — more negative values mean stronger predicted binding to your target protein. Lipinski Pass means the molecule follows the Rule of Five for oral bioavailability. Novelty shows whether this exact molecule is new or already known in chemical databases like PubChem.",
-      highlight: "#resultsSection"
+      bubble: "Results appear ranked by composite score: QED, SAS, docking energy, Lipinski pass, and novelty.",
+      text: "Results appear ranked by composite score. QED is drug-likeness from zero to one — higher is better. SAS is synthetic accessibility — lower means easier to synthesize in a real chemistry lab. The docking score in kilocalories per mole measures binding energy — more negative means stronger predicted binding. Lipinski Pass means the molecule follows the Rule of Five for oral bioavailability. Novelty shows whether this molecule is new or already known in databases like PubChem.",
+      target: "#candidateTable", action: "none"
     }
   ]
 };

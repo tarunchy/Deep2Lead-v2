@@ -150,39 +150,39 @@
 <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
 <script>
 window.PAGE_GUIDE = {
-  title: "How Auto Experiment Works",
+  title: "Auto Experiment Demo",
   character: "🤖",
   voice: "af_heart",
   steps: [
     {
-      bubble: "Welcome! Auto Experiment runs an AI loop — generate molecules, score them, keep the best, repeat. Inspired by Karpathy's autoresearch.",
-      text: "Welcome to Auto Experiment! This is your AI-powered molecule optimization loop. Just like a scientist runs multiple rounds of experiments, the AI here generates candidate drug molecules, scores them on drug-likeness and binding strength, keeps the best performer as the new seed, and then repeats. It's inspired by Andrej Karpathy's autoresearch concept, adapted here for drug discovery.",
-      highlight: ".page-header"
+      bubble: "Auto Experiment runs an AI loop: generate molecules → score → keep the best → repeat. Like a robot scientist.",
+      text: "Welcome to Auto Experiment! This is your AI-powered molecule optimization loop. Just like a scientist runs multiple rounds of experiments, the AI here generates candidate drug molecules, scores them on drug-likeness and binding strength, keeps the best one as the new seed, and then repeats. It's inspired by Andrej Karpathy's autoresearch concept, adapted here for drug discovery.",
+      target: ".page-header", action: "none"
     },
     {
-      bubble: "Step 1 — Select an experiment. This gives the AI a seed molecule — a starting structure to evolve from.",
-      text: "Start by selecting one of your previous experiments from this dropdown. Each experiment contains a seed SMILES molecule, which is the chemical structure the AI will use as its starting point. Think of it as choosing which molecule to evolve. If you haven't run an experiment yet, go to Run Experiment first.",
-      highlight: "#expSelect"
+      bubble: "Click this dropdown to select an experiment. It gives the AI a seed molecule — a starting structure to evolve from.",
+      text: "Start by clicking this dropdown to select one of your previous experiments. Each experiment contains a seed SMILES molecule, which is the chemical structure the AI will use as its starting point for optimization. Think of it as choosing which molecule to evolve. If you haven't run an experiment yet, go to Run Experiment first.",
+      target: "#expSelect", action: "click"
     },
     {
-      bubble: "Step 2 — Choose a strategy. Balanced is a safe default. Explorer tries diverse chemistry. Safety First focuses on drug-likeness.",
-      text: "Now choose your optimization strategy. Balanced weights all objectives equally and works well for most cases. Conservative stays close to your starting molecule with small chemical changes. Explorer tries structurally diverse molecules to cover more chemical space. Novelty Hunter prioritizes molecules not yet seen in chemical databases. Safety First focuses heavily on Lipinski drug-likeness rules, which predict whether a molecule could survive as an oral medicine.",
-      highlight: ".strategy-grid"
+      bubble: "Click a strategy card. Balanced works for most cases. Explorer tries diverse chemistry. Safety First focuses on drug-likeness.",
+      text: "Now click a strategy card to choose your optimization approach. Balanced weights all objectives equally. Conservative stays close to your starting molecule. Explorer tries structurally diverse molecules. Novelty Hunter prioritizes molecules not yet in chemical databases. Safety First focuses heavily on Lipinski drug-likeness rules for oral medicines.",
+      target: ".strategy-grid", action: "click"
     },
     {
-      bubble: "Step 3 — Set rounds (up to 5) and molecules per round (up to 10). More rounds means deeper optimization.",
-      text: "Configure how many optimization rounds to run — up to 5 — and how many candidate molecules to generate each round, up to 10. Each round, the AI generates this many molecules, scores all of them, and picks the best one as the new seed. More rounds gives more chances to find a better molecule, but also takes longer. Start with 3 rounds and 5 molecules to get a feel for it.",
-      highlight: "#rounds"
+      bubble: "Set rounds to 3 and molecules per round to 5. Click the rounds input to change it.",
+      text: "Configure how many optimization rounds to run — up to 5 — and how many candidate molecules to generate each round. Each round the AI generates these molecules, scores them all, and picks the best one as the new seed. Start with 3 rounds and 5 molecules. More rounds means more optimization but takes longer.",
+      target: "#rounds", action: "click"
     },
     {
-      bubble: "Hit Start Loop! Watch the score chart and log update in real time as the AI iterates round by round.",
-      text: "Press Start Loop to begin the optimization! You'll see a live log at the bottom showing exactly what the AI is doing at each step. The score chart tracks improvement round by round. Each round card shows whether the round was Kept — meaning the best score improved — or Discarded — meaning no better molecule was found that round. Don't worry if early rounds discard; the AI keeps the best overall score across all rounds.",
-      highlight: "#startAutoBtn"
+      bubble: "Click Start Loop — and watch the score chart, round cards, and log update live as the AI iterates!",
+      text: "Now click Start Loop to begin! You'll see a live log showing exactly what the AI is doing. The score chart tracks improvement round by round. Each round card shows Keep — score improved — or Discard — no improvement found. The AI always keeps the best molecule found across all rounds, even if later rounds don't improve.",
+      target: "#startAutoBtn", action: "click"
     },
     {
-      bubble: "The Boss Health Bar shows your best molecule vs the target. Lower health = better binding. This is a simulation!",
-      text: "Watch the Boss Health Bar as you run rounds! As your molecules get better composite scores, the boss health drops — a fun way to visualize optimization progress. One hundred percent health means your molecules aren't binding well. Zero would mean perfect computational binding. The round history on the right shows kept versus discarded rounds, and the score trend chart shows your improvement trajectory. Remember: this is an educational computer simulation. Real drug candidates must be validated in laboratory experiments before they mean anything medically.",
-      highlight: "#bossCard"
+      bubble: "The Boss Health Bar fills down as your molecules improve. Lower health = better binding. This is a simulation!",
+      text: "Watch the Boss Health Bar! As your molecules get better composite scores, the boss health drops. One hundred percent health means no binding. Lower health means stronger predicted binding. The score trend chart on the right shows your improvement across rounds. Remember — this is an educational computer simulation. Real drug candidates require lab testing and clinical trials before they mean anything medically.",
+      target: "#bossCard", action: "none"
     }
   ]
 };

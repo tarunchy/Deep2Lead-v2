@@ -61,29 +61,29 @@
 <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
 <script>
 window.PAGE_GUIDE = {
-  title: "Missions & XP System",
+  title: "Missions & XP Demo",
   character: "🏅",
   voice: "af_heart",
   steps: [
     {
-      bubble: "Your XP and level are shown here. Complete missions and earn badges to level up from Scientist to Champion.",
-      text: "Welcome to your Mission Board! This is your progress dashboard. Your total XP and current level are shown at the top. You start as a Level 1 Scientist and can reach Level 8 Champion. XP is earned automatically every time you use the platform — viewing protein structures, generating molecules, running experiments, publishing results, and completing Auto Experiment runs all give you XP.",
-      highlight: "#headerLevel"
+      bubble: "This is your XP header. It shows your level and progress bar. Click it to see how close you are to the next level.",
+      text: "Welcome to your Mission Board! Your total XP and current level are shown here. You start as a Level 1 Scientist and can reach Level 8 Champion. XP is earned automatically — viewing protein structures, generating molecules, running experiments, publishing results, and completing Auto Experiment runs all give you XP without any extra steps.",
+      target: "#headerLevelIcon", action: "none"
     },
     {
-      bubble: "Missions are sequential challenges — complete them in order. Each one teaches a core drug discovery skill.",
-      text: "Missions are your guided learning path through drug discovery. They must be completed in order — each mission unlocks the next one. The 7 missions cover the full pipeline: starting with basic molecule entry, then choosing a target and viewing its 3D structure, running your first docking experiment, generating AI candidate molecules, handling a mutation challenge, running an Auto Experiment loop, and finally submitting your best molecule as a research defense.",
-      highlight: "#missionList"
+      bubble: "These are your missions — complete them in order. Click Start on the available mission to begin.",
+      text: "Missions are your guided learning path through drug discovery. They must be completed in order — each one unlocks the next. The 7 missions go from basic molecule entry, to choosing a target and viewing its 3D structure, to running docking, generating AI molecules, handling a mutation challenge, running an Auto Experiment loop, and finally submitting a research defense.",
+      target: "#missionList", action: "click"
     },
     {
-      bubble: "Badges are earned automatically when you hit specific milestones — like your first docking run or publishing an experiment.",
-      text: "Badges are special achievements earned when you hit specific milestones. The Structure Seeker badge is awarded the first time you view a 3D protein structure. The Docking Rookie badge rewards your first molecular docking run. The Novelty Hunter badge is earned when you find a molecule not in PubChem. The Loop Master badge — worth 300 XP — is awarded for completing a full Auto Experiment run. Earned badges are highlighted; locked ones show what you still need to do.",
-      highlight: "#badgeGrid"
+      bubble: "Badges are earned at milestones. Click any badge to see what you need to do to earn it.",
+      text: "Badges are earned when you hit specific milestones automatically. The Structure Seeker badge is awarded when you first view a 3D protein structure. Docking Rookie rewards your first docking run. Novelty Hunter is earned when you find a molecule not in PubChem. The Loop Master badge — worth 300 XP — rewards a complete Auto Experiment run.",
+      target: "#badgeGrid", action: "click"
     },
     {
-      bubble: "Your Stats panel shows total XP, level, badges earned, and missions complete at a glance.",
-      text: "The Stats panel on the right keeps a quick summary of your progress — total XP accumulated, your current level, how many badges you've earned out of ten, and how many missions you've completed out of seven. Use the Next Steps links to jump directly to whichever part of the platform will earn you the most XP right now. The fastest way to level up is to run a full Auto Experiment — it rewards 100 XP for completion plus the Loop Master badge worth another 300 XP.",
-      highlight: "#statsPanel"
+      bubble: "Your Stats panel shows XP, level, badges, and missions at a glance. Use Next Steps links to earn more XP fast.",
+      text: "The Stats panel keeps a quick summary of your progress — total XP, current level, badges earned out of 10, and missions completed out of 7. The fastest way to level up is to run a full Auto Experiment — it gives 100 XP for completion plus the Loop Master badge worth 300 XP — pushing you from Level 2 to Level 3 in one run.",
+      target: "#statsPanel", action: "none"
     }
   ]
 };
