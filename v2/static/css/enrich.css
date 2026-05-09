@@ -1,0 +1,83 @@
+/* ── Enrichment panel ───────────────────────────────────────────── */
+.enrich-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.enrich-header:hover .enrich-toggle { color: var(--accent); }
+
+.enrich-toggle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  transition: color .15s;
+}
+
+.enrich-link-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.enrich-ext-link {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  background: var(--accent-light);
+  transition: background .15s;
+}
+.enrich-ext-link:hover { background: #d6eaff; }
+
+.enrich-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.enrich-panel {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.enrich-panel-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.enrich-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.enrich-table th {
+  text-align: left;
+  padding: 4px 8px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.enrich-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.enrich-table tr:last-child td { border-bottom: none; }
+.enrich-table a { color: var(--accent); text-decoration: none; }
+.enrich-table a:hover { text-decoration: underline; }
+
+.enrich-name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.enrich-approved { color: var(--success); font-weight: 600; }
+.enrich-error { color: var(--text-muted); font-size: 0.82rem; font-style: italic; }

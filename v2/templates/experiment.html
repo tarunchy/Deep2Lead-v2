@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% block title %}{{ experiment.title or "Experiment" }} — Deep2Lead V2{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/enrich.css') }}">
+{% endblock %}
 
 {% block content %}
 <div id="experiment-data" data-id="{{ experiment.id }}" style="display:none;"></div>
@@ -114,6 +117,17 @@
   </div>
 </div>
 
+<!-- External Enrichment -->
+<div class="card" style="margin-bottom:24px;">
+  <div class="enrich-header" onclick="toggleEnrich()">
+    <p class="section-title" style="margin:0;">🔬 External Database Cross-Validation</p>
+    <span id="enrich-toggle-icon" class="enrich-toggle">▼ Load from ChEMBL &amp; PubChem</span>
+  </div>
+  <div id="enrich-body" style="display:none;margin-top:16px;">
+    <div id="enrich-content"></div>
+  </div>
+</div>
+
 <!-- Comments -->
 {% if experiment.status == 'published' %}
 <div class="card">
@@ -219,4 +233,5 @@ async function retractExp() {
 }
 </script>
 <script src="{{ url_for('static', filename='js/experiment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/enrich.js') }}"></script>
 {% endblock %}

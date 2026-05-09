@@ -252,3 +252,128 @@ Run full test suite: `cd v2 && python scripts/seed_and_test.py`
 - [ ] **SMILES diversity check** — Pre-filter generated SMILES so no two candidates have Tanimoto > 0.9 to each other (avoids near-duplicate clusters).
 - [ ] **Retracted experiment recovery** — Admin UI button to restore a retracted experiment to draft.
 - [ ] **Student profile page** — `/profile/<username>` showing all published experiments, like count, cohort.
+
+---
+
+## MCP (Model Context Protocol) Integration Plan
+
+### What MCP is
+MCP servers expose tools that AI agents (Claude) can call. For Deep2Lead, the strategy is **two-pronged**:
+1. **Backend enrichment** — Flask calls the underlying public REST APIs directly (simpler than running MCP servers as subprocesses). The Flask endpoints wrap these APIs and return structured JSON to the frontend.
+2. **Claude Code MCP config** — configure MCP servers in `~/.claude/mcp.json` so Claude can look up drug data while developing or helping students.
+
+The underlying REST APIs that the MCP servers wrap are all **public and free** — no API key required for Tier 1 servers.
+
+---
+
+### Tier 1 — Integrate into Flask backend (no API key, free, high value)
+
+#### 1. ChEMBL REST API → `POST /api/v2/enrich/chembl`
+- **What**: Bioactivity data (IC50, Ki, EC50) for any SMILES against any target
+- **REST base**: `https://www.ebi.ac.uk/chembl/api/data`
+- **MCP server**: `github.com/Augmented-Nature/ChEMBL-MCP-Server` (27 tools, Node.js stdio)
+- **Flask call**: `GET /chembl/api/data/similarity/{smiles}/85?format=json` for similar compounds
+- **Use in app**: After generation, show known ChEMBL bioactivity for each candidate; cross-validate DTI heuristic score against real IC50 data
+
+#### 2. PubChem REST API → `POST /api/v2/enrich/pubchem`
+- **What**: 110M compound database — lookup by SMILES, get CID, synonyms, XLogP3, GHS hazard, patent cross-refs
+- **REST base**: `https://pubchem.ncbi.nlm.nih.gov/rest/pug`
+- **MCP server**: `github.com/Augmented-Nature/PubChem-MCP-Server` (24 tools, Node.js stdio)
+- **Flask call**: `GET /pug/compound/smiles/{encoded_smiles}/property/XLogP,MolecularWeight,IUPACName/JSON`
+- **Use in app**: Check if generated SMILES already exists in PubChem (novelty check); pull XLogP3 for LogP validation; fetch GHS hazard flags
+
+#### 3. Open Targets GraphQL API → `POST /api/v2/enrich/target`
+- **What**: Evidence scores linking genes to diseases from 20+ databases (ChEMBL, ClinVar, GWAS, Reactome)
+- **REST base**: `https://api.platform.opentargets.org/api/v4/graphql`
+- **MCP server**: `github.com/Augmented-Nature/OpenTargets-MCP-Server` (6 tools, Node.js stdio)
+- **Flask call**: GraphQL POST with gene symbol query
+- **Use in app**: Validate target choice — show disease association score before running generation; surface related targets student may not have considered
+
+#### 4. UniProt REST API → `POST /api/v2/enrich/protein`
+- **What**: Protein name, function, active sites, disease associations, sequence
+- **REST base**: `https://rest.uniprot.org/uniprotkb`
+- **MCP server**: `github.com/Augmented-Nature/Augmented-Nature-UniProt-MCP-Server` (26 tools, Node.js stdio)
+- **Flask call**: `GET /uniprotkb/search?query={gene_name}&format=json`
+- **Use in app**: Auto-enrich the protein target card on the experiment page with UniProt annotation; suggest canonical sequence if student's sequence has errors
+
+#### 5. AlphaFold EBI API → `GET /api/v2/enrich/alphafold`
+- **What**: Predicted 3D structure + per-residue confidence (pLDDT) for any UniProt protein
+- **REST base**: `https://alphafold.ebi.ac.uk/api`
+- **MCP server**: `github.com/Augmented-Nature/AlphaFold-MCP-Server` (20+ tools, HTTP)
+- **Flask call**: `GET /api/prediction/{uniprot_id}`
+- **Use in app**: Link to AlphaFold structure viewer for the target protein; show pLDDT confidence for key residues in the binding pocket
+
+---
+
+### Tier 2 — Literature enrichment (free, some optional API keys)
+
+#### 6. PubMed / NCBI API → `GET /api/v2/enrich/literature`
+- **What**: Search PubMed for papers on target protein or seed molecule
+- **REST base**: `https://eutils.ncbi.nlm.nih.gov/entrez/eutils`
+- **MCP server**: `github.com/cyanheads/pubmed-mcp-server` (9 tools, bunx/stdio)
+- **Flask call**: `GET /esearch.fcgi?db=pubmed&term={query}&retmax=5&format=json`
+- **Use in app**: "Related papers" panel on experiment page; auto-suggest citations for hypothesis; optionally show in feed card
+
+#### 7. Semantic Scholar API → `GET /api/v2/enrich/papers`
+- **What**: Semantic search across 200M+ papers; citation graphs
+- **REST base**: `https://api.semanticscholar.org/graph/v1`
+- **MCP server**: `github.com/akapet00/semantic-scholar-mcp` (Python, uvx)
+- **API key**: Optional free key from semanticscholar.org (higher rate limits)
+- **Use in app**: Better relevance than PubMed keyword search for finding mechanistic papers
+
+---
+
+### Tier 3 — Regulatory & Drug DB (free academic registration required)
+
+#### 8. OpenFDA API → `GET /api/v2/enrich/fda`
+- **What**: Adverse events (FAERS), product labels, drug recalls
+- **REST base**: `https://api.fda.gov/drug`
+- **MCP server**: `github.com/Augmented-Nature/OpenFDA-MCP-Server` (10 tools)
+- **API key**: Optional free key from open.fda.gov (upgrades rate limit 1K → 120K/hr)
+- **Use in app**: Show FDA safety context for drugs in the same class as the candidate
+
+#### 9. DrugBank SQLite MCP → enriches the experiment detail page
+- **What**: 17,430 drugs — pharmakokinetics, drug-drug interactions, metabolic pathways
+- **MCP server**: `github.com/openpharma-org/drugbank-mcp-server` (Node.js stdio, SQLite)
+- **Requires**: Free academic registration at go.drugbank.com to download XML → convert to SQLite
+- **Use in app**: Check if target already has approved drugs; show their half-life for comparison
+
+---
+
+### Implementation approach (tell Claude to build this)
+
+```
+For any enrichment endpoint, the pattern is:
+1. Add route to v2/api/enrich.py (new Blueprint)
+2. Call underlying public REST API with httpx/requests
+3. Cache response in Redis or in-memory LRU (avoid hammering free APIs)
+4. Return structured JSON to frontend
+5. Frontend fetches lazily (on-demand, not blocking page load)
+6. Show enrichment data in collapsible panel on experiment page
+```
+
+The Flask proxy approach means students don't need API keys and the app controls rate limiting.
+
+---
+
+### For Claude Code development (MCP config)
+Add to `~/.claude/mcp.json` to let Claude look up drug data while coding:
+```json
+{
+  "mcpServers": {
+    "fetch": { "command": "uvx", "args": ["mcp-server-fetch"] },
+    "pubmed": { "command": "bunx", "args": ["@cyanheads/pubmed-mcp-server@latest"] },
+    "brave-search": {
+      "command": "npx", "args": ["-y", "@brave/brave-search-mcp-server"],
+      "env": { "BRAVE_API_KEY": "your-key" }
+    }
+  }
+}
+```
+
+---
+
+### Key GitHub orgs producing drug discovery MCP servers
+- **Augmented Nature**: `github.com/Augmented-Nature` — ChEMBL, PubChem, UniProt, PDB, AlphaFold, STRING, KEGG, Open Targets, OpenFDA, PubMed, SureChEMBL, Ensembl, Reactome (all free, no API key)
+- **OpenPharma**: `github.com/openpharma-org` — DrugBank, EMA, PubMed (free academic)
+- **Official MCP**: `github.com/modelcontextprotocol/servers` — Fetch, Brave Search, filesystem
