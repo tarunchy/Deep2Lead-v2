@@ -84,10 +84,39 @@
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       _chunks = [];
+
+      // ── VAD: auto-stop after 2s of silence post-speech ──────────
+      let _audioCtx = null, _silenceTimer = null, _hasSpeech = false, _vadIv = null;
+      try {
+        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src  = _audioCtx.createMediaStreamSource(stream);
+        const anal = _audioCtx.createAnalyser();
+        anal.fftSize = 512;
+        src.connect(anal);
+        const buf = new Uint8Array(anal.frequencyBinCount);
+        const THRESH = 14, HOLD = 2000;
+        _vadIv = setInterval(() => {
+          if (_state !== "recording") { clearInterval(_vadIv); return; }
+          anal.getByteFrequencyData(buf);
+          const avg = buf.reduce((s, v) => s + v, 0) / buf.length;
+          if (avg > THRESH) {
+            _hasSpeech = true;
+            clearTimeout(_silenceTimer); _silenceTimer = null;
+          } else if (_hasSpeech && !_silenceTimer) {
+            _silenceTimer = setTimeout(() => {
+              if (_state === "recording") _stopRecording();
+            }, HOLD);
+          }
+        }, 120);
+      } catch { /* VAD unavailable — manual stop only */ }
+
       _recorder = new MediaRecorder(stream, { mimeType: _bestMime() });
       _recorder.ondataavailable = e => e.data.size > 0 && _chunks.push(e.data);
       _recorder.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
+        clearInterval(_vadIv);
+        clearTimeout(_silenceTimer);
+        _audioCtx?.close().catch(() => {});
         _transcribe(new Blob(_chunks, { type: _recorder.mimeType }));
       };
       _recorder.start();
@@ -119,11 +148,8 @@
       const text = data.transcript?.trim();
       if (!text) { _setState("idle"); return; }
       _setState("idle");
-      askSetMode("text");
-      setTimeout(() => {
-        if (textarea()) { textarea().value = text; textarea().dispatchEvent(new Event("input")); }
-        _ask(text);
-      }, 80);
+      // Stay in current mode (globe stays visible if in voice mode)
+      _ask(text);
     } catch (e) {
       _setState("idle");
       _setVoStatus("Transcription failed: " + e.message, "");
@@ -156,15 +182,26 @@
       .trim();
   }
 
-  function _chunkText(text, maxLen = 420) {
-    const sents = text.match(/[^.!?]+[.!?]+\s*/g) || [text];
-    const chunks = []; let cur = "";
-    for (const s of sents) {
-      if (cur && (cur + s).length > maxLen) { chunks.push(cur.trim()); cur = s; }
-      else cur += s;
+  function _chunkText(text, maxLen = 400) {
+    const result = [];
+    // Split at every newline so colon-terminated intro lines ("involves:") get their own chunk
+    for (const line of text.split(/\n+/)) {
+      const p = line.trim();
+      if (!p) continue;
+      if (p.length <= maxLen) {
+        result.push(p);
+      } else {
+        // Long paragraph: split at sentence boundaries
+        const sents = p.match(/[^.!?]+[.!?]+\s*/g) || [p];
+        let cur = "";
+        for (const s of sents) {
+          if (cur && (cur + s).length > maxLen) { result.push(cur.trim()); cur = s; }
+          else cur += s;
+        }
+        if (cur.trim()) result.push(cur.trim());
+      }
     }
-    if (cur.trim()) chunks.push(cur.trim());
-    return chunks.length ? chunks : [text];
+    return result.length ? result : [text];
   }
 
   // ── LLM call ──────────────────────────────────────────────────
@@ -240,7 +277,8 @@
     for (const chunk of chunks) {
       if (_stopPlayback || _state !== "speaking") break;
       const audio = await _fetchTtsAudio(chunk);
-      if (!audio || _stopPlayback) break;
+      if (_stopPlayback) break;
+      if (!audio) continue;   // TTS failed for this chunk — skip, don't abort
       await _playAudioObj(audio);
     }
     if (!_stopPlayback) { _setState("idle"); _setPlayBtn(btn, false); }
