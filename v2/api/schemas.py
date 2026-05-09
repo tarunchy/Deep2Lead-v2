@@ -1,7 +1,10 @@
-from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow import Schema, fields, validate, ValidationError, EXCLUDE
 
 
 class GenerateSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
     amino_acid_seq = fields.Str(load_default="")
     smile = fields.Str(required=True, validate=validate.Length(min=2))
     noise = fields.Float(load_default=0.5, validate=validate.Range(min=0.0, max=1.0))
