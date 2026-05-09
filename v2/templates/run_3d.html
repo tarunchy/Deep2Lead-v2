@@ -3,6 +3,10 @@
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/3d_viewer.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/gamification.css') }}">
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+</style>
 {% endblock %}
 {% block content %}
 
@@ -111,11 +115,16 @@
         </button>
       </form>
 
-      <div id="run3dProgress" style="display:none;margin-top:14px;">
-        <div class="progress-bar-container" style="background:#1c2128;border-radius:6px;overflow:hidden;height:6px;margin-bottom:8px;">
-          <div id="progressBar" style="height:100%;background:linear-gradient(90deg,#58a6ff,#3fb950);width:0%;transition:width .5s;"></div>
+      <div id="run3dProgress" style="display:none;margin-top:16px;">
+        <div style="background:#1c2128;border-radius:6px;overflow:hidden;height:8px;margin-bottom:10px;position:relative;">
+          <div id="progressBar" style="height:100%;background:linear-gradient(90deg,#58a6ff,#3fb950);width:0%;transition:width .6s ease;border-radius:6px;"></div>
+          <div id="progressPulse" style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(88,166,255,.25),transparent);animation:shimmer 1.4s infinite;"></div>
         </div>
-        <div id="progressLabel" style="font-size:.82rem;color:#8b949e;text-align:center;"></div>
+        <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+          <span id="progressSpinner" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(88,166,255,.3);border-top-color:#58a6ff;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></span>
+          <span id="progressLabel" style="font-size:.83rem;color:#c9d1d9;"></span>
+        </div>
+        <div id="progressPct" style="font-size:.75rem;color:#8b949e;text-align:center;margin-top:4px;"></div>
       </div>
     </div>
 
@@ -205,24 +214,33 @@ window.PAGE_GUIDE = {
     const progress = document.getElementById("run3dProgress");
     const bar = document.getElementById("progressBar");
     const lbl = document.getElementById("progressLabel");
+    const pct = document.getElementById("progressPct");
+    const originalBtnText = btn.innerHTML;
+
     btn.disabled = true;
+    btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:8px;"></span>Running…';
     progress.style.display = "block";
+    progress.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
     const steps = [
-      { label: "Validating inputs…", pct: 10 },
-      { label: "Generating candidates with Gemma4…", pct: 35 },
-      { label: "Computing drug-likeness scores…", pct: 60 },
-      { label: "Running molecular docking…", pct: 85 },
-      { label: "Ranking candidates…", pct: 95 },
+      { label: "Validating inputs…", pct: 8 },
+      { label: "Generating candidates with Gemma4…", pct: 30 },
+      { label: "Computing drug-likeness scores…", pct: 58 },
+      { label: "Running molecular docking…", pct: 80 },
+      { label: "Ranking candidates…", pct: 93 },
     ];
+
     let stepIdx = 0;
-    const stepTimer = setInterval(() => {
+    function advanceStep() {
       if (stepIdx < steps.length) {
         bar.style.width = steps[stepIdx].pct + "%";
         lbl.textContent = steps[stepIdx].label;
+        pct.textContent = steps[stepIdx].pct + "%";
         stepIdx++;
       }
-    }, 2000);
+    }
+    advanceStep();  // show first step immediately
+    const stepTimer = setInterval(advanceStep, 2500);
 
     const payload = {
       target_id: TARGET_ID,
@@ -242,15 +260,24 @@ window.PAGE_GUIDE = {
       clearInterval(stepTimer);
       bar.style.width = "100%";
       lbl.textContent = "Done!";
-      if (res.error) { showAlert(res.error, "danger"); btn.disabled = false; return; }
+      pct.textContent = "100%";
+      document.getElementById("progressPulse").style.animation = "none";
+      document.getElementById("progressSpinner").style.display = "none";
+      if (res.error) { showAlert(res.error, "danger"); btn.disabled = false; btn.innerHTML = originalBtnText; return; }
       renderCandidates(res.candidates || []);
       document.getElementById("resultsSection").style.display = "block";
+      document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth", block: "start" });
       showAlert(`Generated ${res.candidates.length} candidates!`, "success");
     } catch (e) {
       clearInterval(stepTimer);
+      lbl.textContent = "Something went wrong.";
+      pct.textContent = "";
+      document.getElementById("progressPulse").style.animation = "none";
+      document.getElementById("progressSpinner").style.display = "none";
       showAlert("Error: " + e.message, "danger");
     } finally {
       btn.disabled = false;
+      btn.innerHTML = originalBtnText;
     }
   }
 
