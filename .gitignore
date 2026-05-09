@@ -1,0 +1,50 @@
+# V1 legacy code — archived only, not tracked
+v1/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.tox/
+*.env
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+__MACOSX/
+
+# Secrets / config
+.env
+.env.*
+*.secret
+config/local_settings.py
+
+# Database
+*.sqlite3
+*.db
+
+# Logs
+*.log
+gunicorn*.log
+
+# Model weights (large binary — manage separately)
+*.h5
+*.pt
+*.ckpt
+models/weights/
+
+# IDE
+.idea/
+.vscode/
+*.iml

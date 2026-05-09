@@ -96,6 +96,13 @@ section h3 {
   padding-bottom: 4px;
 }
 
+section h4 {
+  font-size: 0.95rem;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
 p {
   margin-bottom: 12px;
 }
