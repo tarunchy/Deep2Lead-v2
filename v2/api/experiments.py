@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, Response
 from flask_login import login_required, current_user
 from marshmallow import ValidationError
+import requests as http
 
 from models.db_models import db, Experiment, Candidate
 from api.schemas import GenerateSchema, ExperimentUpdateSchema
@@ -9,6 +10,7 @@ from services import molecule_generator, property_calculator, dti_predictor
 from services.molecule_validator import validate_and_canonicalize
 from utils.mol_utils import mol_to_svg
 from utils.protein_utils import is_valid_sequence, clean_sequence
+from config.settings import DGX_BASE_URL, DGX_TIMEOUT
 
 bp = Blueprint("experiments", __name__)
 
@@ -220,3 +222,65 @@ def retract(experiment_id):
     exp.status = "retracted"
     db.session.commit()
     return jsonify({"status": "retracted"})
+
+
+# ── API: AI metadata suggestion ─────────────────────────────────────
+
+@bp.route("/api/v2/suggest-metadata", methods=["POST"])
+@login_required
+def suggest_metadata():
+    data = request.get_json() or {}
+    experiment_id = data.get("experiment_id")
+    if not experiment_id:
+        return jsonify({"error": "experiment_id required"}), 400
+
+    exp = Experiment.query.get_or_404(experiment_id)
+    if str(exp.user_id) != str(current_user.id):
+        return jsonify({"error": "Forbidden"}), 403
+
+    top_candidates = sorted(exp.candidates, key=lambda c: c.composite_score, reverse=True)[:3]
+    candidate_lines = "\n".join(
+        f"  {i+1}. SMILES={c.smiles} | Score={c.composite_score:.3f} | DTI={c.dti_score:.3f} | QED={c.qed:.3f} | SAS={c.sas:.2f}"
+        for i, c in enumerate(top_candidates)
+    ) or "  No valid candidates generated."
+
+    prompt = f"""You are a computational chemistry assistant helping a graduate student document their drug discovery experiment.
+
+Experiment details:
+- Seed SMILES: {exp.seed_smile}
+- Protein target (first 80 residues): {exp.amino_acid_seq[:80]}
+- Diversity level: {exp.noise_level:.2f} (0=close analogs, 1=diverse)
+- Candidates generated: {exp.num_valid_generated}
+
+Top candidates by composite score:
+{candidate_lines}
+
+Write a concise experiment title (max 12 words) and a 2-3 sentence scientific hypothesis explaining what structural modifications were explored and why they may improve drug-target binding.
+
+Respond in this exact JSON format (no markdown, no extra text):
+{{"title": "...", "hypothesis": "..."}}"""
+
+    try:
+        resp = http.post(
+            f"{DGX_BASE_URL}/v1/text",
+            json={"prompt": prompt, "max_new_tokens": 200, "temperature": 0.7},
+            timeout=DGX_TIMEOUT,
+        )
+        resp.raise_for_status()
+        raw = resp.json().get("text", "")
+    except Exception as e:
+        return jsonify({"error": f"Gemma4 unavailable: {e}"}), 503
+
+    import json as _json, re
+    match = re.search(r'\{.*?"title".*?"hypothesis".*?\}', raw, re.DOTALL)
+    if not match:
+        return jsonify({"error": "Could not parse Gemma4 response", "raw": raw[:300]}), 502
+    try:
+        suggestion = _json.loads(match.group())
+    except _json.JSONDecodeError:
+        return jsonify({"error": "Invalid JSON from Gemma4", "raw": raw[:300]}), 502
+
+    return jsonify({
+        "title": suggestion.get("title", "").strip(),
+        "hypothesis": suggestion.get("hypothesis", "").strip(),
+    })

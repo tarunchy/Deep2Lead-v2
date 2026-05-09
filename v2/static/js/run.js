@@ -117,6 +117,56 @@ publishBtn?.addEventListener("click", async () => {
   }
 });
 
+// AI metadata suggestion
+const aiSuggestBtn = document.getElementById("ai-suggest-btn");
+const aiSuggestionBox = document.getElementById("ai-suggestion-box");
+const aiAcceptBtn = document.getElementById("ai-accept-btn");
+const aiRetryBtn = document.getElementById("ai-retry-btn");
+const aiDismissBtn = document.getElementById("ai-dismiss-btn");
+
+let lastSuggestion = null;
+
+async function suggestMetadata() {
+  const expId = experimentIdInput.value;
+  if (!expId) return;
+
+  aiSuggestBtn.classList.add("loading");
+  aiSuggestBtn.disabled = true;
+  document.getElementById("ai-suggest-label").textContent = "Thinking…";
+  aiSuggestionBox.style.display = "none";
+
+  try {
+    const data = await apiFetch("/api/v2/suggest-metadata", {
+      method: "POST",
+      body: JSON.stringify({ experiment_id: expId }),
+    });
+    lastSuggestion = data;
+    document.getElementById("ai-sug-title").textContent = data.title;
+    document.getElementById("ai-sug-hypothesis").textContent = data.hypothesis;
+    aiSuggestionBox.style.display = "block";
+  } catch (err) {
+    showAlert(err.message || "AI suggestion failed", "error", document.body);
+  } finally {
+    aiSuggestBtn.classList.remove("loading");
+    aiSuggestBtn.disabled = false;
+    document.getElementById("ai-suggest-label").textContent = "AI Suggest";
+  }
+}
+
+aiSuggestBtn?.addEventListener("click", suggestMetadata);
+aiRetryBtn?.addEventListener("click", suggestMetadata);
+
+aiAcceptBtn?.addEventListener("click", () => {
+  if (!lastSuggestion) return;
+  titleInput.value = lastSuggestion.title;
+  hypothesisInput.value = lastSuggestion.hypothesis;
+  aiSuggestionBox.style.display = "none";
+});
+
+aiDismissBtn?.addEventListener("click", () => {
+  aiSuggestionBox.style.display = "none";
+});
+
 // Molecule viewer modal
 function showMol(smiles) {
   const modal = document.getElementById("mol-modal");

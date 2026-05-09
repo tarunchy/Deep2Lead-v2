@@ -49,8 +49,27 @@
 
     <!-- Save panel (shown after generation) -->
     <div id="save-panel" class="card mt-16" style="display:none;">
-      <p class="section-title">Save &amp; Publish</p>
+      <div class="flex items-center justify-between" style="margin-bottom:12px;">
+        <p class="section-title" style="margin:0;">Save &amp; Publish</p>
+        <button id="ai-suggest-btn" class="btn btn-ai" title="Let Gemma4 suggest a title and hypothesis">
+          <span id="ai-suggest-icon">✨</span>
+          <span id="ai-suggest-label">AI Suggest</span>
+        </button>
+      </div>
       <input type="hidden" id="experiment-id">
+
+      <!-- AI suggestion preview -->
+      <div id="ai-suggestion-box" style="display:none;" class="ai-suggestion-box">
+        <p class="text-sm text-muted" style="margin-bottom:6px;">Gemma4 suggestion — accept or edit below:</p>
+        <div class="ai-suggestion-title" id="ai-sug-title"></div>
+        <div class="ai-suggestion-hypothesis" id="ai-sug-hypothesis"></div>
+        <div class="flex gap-8" style="margin-top:8px;">
+          <button id="ai-accept-btn" class="btn btn-sm btn-primary">Accept</button>
+          <button id="ai-retry-btn" class="btn btn-sm btn-outline">Retry ✨</button>
+          <button id="ai-dismiss-btn" class="btn btn-sm btn-outline">Dismiss</button>
+        </div>
+      </div>
+
       <div class="form-group">
         <label for="exp-title">Title <span style="color:var(--danger)">*</span></label>
         <input type="text" id="exp-title" placeholder="e.g. Chlorambucil analog search — target EGFR">
