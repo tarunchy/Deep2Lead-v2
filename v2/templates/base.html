@@ -11,47 +11,50 @@
 </head>
 <body>
 
-<div class="app-layout">
+<div class="app-layout" id="appLayout">
 
   <!-- Sidebar -->
-  <nav class="sidebar">
+  <nav class="sidebar" id="sidebar">
+
+    <!-- Brand + toggle button -->
     <div class="sidebar-brand">
-      Deep2Lead
-      <span>Drug Discovery Platform</span>
+      <span class="nav-label">Deep2Lead<small>Drug Discovery Platform</small></span>
+      <span class="brand-icon nav-icon-only" title="Deep2Lead">🔬</span>
+      <button class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">&#8249;</button>
     </div>
 
     <div class="sidebar-nav">
       <div class="nav-section-label">Lab</div>
-      <a href="{{ url_for('feed.feed_page') }}" class="{% if request.endpoint == 'feed.feed_page' %}active{% endif %}">
-        <span class="nav-icon">📡</span> Feed
+      <a href="{{ url_for('feed.feed_page') }}" class="{% if request.endpoint == 'feed.feed_page' %}active{% endif %}" title="Feed">
+        <span class="nav-icon">📡</span><span class="nav-label">Feed</span>
       </a>
-      <a href="{{ url_for('experiments.run_page') }}" class="{% if request.endpoint == 'experiments.run_page' %}active{% endif %}">
-        <span class="nav-icon">🧪</span> Run Experiment
+      <a href="{{ url_for('experiments.run_page') }}" class="{% if request.endpoint == 'experiments.run_page' %}active{% endif %}" title="Run Experiment">
+        <span class="nav-icon">🧪</span><span class="nav-label">Run Experiment</span>
       </a>
-      <a href="/run-3d" class="{% if request.endpoint == 'target.run_3d_page' %}active{% endif %}">
-        <span class="nav-icon">⚗️</span> 3D Experiment
+      <a href="/run-3d" class="{% if request.endpoint == 'target.run_3d_page' %}active{% endif %}" title="3D Experiment">
+        <span class="nav-icon">⚗️</span><span class="nav-label">3D Experiment</span>
       </a>
-      <a href="{{ url_for('auto_experiment.auto_exp_page') }}" class="{% if request.endpoint == 'auto_experiment.auto_exp_page' %}active{% endif %}">
-        <span class="nav-icon">🔁</span> Auto Experiment
+      <a href="{{ url_for('auto_experiment.auto_exp_page') }}" class="{% if request.endpoint == 'auto_experiment.auto_exp_page' %}active{% endif %}" title="Auto Experiment">
+        <span class="nav-icon">🔁</span><span class="nav-label">Auto Experiment</span>
       </a>
 
       <div class="nav-section-label">My Work</div>
-      <a href="{{ url_for('experiments.dashboard') }}" class="{% if request.endpoint == 'experiments.dashboard' %}active{% endif %}">
-        <span class="nav-icon">📂</span> My Experiments
+      <a href="{{ url_for('experiments.dashboard') }}" class="{% if request.endpoint == 'experiments.dashboard' %}active{% endif %}" title="My Experiments">
+        <span class="nav-icon">📂</span><span class="nav-label">My Experiments</span>
       </a>
-      <a href="{{ url_for('gamification.mission_board') }}" class="{% if request.endpoint == 'gamification.mission_board' %}active{% endif %}">
-        <span class="nav-icon">🏅</span> Missions
+      <a href="{{ url_for('gamification.mission_board') }}" class="{% if request.endpoint == 'gamification.mission_board' %}active{% endif %}" title="Missions">
+        <span class="nav-icon">🏅</span><span class="nav-label">Missions</span>
       </a>
 
       <div class="nav-section-label">Learn</div>
-      <a href="{{ url_for('tutorial.tutorial_page') }}" class="{% if request.endpoint == 'tutorial.tutorial_page' %}active{% endif %}">
-        <span class="nav-icon">📖</span> Tutorial
+      <a href="{{ url_for('tutorial.tutorial_page') }}" class="{% if request.endpoint == 'tutorial.tutorial_page' %}active{% endif %}" title="Tutorial">
+        <span class="nav-icon">📖</span><span class="nav-label">Tutorial</span>
       </a>
 
       {% if current_user.role == 'admin' %}
       <div class="nav-section-label">Admin</div>
-      <a href="{{ url_for('admin.users_page') }}" class="{% if 'admin' in request.endpoint %}active{% endif %}">
-        <span class="nav-icon">👤</span> Users
+      <a href="{{ url_for('admin.users_page') }}" class="{% if 'admin' in request.endpoint %}active{% endif %}" title="Users">
+        <span class="nav-icon">👤</span><span class="nav-label">Users</span>
       </a>
       {% endif %}
     </div>
@@ -60,9 +63,9 @@
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="sidebar-avatar">{{ (current_user.display_name or current_user.username)[0].upper() }}</div>
-        <div class="sidebar-username">{{ current_user.display_name or current_user.username }}</div>
+        <div class="sidebar-username nav-label">{{ current_user.display_name or current_user.username }}</div>
       </div>
-      <div class="sidebar-xp">
+      <div class="sidebar-xp nav-label">
         <div class="sidebar-xp-row">
           <span class="sidebar-xp-level" id="xpLevelBadge">Lv 1</span>
           <span class="sidebar-xp-pts" id="xpText">0 XP</span>
@@ -71,12 +74,12 @@
           <div class="sidebar-xp-fill" id="xpBarInner"></div>
         </div>
       </div>
-      <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline" style="width:100%;justify-content:center;">Logout</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline sidebar-logout nav-label">Logout</a>
     </div>
   </nav>
 
   <!-- Main content -->
-  <div class="main-area">
+  <div class="main-area" id="mainArea">
     <div class="container">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, msg in messages %}
@@ -94,6 +97,36 @@
 
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
+<script>
+(function () {
+  const SIDEBAR_KEY = "d2l_sidebar_collapsed";
+  const sidebar = document.getElementById("sidebar");
+  const mainArea = document.getElementById("mainArea");
+  const btn = document.getElementById("sidebarToggle");
+
+  function setCollapsed(collapsed) {
+    if (collapsed) {
+      sidebar.classList.add("collapsed");
+      mainArea.classList.add("sidebar-collapsed");
+      btn.innerHTML = "&#8250;";
+      btn.title = "Expand sidebar";
+    } else {
+      sidebar.classList.remove("collapsed");
+      mainArea.classList.remove("sidebar-collapsed");
+      btn.innerHTML = "&#8249;";
+      btn.title = "Collapse sidebar";
+    }
+    localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0");
+  }
+
+  // Restore saved state immediately (before paint)
+  if (localStorage.getItem(SIDEBAR_KEY) === "1") setCollapsed(true);
+
+  btn.addEventListener("click", function () {
+    setCollapsed(!sidebar.classList.contains("collapsed"));
+  });
+})();
+</script>
 {% block scripts %}{% endblock %}
 
 <!-- Gemma chatbot widget -->
