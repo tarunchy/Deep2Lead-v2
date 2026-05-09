@@ -36,8 +36,25 @@
   };
 
   // ── Init ──────────────────────────────────────────────────────
+  const _GREETINGS = [
+    "Hey! I'm your AI research assistant — what's on your mind today?",
+    "Hi there! How can I help you with drug discovery today?",
+    "Hello! I'm ready to help. What would you like to explore?",
+    "Hey! What's on your mind? I'm here to help.",
+  ];
+
+  async function _greetUser() {
+    const msg = _GREETINGS[Math.floor(Math.random() * _GREETINGS.length)];
+    const lbl = voLabel();
+    if (lbl) lbl.textContent = "Hello!";
+    _setState("speaking");
+    const audio = await _fetchTtsAudio(msg);
+    if (audio) await _playAudioObj(audio);
+    _setState("idle");
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
-    if (window.GlobeViz) GlobeViz.load("globeCanvas");
+    if (window.GlobeViz) GlobeViz.load("globeCanvas", () => setTimeout(_greetUser, 900));
 
     micGlobe()?.addEventListener("click", _toggleMic);
     micText()?.addEventListener("click",  _toggleMic);
