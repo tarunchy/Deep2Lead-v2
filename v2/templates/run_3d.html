@@ -12,7 +12,7 @@
 
 <div class="page-header" style="margin-bottom:24px;">
   <h1 style="font-size:1.6rem;font-weight:700;">⚗️ 3D Structure Experiment</h1>
-  <p style="color:#8b949e;margin-top:4px;">Predict a protein's 3D shape, generate candidate molecules, and dock them to find the best fit.</p>
+  <p style="color:var(--text-muted);margin-top:4px;">Predict a protein's 3D shape, generate candidate molecules, and dock them to find the best fit.</p>
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
@@ -23,8 +23,8 @@
       <h3 style="font-size:1rem;margin-bottom:12px;">🎯 Step 1: Target</h3>
       {% if target %}
         <div style="font-weight:600;font-size:1rem;">{{ target.name }}</div>
-        <div style="color:#8b949e;font-size:.85rem;margin:4px 0;">{{ target.disease }} · {{ target.organism }}</div>
-        <div style="background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);border-radius:8px;padding:10px;font-size:.83rem;margin-top:8px;">
+        <div style="color:var(--text-muted);font-size:.85rem;margin:4px 0;">{{ target.disease }} · {{ target.organism }}</div>
+        <div style="background:var(--accent-light);border:1px solid rgba(43,108,176,.2);border-radius:8px;padding:10px;font-size:.83rem;margin-top:8px;">
           🔑 {{ target.analogy }}
         </div>
         <div class="struct-info" style="margin-top:12px;">
@@ -33,7 +33,7 @@
         </div>
         <a href="{{ url_for('target.target_picker_page') }}" class="btn btn-sm btn-outline" style="margin-top:10px;">Change Target</a>
       {% else %}
-        <p style="color:#8b949e;">No target selected yet.</p>
+        <p style="color:var(--text-muted);">No target selected yet.</p>
         <a href="{{ url_for('target.target_picker_page') }}" class="btn btn-primary">Choose a Target →</a>
       {% endif %}
     </div>
@@ -110,13 +110,13 @@
           </label>
         </div>
 
-        <div style="background:#1c2128;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px;">
             <input type="checkbox" id="auto_retry">
             <span style="font-size:.85rem;font-weight:600;">Auto-retry if no candidates found</span>
           </label>
           <div id="retryOptions" style="display:none;display:flex;align-items:center;gap:8px;padding-left:22px;">
-            <span style="font-size:.8rem;color:#8b949e;">Max attempts:</span>
+            <span style="font-size:.8rem;color:var(--text-muted);">Max attempts:</span>
             <select id="max_retries" class="form-control" style="width:auto;padding:3px 8px;font-size:.82rem;">
               <option value="5">5</option>
               <option value="10" selected>10</option>
@@ -124,7 +124,7 @@
               <option value="100">100</option>
               <option value="0">Until stopped</option>
             </select>
-            <span style="font-size:.78rem;color:#8b949e;">Each retry varies diversity level</span>
+            <span style="font-size:.78rem;color:var(--text-muted);">Each retry varies diversity level</span>
           </div>
         </div>
 
@@ -139,15 +139,15 @@
       </form>
 
       <div id="run3dProgress" style="display:none;margin-top:16px;">
-        <div style="background:#1c2128;border-radius:6px;overflow:hidden;height:8px;margin-bottom:10px;position:relative;">
-          <div id="progressBar" style="height:100%;background:linear-gradient(90deg,#58a6ff,#3fb950);width:0%;transition:width .6s ease;border-radius:6px;"></div>
-          <div id="progressPulse" style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(88,166,255,.25),transparent);animation:shimmer 1.4s infinite;"></div>
+        <div style="background:var(--border);border-radius:6px;overflow:hidden;height:8px;margin-bottom:10px;position:relative;">
+          <div id="progressBar" style="height:100%;background:linear-gradient(90deg,var(--accent),#3fb950);width:0%;transition:width .6s ease;border-radius:6px;"></div>
+          <div id="progressPulse" style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(43,108,176,.2),transparent);animation:shimmer 1.4s infinite;"></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
-          <span id="progressSpinner" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(88,166,255,.3);border-top-color:#58a6ff;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></span>
-          <span id="progressLabel" style="font-size:.83rem;color:#c9d1d9;"></span>
+          <span id="progressSpinner" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(43,108,176,.3);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></span>
+          <span id="progressLabel" style="font-size:.83rem;color:var(--text);"></span>
         </div>
-        <div id="progressPct" style="font-size:.75rem;color:#8b949e;text-align:center;margin-top:4px;"></div>
+        <div id="progressPct" style="font-size:.75rem;color:var(--text-muted);text-align:center;margin-top:4px;"></div>
       </div>
     </div>
 
@@ -156,39 +156,39 @@
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <h3 style="font-size:1rem;margin:0;">📊 Step 4: Candidate Results</h3>
-          <span id="candidateCount" style="font-size:.8rem;color:#8b949e;background:#1c2128;padding:3px 10px;border-radius:20px;"></span>
+          <span id="candidateCount" style="font-size:.8rem;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);padding:3px 10px;border-radius:20px;"></span>
         </div>
         <div style="overflow-x:auto;">
           <div id="candidateTable"></div>
         </div>
-        <div id="aiMetadataBox" style="display:none;margin-top:14px;padding:12px;background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.2);border-radius:8px;"></div>
+        <div id="aiMetadataBox" style="display:none;margin-top:14px;padding:12px;background:var(--accent-light);border:1px solid rgba(43,108,176,.2);border-radius:8px;"></div>
         <div class="disclaimer-box" style="margin-top:16px;">
           <strong>⚠️ Educational simulation only.</strong> These scores come from a computer model. Docking scores are approximations — a high score does not mean a molecule is a real medicine. Real drugs require laboratory testing, clinical trials, and regulatory approval.
         </div>
       </div>
 
       <!-- What's next -->
-      <div class="card" style="margin-top:14px;border:1px solid rgba(88,166,255,.25);background:rgba(88,166,255,.04);">
-        <h3 style="font-size:.95rem;margin-bottom:14px;color:#58a6ff;">🔬 What to do next</h3>
+      <div class="card" style="margin-top:14px;border:1px solid rgba(43,108,176,.25);background:var(--accent-light);">
+        <h3 style="font-size:.95rem;margin-bottom:14px;color:var(--accent);">🔬 What to do next</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-          <div style="background:#1c2128;border-radius:8px;padding:12px;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;">
             <div style="font-size:1.2rem;margin-bottom:6px;">🥇</div>
-            <div style="font-weight:600;font-size:.85rem;margin-bottom:4px;">Pick your lead</div>
-            <div style="font-size:.78rem;color:#8b949e;line-height:1.5;">Click any row to copy its SMILES string. Focus on candidates with Score ≥ 70%, Lipinski ✅, and low SAS (easier to synthesise).</div>
+            <div style="font-weight:600;font-size:.85rem;margin-bottom:4px;color:var(--text);">Pick your lead</div>
+            <div style="font-size:.78rem;color:var(--text-muted);line-height:1.5;">Click any row to copy its SMILES string. Focus on candidates with Score ≥ 70%, Lipinski ✅, and low SAS (easier to synthesise).</div>
           </div>
-          <div style="background:#1c2128;border-radius:8px;padding:12px;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;">
             <div style="font-size:1.2rem;margin-bottom:6px;">🔁</div>
-            <div style="font-weight:600;font-size:.85rem;margin-bottom:4px;">Refine & iterate</div>
-            <div style="font-size:.78rem;color:#8b949e;line-height:1.5;">Scroll up, paste the best SMILES as your new Seed, increase candidates to 15, and re-run to explore neighbours of your top hit.</div>
+            <div style="font-weight:600;font-size:.85rem;margin-bottom:4px;color:var(--text);">Refine & iterate</div>
+            <div style="font-size:.78rem;color:var(--text-muted);line-height:1.5;">Scroll up, paste the best SMILES as your new Seed, increase candidates to 15, and re-run to explore neighbours of your top hit.</div>
           </div>
-          <div style="background:#1c2128;border-radius:8px;padding:12px;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;">
             <div style="font-size:1.2rem;margin-bottom:6px;">📁</div>
-            <div style="font-weight:600;font-size:.85rem;margin-bottom:4px;">Save your work</div>
-            <div style="font-size:.78rem;color:#8b949e;line-height:1.5;">This experiment is saved automatically. Visit <a href="/experiments" style="color:#58a6ff;">My Experiments</a> to add a title, hypothesis, and share with your class.</div>
+            <div style="font-weight:600;font-size:.85rem;margin-bottom:4px;color:var(--text);">Save your work</div>
+            <div style="font-size:.78rem;color:var(--text-muted);line-height:1.5;">This experiment is saved automatically. Visit <a href="/experiments">My Experiments</a> to add a title, hypothesis, and share with your class.</div>
           </div>
         </div>
-        <div style="margin-top:12px;padding:10px;background:#1c2128;border-radius:8px;font-size:.8rem;color:#8b949e;">
-          💡 <strong style="color:#c9d1d9;">Tip:</strong> In real drug discovery, chemists would now synthesise the top 2–3 candidates in the lab and test them on cells before any animal or human trials.
+        <div style="margin-top:12px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:.8rem;color:var(--text-muted);">
+          💡 <strong style="color:var(--text);">Tip:</strong> In real drug discovery, chemists would now synthesise the top 2–3 candidates in the lab and test them on cells before any animal or human trials.
         </div>
       </div>
     </div>
@@ -417,7 +417,7 @@ window.PAGE_GUIDE = {
     const box = document.getElementById("aiMetadataBox");
     if (!box) return;
     box.style.display = "block";
-    box.innerHTML = '<span style="color:#8b949e;font-size:.82rem;">✨ AI is writing a title and hypothesis…</span>';
+    box.innerHTML = '<span style="color:#6c757d;font-size:.82rem;">✨ AI is writing a title and hypothesis…</span>';
     try {
       const res = await apiFetch("/api/v2/suggest-metadata", {
         method: "POST",
@@ -426,12 +426,12 @@ window.PAGE_GUIDE = {
       if (res.title || res.hypothesis) {
         box.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <span style="font-size:.8rem;font-weight:600;color:#58a6ff;">✨ AI-suggested metadata</span>
-            <span style="font-size:.72rem;color:#8b949e;">(auto-saved)</span>
+            <span style="font-size:.8rem;font-weight:600;color:#2b6cb0;">✨ AI-suggested metadata</span>
+            <span style="font-size:.72rem;color:#6c757d;">(auto-saved)</span>
           </div>
-          <div style="font-size:.88rem;font-weight:600;color:#c9d1d9;margin-bottom:4px;">${res.title || ""}</div>
-          <div style="font-size:.8rem;color:#8b949e;line-height:1.6;">${res.hypothesis || ""}</div>
-          <a href="/experiments/${experimentId}" style="display:inline-block;margin-top:8px;font-size:.78rem;color:#58a6ff;">View full experiment →</a>`;
+          <div style="font-size:.88rem;font-weight:600;color:#1a202c;margin-bottom:4px;">${res.title || ""}</div>
+          <div style="font-size:.8rem;color:#6c757d;line-height:1.6;">${res.hypothesis || ""}</div>
+          <a href="/experiments/${experimentId}" style="display:inline-block;margin-top:8px;font-size:.78rem;">View full experiment →</a>`;
         await apiFetch(`/api/v2/experiments/${experimentId}`, {
           method: "PATCH",
           body: JSON.stringify({ title: res.title, hypothesis: res.hypothesis }),
@@ -447,45 +447,45 @@ window.PAGE_GUIDE = {
   function renderCandidates(candidates) {
     const el = document.getElementById("candidateTable");
     const count = document.getElementById("candidateCount");
-    if (!candidates.length) { el.innerHTML = "<p style='color:#8b949e;padding:12px 0;'>No valid candidates generated.</p>"; return; }
+    if (!candidates.length) { el.innerHTML = "<p style='color:#6c757d;padding:12px 0;'>No valid candidates generated.</p>"; return; }
 
     count.textContent = candidates.length + " candidates";
 
-    const SCORE_COLOR = s => s >= 0.7 ? "#3fb950" : s >= 0.4 ? "#ffa657" : "#ff7b72";
-    const TH = "padding:8px 12px;text-align:left;font-weight:600;font-size:.75rem;letter-spacing:.04em;white-space:nowrap;";
-    const TD = "padding:8px 12px;vertical-align:middle;white-space:nowrap;border-bottom:1px solid #21262d;";
+    const SCORE_COLOR = s => s >= 0.7 ? "#276749" : s >= 0.4 ? "#c05621" : "#c53030";
+    const TH = "padding:8px 12px;text-align:left;font-weight:600;font-size:.75rem;letter-spacing:.04em;white-space:nowrap;color:#6c757d;";
+    const TD = "padding:8px 12px;vertical-align:middle;white-space:nowrap;border-bottom:1px solid #e2e6ea;";
 
     const rows = candidates.map((c, i) => {
       const smiles = c.smiles || "";
       const short = smiles.length > 28 ? smiles.slice(0, 28) + "…" : smiles;
       return `<tr style="cursor:pointer;transition:background .15s;"
-                   onmouseover="this.style.background='rgba(88,166,255,.06)'"
+                   onmouseover="this.style.background='#ebf4ff'"
                    onmouseout="this.style.background=''"
                    onclick="copySmiles('${smiles.replace(/'/g, "\\'")}',this)"
                    title="Click to copy SMILES">
-        <td style="${TD}color:#8b949e;font-weight:600;">${c.rank || i + 1}</td>
+        <td style="${TD}color:#6c757d;font-weight:600;">${c.rank || i + 1}</td>
         <td style="${TD}font-family:monospace;font-size:.78rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;">${short}</td>
         <td style="${TD}color:${SCORE_COLOR(c.composite_score || 0)};font-weight:700;">${((c.composite_score || 0) * 100).toFixed(0)}%</td>
         <td style="${TD}">${c.qed != null ? c.qed.toFixed(2) : "—"}</td>
         <td style="${TD}">${c.sas != null ? c.sas.toFixed(1) : "—"}</td>
-        <td style="${TD}color:#8b949e;">${c.docking_score_kcal != null ? c.docking_score_kcal.toFixed(1) + " kcal" : "—"}</td>
+        <td style="${TD}color:#6c757d;">${c.docking_score_kcal != null ? c.docking_score_kcal.toFixed(1) + " kcal" : "—"}</td>
         <td style="${TD}text-align:center;">${c.lipinski_pass ? "✅" : "❌"}</td>
-        <td style="${TD}"><span style="font-size:.73rem;padding:2px 8px;border-radius:10px;background:${c.novelty_status === 'novel' ? 'rgba(63,185,80,.15)' : 'rgba(255,166,87,.15)'};color:${c.novelty_status === 'novel' ? '#3fb950' : '#ffa657'}">${c.novelty_status || "—"}</span></td>
+        <td style="${TD}"><span style="font-size:.73rem;padding:2px 8px;border-radius:10px;background:${c.novelty_status === 'novel' ? 'rgba(39,103,73,.12)' : 'rgba(192,86,33,.12)'};color:${c.novelty_status === 'novel' ? '#276749' : '#c05621'}">${c.novelty_status || "—"}</span></td>
       </tr>`;
     }).join("");
 
     el.innerHTML = `
       <table style="width:100%;border-collapse:collapse;font-size:.83rem;min-width:560px;">
         <thead>
-          <tr style="border-bottom:2px solid #30363d;">
-            <th style="${TH}color:#8b949e;">#</th>
-            <th style="${TH}color:#8b949e;">SMILES</th>
-            <th style="${TH}color:#8b949e;">Score</th>
-            <th style="${TH}color:#8b949e;">QED</th>
-            <th style="${TH}color:#8b949e;">SAS</th>
-            <th style="${TH}color:#8b949e;">Docking</th>
-            <th style="${TH}color:#8b949e;text-align:center;">Lipinski</th>
-            <th style="${TH}color:#8b949e;">Novelty</th>
+          <tr style="border-bottom:2px solid #e2e6ea;background:#f5f6f8;">
+            <th style="${TH}">#</th>
+            <th style="${TH}">SMILES</th>
+            <th style="${TH}">Score</th>
+            <th style="${TH}">QED</th>
+            <th style="${TH}">SAS</th>
+            <th style="${TH}">Docking</th>
+            <th style="${TH}text-align:center;">Lipinski</th>
+            <th style="${TH}">Novelty</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -495,7 +495,7 @@ window.PAGE_GUIDE = {
   function copySmiles(smiles, row) {
     navigator.clipboard.writeText(smiles).then(() => {
       const orig = row.style.background;
-      row.style.background = "rgba(63,185,80,.15)";
+      row.style.background = "rgba(39,103,73,.1)";
       setTimeout(() => row.style.background = "", 800);
       showAlert("SMILES copied — paste it as your new Seed to iterate on this candidate.", "success");
     }).catch(() => {
