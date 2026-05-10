@@ -237,6 +237,8 @@ def abandon_session(session_id, user_id) -> bool:
     session = GameSession.query.get(session_id)
     if not session or str(session.user_id) != str(user_id):
         return False
+    if session.status in ("won", "lost", "abandoned"):
+        return False  # already in terminal state
     session.status = "abandoned"
     session.time_ended = datetime.now(timezone.utc)
     db.session.commit()
