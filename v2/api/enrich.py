@@ -7,11 +7,10 @@ from flask_login import login_required
 import requests as http
 
 from models.db_models import Experiment
+from config.settings import PUBCHEM_URL as PUBCHEM, CHEMBL_URL as CHEMBL
 
 bp = Blueprint("enrich", __name__)
 
-PUBCHEM = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
-CHEMBL = "https://www.ebi.ac.uk/chembl/api/data"
 TIMEOUT = 15
 
 

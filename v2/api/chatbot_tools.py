@@ -7,9 +7,8 @@ from rdkit.Chem import Descriptors, QED, rdMolDescriptors
 import requests as http
 
 from services.property_calculator import _sas, _lipinski
+from config.settings import PUBCHEM_URL as PUBCHEM, CHEMBL_URL as CHEMBL
 
-PUBCHEM = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
-CHEMBL = "https://www.ebi.ac.uk/chembl/api/data"
 TIMEOUT = 12
 
 # ── SMILES extraction ────────────────────────────────────────────────

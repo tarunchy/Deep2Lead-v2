@@ -34,21 +34,28 @@ STRUCTURE_CACHE_DIR = _os.getenv(
 )
 
 # ESMFold API
-ESMFOLD_URL = "https://api.esmatlas.com/foldSequence/v1/pdb/"
+ESMFOLD_URL = _os.getenv("ESMFOLD_URL", "https://api.esmatlas.com/foldSequence/v1/pdb/")
 ESMFOLD_TIMEOUT = int(_os.getenv("ESMFOLD_TIMEOUT", "120"))
 ESMFOLD_MAX_SEQ_LEN = 400
 
 # AlphaFold EBI API
-ALPHAFOLD_API_URL = "https://alphafold.ebi.ac.uk/api/prediction"
-ALPHAFOLD_FILES_URL = "https://alphafold.ebi.ac.uk/files"
+ALPHAFOLD_API_URL = _os.getenv("ALPHAFOLD_API_URL", "https://alphafold.ebi.ac.uk/api/prediction")
+ALPHAFOLD_FILES_URL = _os.getenv("ALPHAFOLD_FILES_URL", "https://alphafold.ebi.ac.uk/files")
 
 # RCSB PDB
-RCSB_DOWNLOAD_URL = "https://files.rcsb.org/download"
-RCSB_SEARCH_URL = "https://search.rcsb.org/rcsbsearch/v2/query"
-RCSB_DATA_URL = "https://data.rcsb.org/rest/v1/core/entry"
+RCSB_DOWNLOAD_URL = _os.getenv("RCSB_DOWNLOAD_URL", "https://files.rcsb.org/download")
+RCSB_SEARCH_URL = _os.getenv("RCSB_SEARCH_URL", "https://search.rcsb.org/rcsbsearch/v2/query")
+RCSB_DATA_URL = _os.getenv("RCSB_DATA_URL", "https://data.rcsb.org/rest/v1/core/entry")
 
 # UniProt
-UNIPROT_SEARCH_URL = "https://rest.uniprot.org/uniprotkb/search"
+UNIPROT_SEARCH_URL = _os.getenv("UNIPROT_SEARCH_URL", "https://rest.uniprot.org/uniprotkb/search")
+
+# External chemistry databases
+PUBCHEM_URL = _os.getenv("PUBCHEM_URL", "https://pubchem.ncbi.nlm.nih.gov/rest/pug")
+CHEMBL_URL  = _os.getenv("CHEMBL_URL",  "https://www.ebi.ac.uk/chembl/api/data")
+
+# Kokoro TTS service
+KOKORO_URL = _os.getenv("KOKORO_URL", "http://dlyog05:5151")
 
 # Docking limits per user
 DOCKING_MAX_PER_HOUR = int(_os.getenv("DOCKING_MAX_PER_HOUR", "10"))

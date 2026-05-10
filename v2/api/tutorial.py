@@ -1,9 +1,7 @@
 import requests as http
 from flask import Blueprint, render_template, request, Response, jsonify
 from flask_login import login_required
-from config.settings import DGX_TIMEOUT
-
-KOKORO_URL = "http://dlyog05:5151"
+from config.settings import DGX_TIMEOUT, KOKORO_URL
 
 bp = Blueprint("tutorial", __name__)
 
