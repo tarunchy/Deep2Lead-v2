@@ -161,6 +161,7 @@
         <div style="overflow-x:auto;">
           <div id="candidateTable"></div>
         </div>
+        <div id="aiMetadataBox" style="display:none;margin-top:14px;padding:12px;background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.2);border-radius:8px;"></div>
         <div class="disclaimer-box" style="margin-top:16px;">
           <strong>⚠️ Educational simulation only.</strong> These scores come from a computer model. Docking scores are approximations — a high score does not mean a molecule is a real medicine. Real drugs require laboratory testing, clinical trials, and regulatory approval.
         </div>
@@ -268,6 +269,7 @@ window.PAGE_GUIDE = {
 
   let _stopRequested = false;
   let _abortController = null;
+  let _lastExperimentId = null;
 
   function requestStop() {
     _stopRequested = true;
@@ -371,6 +373,7 @@ window.PAGE_GUIDE = {
 
         if (res.candidates && res.candidates.length > 0) {
           found = res.candidates;
+          _lastExperimentId = res.experiment_id || null;
           setProgress(100, `Done! Found ${found.length} candidates on attempt ${attempt}.`, "100%");
           break;
         }
@@ -403,9 +406,41 @@ window.PAGE_GUIDE = {
       document.getElementById("resultsSection").style.display = "block";
       document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth", block: "start" });
       showAlert(`Found ${found.length} candidates in ${attempt} attempt${attempt > 1 ? "s" : ""}!`, "success");
+      if (_lastExperimentId) autoSuggestMetadata(_lastExperimentId);
     } else if (!_stopRequested) {
       renderCandidates([]);
       document.getElementById("resultsSection").style.display = "block";
+    }
+  }
+
+  async function autoSuggestMetadata(experimentId) {
+    const box = document.getElementById("aiMetadataBox");
+    if (!box) return;
+    box.style.display = "block";
+    box.innerHTML = '<span style="color:#8b949e;font-size:.82rem;">✨ AI is writing a title and hypothesis…</span>';
+    try {
+      const res = await apiFetch("/api/v2/suggest-metadata", {
+        method: "POST",
+        body: JSON.stringify({ experiment_id: experimentId }),
+      });
+      if (res.title || res.hypothesis) {
+        box.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:.8rem;font-weight:600;color:#58a6ff;">✨ AI-suggested metadata</span>
+            <span style="font-size:.72rem;color:#8b949e;">(auto-saved)</span>
+          </div>
+          <div style="font-size:.88rem;font-weight:600;color:#c9d1d9;margin-bottom:4px;">${res.title || ""}</div>
+          <div style="font-size:.8rem;color:#8b949e;line-height:1.6;">${res.hypothesis || ""}</div>
+          <a href="/experiments/${experimentId}" style="display:inline-block;margin-top:8px;font-size:.78rem;color:#58a6ff;">View full experiment →</a>`;
+        await apiFetch(`/api/v2/experiments/${experimentId}`, {
+          method: "PATCH",
+          body: JSON.stringify({ title: res.title, hypothesis: res.hypothesis }),
+        });
+      } else {
+        box.style.display = "none";
+      }
+    } catch (_) {
+      box.style.display = "none";
     }
   }
 

@@ -9,6 +9,9 @@ class GenerateSchema(Schema):
     smile = fields.Str(required=True, validate=validate.Length(min=2))
     noise = fields.Float(load_default=0.5, validate=validate.Range(min=0.0, max=1.0))
     num_candidates = fields.Int(load_default=10, validate=validate.Range(min=1, max=50))
+    target_id = fields.Str(load_default=None)
+    pdb_id = fields.Str(load_default=None)
+    target_name = fields.Str(load_default=None)
 
 
 class ExperimentUpdateSchema(Schema):

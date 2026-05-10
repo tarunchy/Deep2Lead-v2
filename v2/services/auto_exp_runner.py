@@ -97,7 +97,7 @@ def _compute_composite(candidate: dict, docking_score_norm: float | None, strate
 
 def _loop(run_id: str, config: dict, app):
     """Main experiment loop. Runs in background thread."""
-    from services.molecule_generator import generate_candidates
+    from services.molecule_generator import generate as _gen_fn
     from services.molecule_validator import filter_candidates
     from services.property_calculator import compute_all
     from services.docking_service import run_docking_pipeline, is_docking_available
@@ -146,13 +146,14 @@ def _loop(run_id: str, config: dict, app):
 
             try:
                 # Generate candidates using Gemma4
-                raw = generate_candidates(
-                    seed_smiles=best_smiles,
-                    amino_acid_seq=aa_seq,
-                    noise_level=params["noise_level"],
+                gen = _gen_fn(
+                    seed_smile=best_smiles,
+                    amino_acid_seq=aa_seq or "",
+                    noise=params["noise_level"],
                     n=mol_per_round,
                 )
-                valid = filter_candidates(raw, seed_smiles)
+                raw = gen["smiles"]
+                valid = filter_candidates(raw, best_smiles)
                 _append_log(run_id, f"  Generated {len(raw)} raw, {len(valid)} valid molecules.")
 
                 if not valid:

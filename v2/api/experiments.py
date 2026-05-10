@@ -122,6 +122,8 @@ def generate():
         num_requested=data["num_candidates"],
         gemma4_latency_ms=gen["latency_ms"],
         num_valid_generated=gen["total_generated"],
+        target_id=data.get("target_id") or None,
+        pdb_id=data.get("pdb_id") or None,
     )
     db.session.add(exp)
     db.session.flush()  # get exp.id before commit
