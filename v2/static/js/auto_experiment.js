@@ -10,22 +10,22 @@
     start: async function (config) {
       const btn = document.getElementById("startAutoBtn");
       const stopBtn = document.getElementById("stopAutoBtn");
-      if (btn) btn.disabled = true;
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-spinner"></span>Running…'; }
       if (stopBtn) stopBtn.disabled = false;
 
       setStatus("starting", "Starting Auto Experiment…");
+      _setProgressBar(true);
       _rounds = [];
       _maxScore = 0;
 
       try {
         const res = await apiFetch("/api/v3/auto-experiment/start", { method: "POST", body: JSON.stringify(config) });
-        if (res.error) { setStatus("failed", res.error); return; }
+        if (res.error) { setStatus("failed", res.error); _resetStartBtn(); return; }
         AutoExp.stream(res.run_id);
-        // Store run_id for stop button
         document.getElementById("currentRunId").value = res.run_id;
       } catch (e) {
         setStatus("failed", "Failed to start: " + e.message);
-        if (btn) btn.disabled = false;
+        _resetStartBtn();
       }
     },
 
@@ -55,6 +55,8 @@
       setStatus("stopped", "Stopped by user.");
       const stopBtn = document.getElementById("stopAutoBtn");
       if (stopBtn) stopBtn.disabled = true;
+      _resetStartBtn();
+      _setProgressBar(false);
     },
   };
 
@@ -63,6 +65,16 @@
     const txt = document.getElementById("statusText");
     if (dot) { dot.className = "status-dot " + status; }
     if (txt) txt.textContent = msg || status;
+  }
+
+  function _resetStartBtn() {
+    const btn = document.getElementById("startAutoBtn");
+    if (btn) { btn.disabled = false; btn.innerHTML = '▶ Start Loop'; }
+  }
+
+  function _setProgressBar(show) {
+    const bar = document.getElementById("monitorProgressBar");
+    if (bar) bar.style.display = show ? "block" : "none";
   }
 
   function appendLog(msg) {
@@ -135,9 +147,9 @@
   function onDone(status) {
     setStatus(status, status === "complete" ? "Complete!" : status);
     const stopBtn = document.getElementById("stopAutoBtn");
-    const startBtn = document.getElementById("startAutoBtn");
     if (stopBtn) stopBtn.disabled = true;
-    if (startBtn) startBtn.disabled = false;
+    _resetStartBtn();
+    _setProgressBar(false);
     if (_eventSource) _eventSource.close();
     appendLog(`Auto Experiment ${status}.`);
   }

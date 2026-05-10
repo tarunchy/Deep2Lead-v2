@@ -8,7 +8,7 @@
 
 <div class="page-header" style="margin-bottom:20px;">
   <h1 style="font-size:1.6rem;font-weight:700;">Auto Experiment</h1>
-  <p style="color:#8b949e;margin-top:4px;">Pick a previous 3D experiment and let the AI iterate autonomously. <strong>Evolve</strong> improves an existing top candidate. <strong>Rescue</strong> retries a failed experiment across multiple strategies.</p>
+  <p style="color:var(--text-muted);margin-top:4px;">Pick a previous 3D experiment and let the AI iterate autonomously. <strong>Evolve</strong> improves an existing top candidate. <strong>Rescue</strong> retries a failed experiment across multiple strategies.</p>
 </div>
 
 <div class="auto-exp-layout">
@@ -17,7 +17,7 @@
 
     <!-- Step 1: Experiment selector -->
     <div class="auto-exp-config">
-      <h3 style="font-size:.92rem;font-weight:600;margin-bottom:14px;color:#e6edf3;">Step 1 — Choose a 3D Experiment</h3>
+      <h3 style="font-size:.92rem;font-weight:600;margin-bottom:14px;color:var(--text);">Step 1 — Choose a 3D Experiment</h3>
       <div class="form-group">
         <label>Your 3D experiments</label>
         <select id="expSelect" class="form-control" onchange="onExpChange(this.value)">
@@ -26,22 +26,22 @@
       </div>
 
       <!-- Target info card (hidden until experiment selected) -->
-      <div id="targetInfoCard" style="display:none;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 14px;margin-top:10px;">
+      <div id="targetInfoCard" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-top:10px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
           <div id="modeBadge" style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.5px;"></div>
-          <span id="targetName" style="font-weight:600;font-size:.9rem;color:#e6edf3;"></span>
+          <span id="targetName" style="font-weight:600;font-size:.9rem;color:var(--text);"></span>
         </div>
-        <div id="targetDisease" style="font-size:.78rem;color:#8b949e;margin-bottom:6px;"></div>
-        <div style="font-size:.75rem;color:#8b949e;">
-          Seed: <span id="seedSmiles" style="font-family:monospace;color:#79c0ff;word-break:break-all;"></span>
+        <div id="targetDisease" style="font-size:.78rem;color:var(--text-muted);margin-bottom:6px;"></div>
+        <div style="font-size:.75rem;color:var(--text-muted);">
+          Seed: <span id="seedSmiles" style="font-family:monospace;color:var(--accent);word-break:break-all;"></span>
         </div>
       </div>
     </div>
 
     <!-- Step 2: Strategy (only shown in evolve mode) -->
     <div class="auto-exp-config" id="strategyPanel" style="margin-top:12px;">
-      <h3 style="font-size:.92rem;font-weight:600;margin-bottom:10px;color:#e6edf3;">Step 2 — Optimization Strategy</h3>
-      <p id="rescueModeNote" style="display:none;font-size:.8rem;color:#8b949e;line-height:1.5;background:#0d1117;border-radius:6px;padding:10px 12px;border:1px solid #30363d;">
+      <h3 style="font-size:.92rem;font-weight:600;margin-bottom:10px;color:var(--text);">Step 2 — Optimization Strategy</h3>
+      <p id="rescueModeNote" style="display:none;font-size:.8rem;color:var(--text-muted);line-height:1.5;background:var(--bg);border-radius:6px;padding:10px 12px;border:1px solid var(--border);">
         Rescue mode auto-cycles through all 5 strategies (Conservative → Explorer → Novelty → Safety First → Balanced) one per round. No manual selection needed.
       </p>
       <div class="strategy-grid" id="strategyGrid">
@@ -75,7 +75,7 @@
 
     <!-- Step 3: Rounds config -->
     <div class="auto-exp-config" style="margin-top:12px;">
-      <h3 style="font-size:.92rem;font-weight:600;margin-bottom:10px;color:#e6edf3;">Step 3 — Run Settings</h3>
+      <h3 style="font-size:.92rem;font-weight:600;margin-bottom:10px;color:var(--text);">Step 3 — Run Settings</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="form-group">
           <label>Rounds (max 5)</label>
@@ -99,9 +99,9 @@
 
     <!-- Best molecule box -->
     <div class="best-mol-box" id="bestMolBox" style="display:none;margin-top:12px;">
-      <div style="font-size:.8rem;color:#8b949e;margin-bottom:4px;">Best molecule found</div>
+      <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:4px;">Best molecule found</div>
       <div class="best-mol-score" id="bestMolScore">—</div>
-      <div style="font-family:monospace;font-size:.75rem;word-break:break-all;color:#8b949e;margin-top:6px;" id="bestMolSmiles"></div>
+      <div style="font-family:monospace;font-size:.75rem;word-break:break-all;color:var(--text-muted);margin-top:6px;" id="bestMolSmiles"></div>
     </div>
 
     <!-- Boss bar -->
@@ -124,20 +124,21 @@
   <!-- Right: Monitor panel -->
   <div>
     <div class="auto-exp-monitor">
+      <div id="monitorProgressBar" style="display:none;" class="monitor-running-bar"></div>
       <div class="monitor-header">
         <div class="monitor-status">
           <div class="status-dot idle" id="statusDot"></div>
           <span id="statusText">Idle</span>
           <span id="modeLabel" style="font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:8px;display:none;"></span>
         </div>
-        <div style="font-size:.8rem;color:#8b949e;">
+        <div style="font-size:.8rem;color:var(--text-muted);">
           Rounds: <strong id="roundsCompletedLabel">0</strong> &nbsp;|&nbsp; Best: <strong id="bestScoreLabel">—</strong>
         </div>
       </div>
 
       <!-- Score chart -->
       <div class="score-chart">
-        <div style="font-size:.78rem;color:#8b949e;margin-bottom:8px;">Score trend per round</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;">Score trend per round</div>
         <div class="chart-bars" id="chartBars">
           <div style="color:#555;font-size:.75rem;align-self:center;">No data yet</div>
         </div>
@@ -145,7 +146,7 @@
 
       <!-- Round history -->
       <div style="padding:10px 18px;border-bottom:1px solid #30363d;">
-        <div style="font-size:.82rem;color:#8b949e;">Round history</div>
+        <div style="font-size:.82rem;color:var(--text-muted);">Round history</div>
       </div>
       <div class="round-feed" id="roundFeed">
         <div style="color:#555;font-size:.83rem;padding:16px 0;text-align:center;">
@@ -213,14 +214,14 @@
     const badge = document.getElementById("modeBadge");
     if (_currentMode === "evolve") {
       badge.textContent = "EVOLVE";
-      badge.style.background = "#1f6feb33";
-      badge.style.color = "#58a6ff";
-      badge.style.border = "1px solid #1f6feb";
+      badge.style.background = "var(--accent-light)";
+      badge.style.color = "var(--accent)";
+      badge.style.border = "1px solid var(--accent)";
     } else {
       badge.textContent = "RESCUE";
-      badge.style.background = "#da3633 22";
-      badge.style.color = "#ff7b72";
-      badge.style.border = "1px solid #da363333";
+      badge.style.background = "rgba(197,48,48,0.1)";
+      badge.style.color = "#c53030";
+      badge.style.border = "1px solid rgba(197,48,48,0.35)";
     }
 
     // Target info
@@ -273,11 +274,15 @@
     modeLabel.textContent = _currentMode === "evolve" ? "EVOLVE" : "RESCUE";
     modeLabel.style.display = "inline-block";
     if (_currentMode === "evolve") {
-      modeLabel.style.background = "#1f6feb33";
-      modeLabel.style.color = "#58a6ff";
+      modeLabel.style.background = "var(--accent-light)";
+      modeLabel.style.color = "var(--accent)";
+      modeLabel.style.border = "1px solid var(--accent)";
+      modeLabel.style.borderRadius = "20px";
     } else {
-      modeLabel.style.background = "#da363322";
-      modeLabel.style.color = "#ff7b72";
+      modeLabel.style.background = "rgba(197,48,48,0.1)";
+      modeLabel.style.color = "#c53030";
+      modeLabel.style.border = "1px solid rgba(197,48,48,0.35)";
+      modeLabel.style.borderRadius = "20px";
     }
 
     AutoExp.start({
