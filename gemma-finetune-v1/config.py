@@ -54,6 +54,7 @@ DGX_FINETUNE_DIR = "/home/dlyog/unsloth/gemma-4-finetune"
 FINETUNED_API_PORT = 9002          # A/B alongside existing E4B at 9001
 
 # ── Paths on DGX (relative to DGX_FINETUNE_DIR) ────────────────────────────────
-TARGETS_JSON_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "v2", "data", "curated_targets.json"
-)
+# Check both: local repo layout (Mac) and DGX deployment layout
+_local_targets = os.path.join(os.path.dirname(__file__), "..", "v2", "data", "curated_targets.json")
+_dgx_targets   = os.path.join(os.path.dirname(__file__), "data", "curated_targets.json")
+TARGETS_JSON_PATH = _local_targets if os.path.exists(_local_targets) else _dgx_targets
