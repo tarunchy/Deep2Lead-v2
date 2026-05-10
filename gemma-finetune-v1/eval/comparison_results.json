@@ -1,0 +1,300 @@
+[
+  {
+    "target": "SARS-CoV-2 Main Protease",
+    "prod": {
+      "raw": "CC1CC1NC(=O)C(F)(F)F\nCC(F)(F)C1NC(=O)C\nCC(F)(F)C1N(C)C(=O)F\nCC1CC1NC(=O)C(F)F\nCC1CC1NC(=O)C(F)(F)\nCN(C)CC1NC(=O)C(F)(F)\nCC1C(F)(F)NC(=O)C\nCC(F)(F)NC(=O)C1C",
+      "smiles": [
+        "CC1CC1NC(=O)C(F)(F)F",
+        "CC(F)(F)C1NC(=O)C",
+        "CC(F)(F)C1N(C)C(=O)F",
+        "CC1CC1NC(=O)C(F)F",
+        "CC1CC1NC(=O)C(F)(F)",
+        "CN(C)CC1NC(=O)C(F)(F)",
+        "CC1C(F)(F)NC(=O)C",
+        "CC(F)(F)NC(=O)C1C"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 3,
+        "validity_pct": 37.5,
+        "unique_pct": 100.0,
+        "avg_qed": 0.619,
+        "avg_sas": 3.28,
+        "avg_tanimoto": 0.678,
+        "valid_smiles": [
+          "CC1CC1NC(=O)C(F)(F)F",
+          "CC1CC1NC(=O)C(F)F",
+          "CC1CC1NC(=O)C(F)(F)"
+        ]
+      }
+    },
+    "ft": {
+      "raw": "CC1CC1NC(=O)C(F)(F)F\nCC1CC1NC(=O)C(Cl)(F)(F)\nCC1CC1NC(=O)C(OMe)(F)(F)\nCC1CC1NC(=O)C(Br)(F)(F)\nCC1CC1NC(=O)C(OMe)(Cl)(F)\nCC1CC1NC(=O)C(OEt)(F)(F)\nCC1CC1NC(=O)C(OEt)(Cl)(F)\nCC1CC1NC(=O)C(OMe)(Cl)(F)",
+      "smiles": [
+        "CC1CC1NC(=O)C(F)(F)F",
+        "CC1CC1NC(=O)C(Cl)(F)(F)",
+        "CC1CC1NC(=O)C(OMe)(F)(F)",
+        "CC1CC1NC(=O)C(Br)(F)(F)",
+        "CC1CC1NC(=O)C(OMe)(Cl)(F)",
+        "CC1CC1NC(=O)C(OEt)(F)(F)",
+        "CC1CC1NC(=O)C(OEt)(Cl)(F)",
+        "CC1CC1NC(=O)C(OMe)(Cl)(F)"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 3,
+        "validity_pct": 37.5,
+        "unique_pct": 100.0,
+        "avg_qed": 0.659,
+        "avg_sas": 3.48,
+        "avg_tanimoto": 0.802,
+        "valid_smiles": [
+          "CC1CC1NC(=O)C(F)(F)F",
+          "CC1CC1NC(=O)C(Cl)(F)(F)",
+          "CC1CC1NC(=O)C(Br)(F)(F)"
+        ]
+      }
+    }
+  },
+  {
+    "target": "Influenza Neuraminidase (H1N1)",
+    "prod": {
+      "raw": "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1\nCCOC(=O)C(C)C1=CC(NC(C)=O)C(OC(CC)CC)C1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+      "smiles": [
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+        "CCOC(=O)C(C)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 8,
+        "validity_pct": 100.0,
+        "unique_pct": 25.0,
+        "avg_qed": 0.704,
+        "avg_sas": 3.69,
+        "avg_tanimoto": 0.762,
+        "valid_smiles": [
+          "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+          "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+          "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+          "CCOC(=O)C(C)C1=CC(NC(C)=O)C(OC(CC)CC)C1",
+          "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)C1"
+        ]
+      }
+    },
+    "ft": {
+      "raw": "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1\nCCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+      "smiles": [
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+        "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 8,
+        "validity_pct": 100.0,
+        "unique_pct": 12.5,
+        "avg_qed": 0.733,
+        "avg_sas": 3.7,
+        "avg_tanimoto": 1.0,
+        "valid_smiles": [
+          "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+          "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+          "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+          "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
+          "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1"
+        ]
+      }
+    }
+  },
+  {
+    "target": "HIV-1 Protease",
+    "prod": {
+      "raw": "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(C)C(=O)NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)C(=O)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC(C)C1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)C(C)C1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)C(=O)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(C)C(=O)NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+      "smiles": [
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(C)C(=O)NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)C(=O)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC(C)C1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)C(C)C1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)C(=O)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(C)C(=O)NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 8,
+        "validity_pct": 100.0,
+        "unique_pct": 62.5,
+        "avg_qed": 0.312,
+        "avg_sas": 4.72,
+        "avg_tanimoto": 0.878,
+        "valid_smiles": [
+          "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+          "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+          "CC(C)CC1NC(=O)C(C)C(=O)NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+          "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)C(=O)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+          "CC(C)CC(C)C1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O"
+        ]
+      }
+    },
+    "ft": {
+      "raw": "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O\nCC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+      "smiles": [
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+        "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 8,
+        "validity_pct": 100.0,
+        "unique_pct": 12.5,
+        "avg_qed": 0.427,
+        "avg_sas": 4.43,
+        "avg_tanimoto": 1.0,
+        "valid_smiles": [
+          "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+          "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+          "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+          "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
+          "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O"
+        ]
+      }
+    }
+  },
+  {
+    "target": "EGFR Tyrosine Kinase",
+    "prod": {
+      "raw": "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccccc4CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4cc(Cl)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccccc4CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(N)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4c(F)c(Cl)CN5CCN(CC5)C",
+      "smiles": [
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccccc4CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4cc(Cl)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccccc4CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(N)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4c(F)c(Cl)CN5CCN(CC5)C"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 5,
+        "validity_pct": 62.5,
+        "unique_pct": 40.0,
+        "avg_qed": 0.389,
+        "avg_sas": 2.36,
+        "avg_tanimoto": 0.908,
+        "valid_smiles": [
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccccc4CN5CCN(CC5)C",
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccccc4CN5CCN(CC5)C"
+        ]
+      }
+    },
+    "ft": {
+      "raw": "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C\nCc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+      "smiles": [
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+        "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 8,
+        "validity_pct": 100.0,
+        "unique_pct": 12.5,
+        "avg_qed": 0.389,
+        "avg_sas": 2.33,
+        "avg_tanimoto": 1.0,
+        "valid_smiles": [
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
+          "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C"
+        ]
+      }
+    }
+  },
+  {
+    "target": "BRAF V600E Kinase",
+    "prod": {
+      "raw": "CCOc(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCCOc(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4C)cc3s2\nC1=CC=CC=C1Nc2ccc(cc2)c3nc(C)c(C)c3s\nCC(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCCOC(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCCOc(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s\nCCOC(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s\nCCOc(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s",
+      "smiles": [
+        "CCOc(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CCOc(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4C)cc3s2",
+        "C1=CC=CC=C1Nc2ccc(cc2)c3nc(C)c(C)c3s",
+        "CC(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CCOC(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CCOc(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s",
+        "CCOC(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s",
+        "CCOc(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 2,
+        "validity_pct": 25.0,
+        "unique_pct": 100.0,
+        "avg_qed": 0.686,
+        "avg_sas": 2.06,
+        "avg_tanimoto": 0.677,
+        "valid_smiles": [
+          "CC(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+          "CCOC(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2"
+        ]
+      }
+    },
+    "ft": {
+      "raw": "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2\nCC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+      "smiles": [
+        "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+        "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2"
+      ],
+      "scores": {
+        "total_parsed": 8,
+        "valid": 8,
+        "validity_pct": 100.0,
+        "unique_pct": 12.5,
+        "avg_qed": 0.549,
+        "avg_sas": 2.62,
+        "avg_tanimoto": 0.803,
+        "valid_smiles": [
+          "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+          "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+          "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+          "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
+          "CC(=O)COS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2"
+        ]
+      }
+    }
+  }
+]
