@@ -281,18 +281,33 @@ def suggest_metadata():
         for i, c in enumerate(top_candidates)
     ) or "  No valid candidates generated."
 
+    target_info = get_curated_target(exp.target_id) if exp.target_id else None
+    if target_info:
+        target_block = f"""
+Biological target context:
+- Name: {target_info['name']}
+- Disease: {target_info['disease']}
+- Organism: {target_info['organism']}
+- Category: {target_info['category']}
+- Difficulty: {target_info['difficulty']}
+- Description: {target_info['description']}
+- Known drug / reference ligand: {target_info.get('known_drug', 'N/A')} (SMILES: {target_info.get('known_drug_smiles', 'N/A')})
+- Key binding residues: {', '.join(target_info.get('key_residues', []))}"""
+    else:
+        target_block = f"- Protein sequence (first 80 residues): {exp.amino_acid_seq[:80]}"
+
     prompt = f"""You are a computational chemistry assistant helping a graduate student document their drug discovery experiment.
 
 Experiment details:
 - Seed SMILES: {exp.seed_smile}
-- Protein target (first 80 residues): {exp.amino_acid_seq[:80]}
 - Diversity level: {exp.noise_level:.2f} (0=close analogs, 1=diverse)
 - Candidates generated: {exp.num_valid_generated}
+{target_block}
 
 Top candidates by composite score:
 {candidate_lines}
 
-Write a concise experiment title (max 12 words) and a 2-3 sentence scientific hypothesis explaining what structural modifications were explored and why they may improve drug-target binding.
+Write a concise experiment title (max 12 words) and a 2-3 sentence scientific hypothesis explaining what structural modifications were explored, how they relate to the known drug scaffold, and why they may improve binding to the target protein.
 
 Respond in this exact JSON format (no markdown, no extra text):
 {{"title": "...", "hypothesis": "..."}}"""
