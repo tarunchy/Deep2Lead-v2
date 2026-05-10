@@ -277,7 +277,11 @@ def suggest_metadata():
 
     top_candidates = sorted(exp.candidates, key=lambda c: c.composite_score, reverse=True)[:3]
     candidate_lines = "\n".join(
-        f"  {i+1}. SMILES={c.smiles} | Score={c.composite_score:.3f} | DTI={c.dti_score:.3f} | QED={c.qed:.3f} | SAS={c.sas:.2f}"
+        f"  {i+1}. SMILES={c.smiles}"
+        f" | Score={c.composite_score or 0:.3f}"
+        f" | DTI={c.dti_score or 0:.3f}"
+        f" | QED={c.qed or 0:.3f}"
+        f" | SAS={c.sas or 0:.2f}"
         for i, c in enumerate(top_candidates)
     ) or "  No valid candidates generated."
 
