@@ -152,7 +152,7 @@ def stream(run_id):
                 if state.get("status") == "complete":
                     award_xp(current_user.id, "auto_exp_complete")
                     award_badge(current_user.id, "loop_master")
-                yield f"data: {json.dumps({'type': 'done', 'status': state.get('status')})}\n\n"
+                yield f"data: {json.dumps({'type': 'done', 'status': state.get('status'), 'result_experiment_id': state.get('result_experiment_id')})}\n\n"
                 break
 
             time.sleep(2)

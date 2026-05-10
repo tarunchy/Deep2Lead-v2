@@ -135,6 +135,7 @@ def _loop(run_id: str, config: dict, app):
         # Establish baseline
         best_smiles = seed_smiles
         best_score = 0.0
+        all_scored = []   # accumulate every candidate across all rounds
         _append_log(run_id, f"Baseline seed: {seed_smiles[:60]}...")
 
         for round_num in range(1, rounds + 1):
@@ -229,6 +230,7 @@ def _loop(run_id: str, config: dict, app):
                     "candidates": [{"smiles": c["smiles"], "score": c["score"]} for c in scored[:5]],
                     "rationale": rationale,
                 })
+                all_scored.extend(scored)
 
                 # Persist round to DB
                 with _lock:
@@ -267,16 +269,80 @@ def _loop(run_id: str, config: dict, app):
                     _runs[run_id]["rounds"].append(round_record)
                 continue
 
-        # Finalize
+        # Finalize — save results as a new Experiment
         _append_log(run_id, f"Auto Experiment complete. Best score: {best_score:.4f}")
         _set_state(run_id, {"status": "complete", "phase": "done"})
 
+        result_exp_id = None
         try:
             run_row = AutoExperimentRun.query.get(uuid.UUID(run_id))
+            src_exp = Experiment.query.get(uuid.UUID(exp_id)) if exp_id else None
+
+            if run_row and src_exp and all_scored:
+                # Deduplicate by SMILES, keep best score per molecule
+                seen: dict[str, dict] = {}
+                for c in all_scored:
+                    s = c["smiles"]
+                    if s not in seen or c["score"] > seen[s]["score"]:
+                        seen[s] = c
+                top_candidates = sorted(seen.values(), key=lambda x: x["score"], reverse=True)[:10]
+
+                # Derive title
+                target_label = (
+                    src_exp.target_name or
+                    (src_exp.target_id.replace("_", " ").title() if src_exp.target_id else None) or
+                    src_exp.title or
+                    "Unknown Target"
+                )
+                result_title = f"Auto {mode_label}: {target_label}"
+
+                result_exp = Experiment(
+                    user_id=src_exp.user_id,
+                    title=result_title,
+                    amino_acid_seq=src_exp.amino_acid_seq,
+                    seed_smile=src_exp.seed_smile,
+                    noise_level=src_exp.noise_level,
+                    num_requested=rounds * mol_per_round,
+                    num_valid_generated=len(top_candidates),
+                    target_id=src_exp.target_id,
+                    target_name=src_exp.target_name,
+                    pdb_id=src_exp.pdb_id,
+                    uniprot_id=src_exp.uniprot_id,
+                    mode="3d",
+                    status="draft",
+                )
+                db.session.add(result_exp)
+                db.session.flush()
+
+                for rank, c in enumerate(top_candidates, start=1):
+                    p = c.get("props") or {}
+                    cand = Candidate(
+                        experiment_id=result_exp.id,
+                        smiles=c["smiles"],
+                        rank=rank,
+                        composite_score=c["score"],
+                        dti_score=None,
+                        qed=p.get("qed"),
+                        sas=p.get("sas"),
+                        logp=p.get("logp"),
+                        mw=p.get("mw"),
+                        tanimoto=p.get("tanimoto"),
+                        lipinski_pass=p.get("lipinski_pass"),
+                        novelty_status=p.get("novelty_status"),
+                        docking_score_kcal=c.get("docking_kcal"),
+                    )
+                    db.session.add(cand)
+
+                run_row.result_experiment_id = result_exp.id
+                result_exp_id = str(result_exp.id)
+                _append_log(run_id, f"Saved {len(top_candidates)} candidates → new experiment {result_exp_id[:8]}…")
+
             if run_row:
                 run_row.status = "complete"
                 run_row.completed_at = datetime.now(timezone.utc)
                 run_row.best_score = best_score
-                db.session.commit()
-        except Exception:
-            pass
+            db.session.commit()
+        except Exception as e:
+            log.warning(f"Finalize DB error: {e}")
+
+        _set_state(run_id, {"result_experiment_id": result_exp_id})

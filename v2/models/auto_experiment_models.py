@@ -18,6 +18,7 @@ class AutoExperimentRun(db.Model):
     molecules_per_round = db.Column(db.Integer, default=5)
     best_candidate_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey("candidates.id"), nullable=True)
     best_score = db.Column(db.Float, nullable=True)
+    result_experiment_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey("experiments.id"), nullable=True)
     status = db.Column(db.String(16), default="pending")
     # pending | running | complete | failed | stopped
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
@@ -32,6 +33,7 @@ class AutoExperimentRun(db.Model):
         d = {
             "id": str(self.id),
             "experiment_id": str(self.experiment_id),
+            "result_experiment_id": str(self.result_experiment_id) if self.result_experiment_id else None,
             "strategy": self.strategy,
             "rounds_planned": self.rounds_planned,
             "rounds_completed": self.rounds_completed,

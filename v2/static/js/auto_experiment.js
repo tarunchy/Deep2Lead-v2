@@ -38,7 +38,7 @@
         if (msg.type === "log") appendLog(msg.message);
         else if (msg.type === "round") addRound(msg.round);
         else if (msg.type === "state") updateStatePanel(msg);
-        else if (msg.type === "done") onDone(msg.status);
+        else if (msg.type === "done") onDone(msg.status, msg.result_experiment_id);
       };
 
       _eventSource.onerror = function () {
@@ -144,7 +144,7 @@
     setStatus(msg.status === "running" ? "running" : "idle", msg.status === "running" ? "Running…" : msg.status);
   }
 
-  function onDone(status) {
+  function onDone(status, resultExpId) {
     setStatus(status, status === "complete" ? "Complete!" : status);
     const stopBtn = document.getElementById("stopAutoBtn");
     if (stopBtn) stopBtn.disabled = true;
@@ -152,5 +152,24 @@
     _setProgressBar(false);
     if (_eventSource) _eventSource.close();
     appendLog(`Auto Experiment ${status}.`);
+
+    if (status === "complete" && resultExpId) {
+      appendLog(`Results saved → experiment ${resultExpId.slice(0, 8)}…`);
+      let box = document.getElementById("resultExpBox");
+      if (!box) {
+        box = document.createElement("div");
+        box.id = "resultExpBox";
+        box.style.cssText = "margin-top:12px;padding:12px 14px;background:var(--accent-light);border:1px solid var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;";
+        const bestMolBox = document.getElementById("bestMolBox");
+        if (bestMolBox) bestMolBox.after(box);
+        else document.querySelector(".auto-exp-config")?.append(box);
+      }
+      box.innerHTML = `
+        <div>
+          <div style="font-size:.8rem;font-weight:600;color:var(--accent);">Results saved to My Experiments</div>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">Top evolved candidates are ready to review</div>
+        </div>
+        <a href="/experiments/${resultExpId}" class="btn btn-sm btn-primary" style="white-space:nowrap;">View Results →</a>`;
+    }
   }
 })();
