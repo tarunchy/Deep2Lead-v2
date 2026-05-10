@@ -8,6 +8,7 @@
   let _history      = [];
   let _playingAudio = null;
   let _stopPlayback = false;
+  let _useNaturalBot = false;
 
   // ── DOM refs ──────────────────────────────────────────────────
   const voOverlay = () => document.getElementById("voiceOverlay");
@@ -53,8 +54,51 @@
     _setState("idle");
   }
 
+  function _initNaturalBot() {
+    if (!window.NaturalVoiceBot) return;
+
+    window.NaturalVoiceBot.init({
+      onStateChange: (s) => {
+        const map = { idle: "idle", listening: "recording", thinking: "thinking", speaking: "speaking" };
+        _setState(map[s] || s);
+      },
+      onTranscript: (text) => {
+        _appendUserMsg(text);
+        _history.push({ role: "user", content: text });
+        if (_history.length > 16) _history = _history.slice(-16);
+      },
+      onReply: async (reply, toolsUsed) => {
+        _history.push({ role: "assistant", content: reply });
+        const msgEl = _appendAiMsg(reply, toolsUsed || []);
+        await _speakChunked(reply, msgEl);
+        window.NaturalVoiceBot.setSpeakingDone();
+      }
+    });
+
+    window.getChatHistory = () => _history;
+
+    window.addEventListener("voice-interrupt", () => {
+      console.log("UI: Handling voice interrupt");
+      _stopPlayback = true;
+      if (_playingAudio) {
+        _playingAudio.pause();
+        _playingAudio = null;
+      }
+    });
+
+    window.addEventListener("voice-stop-speech", () => {
+       _stopPlayback = true;
+       if (_playingAudio) {
+         _playingAudio.pause();
+         _playingAudio = null;
+       }
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     if (window.GlobeViz) GlobeViz.load("globeCanvas", () => setTimeout(_greetUser, 900));
+
+    _initNaturalBot();
 
     micGlobe()?.addEventListener("click", _toggleMic);
     micText()?.addEventListener("click",  _toggleMic);
@@ -93,6 +137,19 @@
 
   // ── Mic ───────────────────────────────────────────────────────
   async function _toggleMic() {
+    // Prefer Natural Bot for better experience
+    if (window.NaturalVoiceBot) {
+        if (!_useNaturalBot) {
+            _useNaturalBot = true;
+            await window.NaturalVoiceBot.start();
+        } else {
+            _useNaturalBot = false;
+            window.NaturalVoiceBot.stop();
+            _setState("idle");
+        }
+        return;
+    }
+
     if (_state === "recording") _stopRecording();
     else if (_state === "idle") await _startRecording();
   }
@@ -374,7 +431,14 @@
 
   // ── State machine ─────────────────────────────────────────────
   const _G_STATES  = { idle:"idle", recording:"listening", transcribing:"thinking", thinking:"thinking", speaking:"speaking" };
-  const _G_LABELS  = { idle:"Tap mic to ask a question", recording:"Listening…", transcribing:"Transcribing…", thinking:"Thinking…", speaking:"Speaking…" };
+  const _G_LABELS  = {
+    idle:"Tap mic to ask a question", recording:"Listening…",
+    transcribing:"Transcribing…", thinking:"Thinking…", speaking:"Speaking…"
+  };
+  const _G_LABELS_NATURAL = {
+    idle:"I'm listening…", recording:"I'm listening…",
+    transcribing:"I'm thinking…", thinking:"I'm thinking…", speaking:"Speaking…"
+  };
   const _STATUS_TX = {
     idle:"", recording:'<span class="status-dot-live"></span> Recording… tap mic to stop',
     transcribing:"🎙 Transcribing…", thinking:"🤖 Thinking…", speaking:"🔊 Speaking…",
@@ -388,7 +452,10 @@
     const ov = voOverlay();
     if (ov) ov.dataset.state = _G_STATES[s] || "idle";
     const lbl = voLabel();
-    if (lbl) lbl.textContent = _G_LABELS[s] || "";
+    if (lbl) {
+        const labels = _useNaturalBot ? _G_LABELS_NATURAL : _G_LABELS;
+        lbl.textContent = labels[s] || "";
+    }
 
     // Voice status
     _setVoStatus(_STATUS_TX[s] || "", s);
@@ -396,9 +463,10 @@
     // Both mic buttons
     [micGlobe(), micText()].forEach(m => {
       if (!m) return;
-      m.classList.toggle("recording", s === "recording");
-      m.textContent = s === "recording" ? "⏹" : "🎙";
-      m.disabled = s === "transcribing" || s === "thinking" || s === "speaking";
+      m.classList.toggle("recording", s === "recording" || (_useNaturalBot && s !== "thinking"));
+      m.textContent = (_useNaturalBot && s !== "thinking") ? "⏹" : (s === "recording" ? "⏹" : "🎙");
+      // Don't disable during speaking if using natural bot, so user can manually stop
+      m.disabled = s === "transcribing" || s === "thinking" || (s === "speaking" && !_useNaturalBot);
     });
 
     // Text mode controls

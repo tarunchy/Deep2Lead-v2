@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deep2Lead v3 — Enhancement Plan v2 (Game + Gap Analysis)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #d2a8ff;
+      --accent4: #ffa657;
+      --accent5: #ff7b72;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --pill-blue: rgba(88,166,255,0.15);
+      --pill-green: rgba(63,185,80,0.15);
+      --pill-purple: rgba(210,168,255,0.15);
+      --pill-orange: rgba(255,166,87,0.15);
+      --pill-red: rgba(255,123,114,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; }
+
+    .wrapper { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+    header { text-align: center; padding: 60px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+    header h1 { font-size: 2.6rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent3), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    header .subtitle { color: var(--muted); margin-top: 10px; font-size: 1.05rem; }
+    header .meta { display: flex; justify-content: center; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+    header .meta span { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px; font-size: 0.82rem; color: var(--muted); }
+
+    h2 { font-size: 1.5rem; font-weight: 600; margin: 48px 0 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    h2 .num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; font-size: 0.85rem; font-weight: 700; flex-shrink: 0; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 10px; color: var(--accent); }
+    h4 { font-size: 0.95rem; font-weight: 600; margin: 16px 0 6px; color: var(--accent3); }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; margin-bottom: 16px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .card-sm { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+
+    .pill { display: inline-block; border-radius: 12px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600; margin: 2px; }
+    .pill-blue { background: var(--pill-blue); color: var(--accent); }
+    .pill-green { background: var(--pill-green); color: var(--accent2); }
+    .pill-purple { background: var(--pill-purple); color: var(--accent3); }
+    .pill-orange { background: var(--pill-orange); color: var(--accent4); }
+    .pill-red { background: var(--pill-red); color: var(--accent5); }
+
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+    th { background: var(--surface2); color: var(--muted); text-align: left; padding: 8px 12px; font-weight: 600; border-bottom: 2px solid var(--border); }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+
+    code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.84rem; background: var(--surface2); border-radius: 4px; padding: 1px 6px; color: var(--accent4); }
+    pre { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 18px; overflow-x: auto; margin: 12px 0; }
+    pre code { background: none; padding: 0; color: var(--text); font-size: 0.83rem; }
+
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 16px 0; }
+    .flow-step { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 0.85rem; font-weight: 500; }
+    .flow-arrow { color: var(--muted); font-size: 1.1rem; }
+
+    .timeline { border-left: 2px solid var(--border); padding-left: 24px; margin: 16px 0; }
+    .timeline-item { position: relative; margin-bottom: 24px; }
+    .timeline-item::before { content: ''; position: absolute; left: -30px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+    .timeline-item.phase2::before { background: var(--accent3); }
+    .timeline-item.phase3::before { background: var(--accent2); }
+    .timeline-label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .tl-blue { color: var(--accent); }
+    .tl-purple { color: var(--accent3); }
+    .tl-green { color: var(--accent2); }
+    .tl-red { color: var(--accent5); }
+
+    .note { background: rgba(255,166,87,0.08); border-left: 3px solid var(--accent4); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .note strong { color: var(--accent4); }
+    .info { background: rgba(88,166,255,0.08); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .info strong { color: var(--accent); }
+    .success { background: rgba(63,185,80,0.08); border-left: 3px solid var(--accent2); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .success strong { color: var(--accent2); }
+    .danger { background: rgba(255,123,114,0.08); border-left: 3px solid var(--accent5); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .danger strong { color: var(--accent5); }
+
+    .gap-done { color: var(--accent2); font-weight: 600; }
+    .gap-partial { color: var(--accent4); font-weight: 600; }
+    .gap-missing { color: var(--accent5); font-weight: 600; }
+    .gap-new { color: var(--accent3); font-weight: 600; }
+
+    .game-screen { background: var(--surface2); border: 2px solid var(--border); border-radius: 12px; padding: 24px; margin: 16px 0; position: relative; }
+    .game-screen::before { content: attr(data-label); position: absolute; top: -12px; left: 20px; background: var(--bg); padding: 0 8px; font-size: 0.75rem; font-weight: 600; color: var(--accent3); text-transform: uppercase; letter-spacing: 0.06em; }
+    .boss-bar { background: linear-gradient(90deg, var(--accent5), var(--accent4)); height: 28px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; font-size: 0.85rem; font-weight: 700; color: white; transition: width 0.5s ease; }
+    .boss-bar-bg { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin: 8px 0; }
+    .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .level-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+    .level-card:hover { border-color: var(--accent); }
+    .level-card .lc-icon { font-size: 2.5rem; margin-bottom: 8px; }
+    .level-card .lc-name { font-weight: 600; font-size: 0.95rem; }
+    .level-card .lc-sub { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+    .level-card .lc-diff { margin-top: 8px; }
+
+    .highlight-box { background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(210,168,255,0.08)); border: 1px solid rgba(88,166,255,0.3); border-radius: 10px; padding: 20px 24px; margin: 16px 0; }
+
+    ul { padding-left: 18px; }
+    li { margin-bottom: 5px; font-size: 0.9rem; color: var(--text); }
+    p { margin-bottom: 10px; font-size: 0.93rem; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 40px; }
+    .toc h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 12px; }
+    .toc ol { padding-left: 18px; }
+    .toc li { margin-bottom: 6px; }
+    .toc a { font-size: 0.9rem; }
+
+    .jaderberg-box { background: linear-gradient(135deg, rgba(63,185,80,0.06), rgba(88,166,255,0.06)); border: 1px solid rgba(63,185,80,0.25); border-radius: 10px; padding: 18px 22px; margin: 12px 0; }
+    .jaderberg-box .jb-num { display: inline-block; background: rgba(63,185,80,0.2); color: var(--accent2); border-radius: 50%; width: 24px; height: 24px; text-align: center; line-height: 24px; font-size: 0.8rem; font-weight: 700; margin-right: 8px; }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.8rem; }
+      .card-grid { grid-template-columns: 1fr; }
+      .game-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <h1>Deep2Lead v3 — Enhancement Plan v2</h1>
+    <p class="subtitle">Game Mode Design · Gap Analysis · Max Jaderberg AI Framework Integration</p>
+    <div class="meta">
+      <span>Version 3.1 Draft</span>
+      <span>Date: 2026-05-10</span>
+      <span>Author: Tarun Chawdhury</span>
+      <span>Platform: Deep2Lead v3 on DGX GB10</span>
+    </div>
+  </header>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#gap">Gap Analysis — v2 Current State vs Enhancement Plan v1</a></li>
+      <li><a href="#game-overview">PathoHunt — Browser Game: Overview &amp; Concept</a></li>
+      <li><a href="#game-modes">Game Modes: Quick Battle, Docking Battle, AI Army</a></li>
+      <li><a href="#game-levels">Level Design — Pathogens as Boss Enemies</a></li>
+      <li><a href="#game-mechanics">Game Mechanics, Scoring &amp; Progression</a></li>
+      <li><a href="#game-backend">Game Backend Architecture</a></li>
+      <li><a href="#game-frontend">Game Frontend Architecture &amp; UI Flow</a></li>
+      <li><a href="#game-models">New DB Models &amp; API Endpoints</a></li>
+      <li><a href="#jaderberg">Max Jaderberg Framework — Applied to Deep2Lead</a></li>
+      <li><a href="#phase-plan">Updated Phased Roadmap</a></li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════════════════ 1. GAP ANALYSIS -->
+  <h2 id="gap"><span class="num" style="background:rgba(255,123,114,0.2);color:var(--accent5)">1</span> Gap Analysis — Current v2 State vs Enhancement Plan v1</h2>
+  <p>The following table maps every feature from the original <code>enhancement_plan.html</code> to its implementation status in the current v2 codebase, based on code analysis of all services, API blueprints, templates, and models.</p>
+
+  <div class="success"><strong>Overall Assessment:</strong> The v2 codebase has implemented approximately 80% of Phase 1 and Phase 2 features from the original enhancement plan. The core drug discovery pipeline (3D docking, auto-experiment, gamification, target discovery) is architecturally complete. The main gaps are in content depth (curated targets: 6 of 20-30 planned), Phase 3 features (leaderboard, teacher dashboard, lineage graph), and the newly requested Game and Fine-tuning features.</div>
+
+  <h3>Feature-by-Feature Status</h3>
+  <table>
+    <thead>
+      <tr><th>Feature / Component</th><th>Status</th><th>What Exists</th><th>Gap / Missing Piece</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Target &amp; Pathogen Discovery Pipeline</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>api/target.py</code>, <code>services/target_service.py</code>, <code>templates/target_picker.html</code>, curated target JSON</td>
+        <td>Only 6 curated targets (plan: 20–30). Missing 14+ targets across cancer/aging/viral categories. UniProt live search wired but needs more UI polish.</td>
+      </tr>
+      <tr>
+        <td><strong>RCSB PDB Download</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>services/structure_service.py:fetch_rcsb_pdb()</code>. Cache files found at <code>data/structures/rcsb_*.pdb</code></td>
+        <td>None — working. 5 PDB files pre-cached.</td>
+      </tr>
+      <tr>
+        <td><strong>AlphaFold EBI Integration</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>structure_service.py:fetch_alphafold_pdb()</code>, <code>api/structure.py:/api/v3/structure/alphafold/&lt;id&gt;</code>, XP award on use</td>
+        <td>None. Production ready.</td>
+      </tr>
+      <tr>
+        <td><strong>ESMFold Custom Sequence</strong></td>
+        <td><span class="gap-partial">⚠️ Partial</span></td>
+        <td><code>structure_service.py:fold_with_esmfold()</code>, <code>api/structure.py:POST /api/v3/structure/fold</code>, max 400 AA</td>
+        <td>ESMFold API (api.esmatlas.com) has been intermittently unavailable. Need fallback strategy or local ESMFold deployment on DGX. Rate limiting (1 fold/experiment/student) not fully enforced.</td>
+      </tr>
+      <tr>
+        <td><strong>AutoDock Vina Docking</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>services/docking_service.py</code>, <code>api/docking.py</code>, Meeko + OpenBabel integration, threaded jobs</td>
+        <td>Docking box center/size defaults per target need more curated values. Some targets in the curated JSON may have placeholder binding site coords.</td>
+      </tr>
+      <tr>
+        <td><strong>3D Structure Viewer (3Dmol.js)</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>static/js/structure_viewer.js</code>, <code>static/js/3d_viewer.js</code>, <code>templates/run_3d.html</code></td>
+        <td>None. 3Dmol.js loaded via CDN. Both protein and ligand pose visualization working.</td>
+      </tr>
+      <tr>
+        <td><strong>Auto Experiment (Autonomous Loop)</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>services/auto_exp_runner.py</code> (348 lines), SSE streaming, 5 strategies, round tracking, DB models</td>
+        <td>Auto Experiment results save as a new Experiment (confirmed in git log: "Auto Experiment: save results as a new Experiment on completion"). Working end-to-end.</td>
+      </tr>
+      <tr>
+        <td><strong>Gamification — XP, Badges</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>services/xp_service.py</code>, 10 badge definitions, 7 mission levels, XP event system, <code>api/gamification.py</code></td>
+        <td>Badge icons are emoji-only. Visual badge gallery on mission_board.html needs testing. Mission Level 5 (Mutation Challenge) has no backend logic to trigger it automatically.</td>
+      </tr>
+      <tr>
+        <td><strong>Mission Board (7 Levels)</strong></td>
+        <td><span class="gap-partial">⚠️ Partial</span></td>
+        <td><code>templates/mission_board.html</code>, mission progress API, 7 level definitions in <code>xp_service.py</code></td>
+        <td>Levels 1–4 and 6–7 have clear completion criteria tied to XP events. Level 5 (Mutation Challenge) requires comparing docking vs. mutated target — backend logic for mutation not yet implemented.</td>
+      </tr>
+      <tr>
+        <td><strong>Boss Health Bar</strong></td>
+        <td><span class="gap-partial">⚠️ Partial</span></td>
+        <td>Defined in gamification CSS and enhancement plan. Boss concept exists in auto_experiment.html</td>
+        <td>Full boss health bar UI (with animations, disclaimer text, simulation HP %) not yet a standalone component. Exists conceptually but not built as a reusable game element. The Game feature will solve this properly.</td>
+      </tr>
+      <tr>
+        <td><strong>Student Report Export (PDF)</strong></td>
+        <td><span class="gap-partial">⚠️ Partial</span></td>
+        <td><code>WeasyPrint</code> in requirements.txt. <code>POST /api/v2/experiments/&lt;id&gt;/generate-report</code> endpoint exists in experiments.py</td>
+        <td>Report endpoint exists but may not be fully styled/tested. The HTML template for the report may need design work. PDF quality (fonts, molecule images) needs verification.</td>
+      </tr>
+      <tr>
+        <td><strong>High School UX / Plain-English Explanations</strong></td>
+        <td><span class="gap-partial">⚠️ Partial</span></td>
+        <td>Score labels exist in templates. Tutorial page exists. Ask AI (voice Q&amp;A) page exists.</td>
+        <td>Lock-and-key analogy cards not prominently shown on main experiment pages. Plain-English score explainers (Attack Power, Health Balance, etc.) from the plan are not yet used in UI — scientific metric names are shown instead.</td>
+      </tr>
+      <tr>
+        <td><strong>Curated Target Library (20–30 targets)</strong></td>
+        <td><span class="gap-partial">⚠️ 6 of 30</span></td>
+        <td><code>data/curated_targets.json</code> — 6 targets: COVID-19 Mpro, Influenza NA, HIV Protease, EGFR, BRAF V600E, SIRT1</td>
+        <td>Need 14–24 more targets. Missing CDK2, BCR-ABL, mTOR, p53, NLRP3, SARS-CoV-2 Spike RBD, and aging/longevity targets. Each needs binding site center/box coordinates for Vina docking.</td>
+      </tr>
+      <tr>
+        <td><strong>UniProt Live Search (Path B)</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>services/target_service.py:search_uniprot()</code>, <code>GET /api/v3/targets/search</code></td>
+        <td>Backend functional. UI in target_picker.html needs search box integration and results card display refinement.</td>
+      </tr>
+      <tr>
+        <td><strong>Gemma4 Molecule Generation</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>services/molecule_generator.py</code>, DGX API proxy, retry logic, SMILES parsing</td>
+        <td>Working. Gemma4 on DGX Spark GB10. Fine-tuning for drug discovery is the next step (see finetune-gemma.html document).</td>
+      </tr>
+      <tr>
+        <td><strong>Chatbot with Tool Use</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>api/chatbot.py</code>, <code>api/chatbot_tools.py</code>, Gemma4-powered with SMILES extraction, property tools, validation</td>
+        <td>Not in original enhancement plan — this is an additional feature. Working.</td>
+      </tr>
+      <tr>
+        <td><strong>Voice Q&amp;A (Ask AI)</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>api/ask_ai.py</code>, STT (Whisper on dlyog05), TTS (Kokoro on dlyog05)</td>
+        <td>Not in original enhancement plan — additional feature. Working.</td>
+      </tr>
+      <tr>
+        <td><strong>Social Feed / Likes / Comments</strong></td>
+        <td><span class="gap-done">✅ Done</span></td>
+        <td><code>api/feed.py</code>, threaded comments, likes, pagination, sort</td>
+        <td>Working. Full comment thread with edit/delete.</td>
+      </tr>
+      <tr>
+        <td><strong>Leaderboard (Classroom Tournament)</strong></td>
+        <td><span class="gap-missing">❌ Not Built</span></td>
+        <td>—</td>
+        <td>Phase 3 feature. No leaderboard model, endpoint, or template exists. Need per-cohort XP ranking, best experiment scores, weekly reset option.</td>
+      </tr>
+      <tr>
+        <td><strong>Teacher Dashboard</strong></td>
+        <td><span class="gap-missing">❌ Not Built</span></td>
+        <td>Admin dashboard exists (experiment counts, user list) but is not teacher-specific</td>
+        <td>Phase 3. Need: student progress tracking by mission level, lock/unlock level by student, class-wide experiment comparison, cohort management.</td>
+      </tr>
+      <tr>
+        <td><strong>Molecule Lineage Graph</strong></td>
+        <td><span class="gap-missing">❌ Not Built</span></td>
+        <td>—</td>
+        <td>Phase 3. D3.js family tree of molecules across auto-experiment rounds. AutoExperimentRound table has seed_smiles per round — data is there, visualization is not.</td>
+      </tr>
+      <tr>
+        <td><strong>Mutation Challenge (Mission L5)</strong></td>
+        <td><span class="gap-missing">❌ Backend Missing</span></td>
+        <td>Mission level 5 defined in xp_service.py with status tracking</td>
+        <td>Need: service to mutate AA sequence (point mutations), run docking before/after mutation, compare binding scores. Could use simple AA substitution or AlphaFold delta-folding concept.</td>
+      </tr>
+      <tr>
+        <td><strong>Game Feature (NEW)</strong></td>
+        <td><span class="gap-new">🆕 New Feature</span></td>
+        <td>—</td>
+        <td>Full game mode: PathoHunt browser game using existing drug discovery pipeline as engine. See Section 2–8 of this document.</td>
+      </tr>
+      <tr>
+        <td><strong>Gemma Fine-tuning (NEW)</strong></td>
+        <td><span class="gap-new">🆕 New Feature</span></td>
+        <td>Gemma4 model running on DGX GB10 Spark system</td>
+        <td>Fine-tune on drug discovery datasets for better molecule generation. See finetune-gemma.html for full plan.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Summary Priority Queue (after Game &amp; Fine-tune docs reviewed)</h3>
+  <div class="card-grid">
+    <div class="card-sm">
+      <h4 style="color:var(--accent5)">Critical Gaps (Build First)</h4>
+      <ol style="padding-left:18px;font-size:0.88rem;">
+        <li>Expand curated targets: 6 → 25 (need binding site coords)</li>
+        <li>Fix plain-English score labels on experiment pages</li>
+        <li>ESMFold fallback (local or graceful error)</li>
+        <li>Mutation Challenge backend (Mission L5)</li>
+        <li>Game Feature: PathoHunt (this document)</li>
+      </ol>
+    </div>
+    <div class="card-sm">
+      <h4 style="color:var(--accent4)">High Priority (Phase 2 Completion)</h4>
+      <ol style="padding-left:18px;font-size:0.88rem;">
+        <li>Student Report Export — finish PDF styling</li>
+        <li>Boss Health Bar as reusable component (used by game + auto-exp)</li>
+        <li>Leaderboard (per-cohort XP ranking)</li>
+        <li>AI hints after experiment (Gemma4-generated takeaways)</li>
+        <li>Gemma fine-tuning pipeline (finetune-gemma.html)</li>
+      </ol>
+    </div>
+    <div class="card-sm">
+      <h4 style="color:var(--accent2)">Phase 3 (Future)</h4>
+      <ol style="padding-left:18px;font-size:0.88rem;">
+        <li>Teacher Dashboard with cohort management</li>
+        <li>Molecule Lineage Graph (D3.js)</li>
+        <li>Story Campaign Mode</li>
+        <li>DiffDock integration</li>
+        <li>ESM-2 protein embedding DTI model</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ 2. GAME OVERVIEW -->
+  <h2 id="game-overview"><span class="num" style="background:rgba(210,168,255,0.2);color:var(--accent3)">2</span> PathoHunt — Browser Game: Overview &amp; Concept</h2>
+
+  <div class="highlight-box">
+    <strong>Core Game Concept:</strong>
+    <p style="margin-top:8px;">PathoHunt transforms the drug discovery pipeline into an interactive browser game. Pathogens (real proteins with known amino acid sequences) appear as "Boss Enemies." The player's goal is to design a molecule — their "ammunition" — that computationally neutralizes the pathogen. Every game action maps to a real science action: generating candidates with Gemma, scoring with RDKit, and docking with AutoDock Vina.</p>
+  </div>
+
+  <h3>Design Philosophy</h3>
+  <div class="card-grid">
+    <div class="card-sm">
+      <h4>Real Science as Game Engine</h4>
+      <p>No simulated game physics. Every "attack" is a real molecule generation + scoring operation. The game's outcome is 100% determined by actual cheminformatics algorithms. Kids win by doing better chemistry.</p>
+    </div>
+    <div class="card-sm">
+      <h4>Scientific Literacy First</h4>
+      <p>Every damage number comes with a 1-line plain-English explanation. Boss HP is always labeled "Simulation Health." No player ever thinks they cured a disease. They understand they ran a computational model.</p>
+    </div>
+    <div class="card-sm">
+      <h4>Three Engagement Levels</h4>
+      <p><strong>Casual (Quick Battle)</strong> — 2D mode, 5 min max, guided hints. <strong>Intermediate (Docking Battle)</strong> — 3D Vina docking, pick your strategy. <strong>Advanced (AI Army)</strong> — autonomous loop with live visualization.</p>
+    </div>
+    <div class="card-sm">
+      <h4>Reusable for Class &amp; Solo</h4>
+      <p>Designed for both individual play and classroom demos. The AI Army mode is perfect for group viewing on a projector — watch the AI optimize a drug molecule in real time.</p>
+    </div>
+  </div>
+
+  <h3>Navigation Entry Point</h3>
+  <div class="info"><strong>Left Sidebar → "Game" (new menu item).</strong> Icon: 🎮. Appears between "Auto Experiment" and "Missions" in the sidebar. Clicking goes to the Game Lobby (<code>/game</code> route). No auth restriction — logged-in students, admins, and faculty can all play. Guest access can be enabled by admin for demos.</div>
+
+  <!-- ═══════════════════════════════════ 3. GAME MODES -->
+  <h2 id="game-modes"><span class="num" style="background:rgba(88,166,255,0.2);color:var(--accent)">3</span> Game Modes</h2>
+
+  <h3>Mode 1 — Quick Battle (2D Mode, Kids-Friendly)</h3>
+  <div class="card">
+    <p>The fastest game mode. No 3D docking required — uses the existing 2D composite score (QED + SAS + Tanimoto + DTI heuristic). A round takes 30–60 seconds.</p>
+    <div class="flow">
+      <div class="flow-step">Pick Pathogen Boss</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Get Seed SMILES hint<br>(known drug for this target)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Generate 5 Molecules<br>via Gemma4</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Composite Score<br>(QED + SAS + Tanimoto)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Boss takes damage<br>= improvement vs. seed</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Win if score ≥ 0.75<br>or ≤ 5 rounds</div>
+    </div>
+    <div class="note"><strong>Difficulty Scaling:</strong> Junior — seed SMILES provided, noise=0.1. Fellow — no seed, random SMILES as start. PI — must type own SMILES, noise=0.5.</div>
+  </div>
+
+  <h3>Mode 2 — Docking Battle (3D Mode, Intermediate)</h3>
+  <div class="card">
+    <p>The most scientifically accurate mode. Uses real AutoDock Vina docking scores. A round takes 2–5 minutes depending on server load. Shows 3D binding visualization after each attack.</p>
+    <div class="flow">
+      <div class="flow-step">Pick Pathogen Boss<br>(Level ≥ 2 required)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Fetch/Cache<br>3D PDB Structure</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Enter Seed SMILES<br>or Generate with AI</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">AutoDock Vina<br>Docking (Async)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Docking Score<br>(kcal/mol)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">3D Pose Viewer<br>+ Boss HP update</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Win if score ≤ -9<br>kcal/mol (strong binder)</div>
+    </div>
+    <div class="info"><strong>Win Condition:</strong> Docking score ≤ −9.0 kcal/mol AND QED ≥ 0.4 AND Lipinski pass. These thresholds represent a genuinely promising computational hit. Students who win understand <em>what it means</em> — the game explains this.</div>
+  </div>
+
+  <h3>Mode 3 — AI Army (Auto-Experiment Mode, Advanced)</h3>
+  <div class="card">
+    <p>The most educational mode for understanding autonomous AI. The player sets parameters and watches the AI optimize a molecule across multiple rounds. Ideal for classroom demos and advanced students.</p>
+    <div class="flow">
+      <div class="flow-step">Pick Pathogen Boss<br>(Expert unlock)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Choose AI Strategy<br>(Conservative/Explorer/etc)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Set Rounds (1–5)<br>&amp; Molecules per Round</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">AI Army launches<br>(existing auto_exp_runner)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Live SSE stream<br>Round-by-round updates</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Boss HP drops<br>each improved round</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Victory Report<br>Best molecule + lineage</div>
+    </div>
+    <div class="note"><strong>Key insight for students:</strong> The AI doesn't always win. Some rounds produce worse molecules. This teaches that AI exploration involves failure — just like real science. Every discard is labeled with a reason.</div>
+  </div>
+
+  <!-- ═══════════════════════════════════ 4. LEVELS -->
+  <h2 id="game-levels"><span class="num" style="background:rgba(255,166,87,0.2);color:var(--accent4)">4</span> Level Design — Pathogens as Boss Enemies</h2>
+
+  <p>Each level maps to one curated target. Levels unlock sequentially — players must win (or attempt twice) to unlock the next. Boss personas make the science memorable.</p>
+
+  <div class="card-grid">
+    <div class="level-card">
+      <div class="lc-icon">🤧</div>
+      <div class="lc-name">Level 1: "Flu Commander"</div>
+      <div class="lc-sub">Influenza Neuraminidase (2HU4)<br>Disease: Seasonal Influenza</div>
+      <div class="lc-diff"><span class="pill pill-green">Easy — Seed provided (Oseltamivir)</span></div>
+    </div>
+    <div class="level-card">
+      <div class="lc-icon">🦠</div>
+      <div class="lc-name">Level 2: "Corona Cutter"</div>
+      <div class="lc-sub">SARS-CoV-2 Main Protease (6LU7)<br>Disease: COVID-19</div>
+      <div class="lc-diff"><span class="pill pill-green">Easy — Seed provided (Nirmatrelvir)</span></div>
+    </div>
+    <div class="level-card">
+      <div class="lc-icon">🔴</div>
+      <div class="lc-name">Level 3: "HIV Hydra"</div>
+      <div class="lc-sub">HIV Protease (1HSG)<br>Disease: HIV/AIDS</div>
+      <div class="lc-diff"><span class="pill pill-blue">Medium — Partial hint only</span></div>
+    </div>
+    <div class="level-card">
+      <div class="lc-icon">🧬</div>
+      <div class="lc-name">Level 4: "Cancer Kinase"</div>
+      <div class="lc-sub">BCR-ABL Kinase (1IEP)<br>Disease: Chronic Myeloid Leukemia</div>
+      <div class="lc-diff"><span class="pill pill-blue">Medium — No seed, choose strategy</span></div>
+    </div>
+    <div class="level-card">
+      <div class="lc-icon">⚡</div>
+      <div class="lc-name">Level 5: "Mutant BRAF"</div>
+      <div class="lc-sub">BRAF V600E Mutant (3OG7)<br>Disease: Melanoma / Drug Resistance</div>
+      <div class="lc-diff"><span class="pill pill-purple">Hard — Drug-resistant mutation scenario</span></div>
+    </div>
+    <div class="level-card">
+      <div class="lc-icon">⏳</div>
+      <div class="lc-name">Level 6: "Aging Architect"</div>
+      <div class="lc-sub">SIRT1 Sirtuin (4ZZJ)<br>Disease: Aging / Longevity Research</div>
+      <div class="lc-diff"><span class="pill pill-purple">Hard — Novel target, 3D required</span></div>
+    </div>
+    <div class="level-card">
+      <div class="lc-icon">🔥</div>
+      <div class="lc-name">Level 7: "CDK2 Overlord"</div>
+      <div class="lc-sub">CDK2 Cell Cycle Kinase (1HCL)<br>Disease: Multiple Cancers</div>
+      <div class="lc-diff"><span class="pill pill-red">Expert — AI Army mode recommended</span></div>
+    </div>
+    <div class="level-card">
+      <div class="lc-icon">🌟</div>
+      <div class="lc-name">Level 8+: "Custom Boss"</div>
+      <div class="lc-sub">Teacher or student-defined target<br>(any UniProt ID or custom AA sequence)</div>
+      <div class="lc-diff"><span class="pill pill-red">Expert — Admin unlock required</span></div>
+    </div>
+  </div>
+
+  <h3>Boss Persona Cards (shown at battle start)</h3>
+  <div class="card">
+    <p>Each boss has a narrative intro card shown before the battle begins. Example for Level 2:</p>
+    <div class="game-screen" data-label="Boss Intro — Level 2">
+      <p style="color:var(--accent5);font-size:1.1rem;font-weight:700;text-align:center;">🦠 CORONA CUTTER — SARS-CoV-2 Main Protease</p>
+      <p style="color:var(--muted);font-size:0.88rem;text-align:center;margin-bottom:16px;">Also known as: 3CL Protease (3CLpro) · PDB: 6LU7 · Organism: SARS-CoV-2</p>
+      <p style="font-size:0.9rem;">This enzyme is critical for COVID-19 replication. It cuts viral proteins into functional pieces. Without it, the virus cannot replicate. Real drug: <strong>Nirmatrelvir</strong> (in Paxlovid) — approved 2021, docking score ≈ −7.2 kcal/mol.</p>
+      <p style="font-size:0.9rem;margin-top:10px;"><strong>Your mission:</strong> Design a molecule that fits the binding pocket better than Nirmatrelvir — score below −7.2 kcal/mol — while passing drug-likeness checks. <em>(Simulation only — not a real drug development process.)</em></p>
+      <div class="boss-bar-bg" style="margin-top:16px;">
+        <div class="boss-bar" style="width:85%;">Simulation Health: 85%</div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:4px;">Boss HP represents how well the current best molecule (Nirmatrelvir) scores. Your molecule must score better to reduce HP.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ 5. MECHANICS -->
+  <h2 id="game-mechanics"><span class="num" style="background:rgba(63,185,80,0.2);color:var(--accent2)">5</span> Game Mechanics, Scoring &amp; Progression</h2>
+
+  <h3>Boss HP Calculation</h3>
+  <div class="card">
+    <p>Boss HP starts at 100% (representing the known drug's baseline score). Each player attack (molecule submission) potentially reduces HP.</p>
+    <pre><code># Boss HP = normalized composite score of the CURRENT BEST molecule in this session
+# Starts at HP_initial = normalize(known_drug_score)
+
+def calculate_boss_hp(session: GameSession) -> float:
+    if not session.attacks:
+        return 100.0  # max HP before any attack
+
+    best_attack = max(session.attacks, key=lambda a: a.composite_score)
+
+    # HP = inverse of player's best composite score
+    # Higher player score → lower boss HP
+    player_best = best_attack.composite_score   # 0.0 → 1.0
+    boss_hp = max(0.0, 100.0 - (player_best * 100.0))
+    return round(boss_hp, 1)
+
+# Boss is defeated when HP ≤ 10.0 (player score ≥ 0.9)
+# Or for Docking mode: when docking_score ≤ win_threshold (per target)</code></pre>
+    <div class="note"><strong>Educational framing:</strong> HP does not mean "virus health" in any real sense. It is explicitly labeled "Simulation Score" and the disclaimer is shown on every battle screen.</div>
+  </div>
+
+  <h3>Damage &amp; Attack Calculation</h3>
+  <table>
+    <thead><tr><th>Source</th><th>Damage Calculation</th><th>Max Damage</th></tr></thead>
+    <tbody>
+      <tr><td>QED improvement over previous round</td><td>Δ QED × 20 points</td><td>20 pts</td></tr>
+      <tr><td>Docking score improvement (3D mode)</td><td>(Δ kcal/mol score normalized) × 35 pts</td><td>35 pts</td></tr>
+      <tr><td>Novelty bonus (not in PubChem)</td><td>+15 pts flat bonus</td><td>15 pts</td></tr>
+      <tr><td>Lipinski pass</td><td>+10 pts flat bonus</td><td>10 pts</td></tr>
+      <tr><td>SA Score improvement</td><td>Δ SAS (lower=better) × 10 pts</td><td>10 pts</td></tr>
+      <tr><td>Consecutive improvement (combo)</td><td>×1.5 multiplier on total damage</td><td>Multiplier</td></tr>
+    </tbody>
+  </table>
+
+  <h3>XP &amp; Badge Integration</h3>
+  <div class="card-grid">
+    <div class="card-sm">
+      <h4>Game XP Events</h4>
+      <ul>
+        <li><code>game_battle_started</code> → 10 XP</li>
+        <li><code>game_first_attack</code> → 15 XP</li>
+        <li><code>game_boss_damaged</code> → 20 XP (per improvement)</li>
+        <li><code>game_boss_defeated_easy</code> → 100 XP</li>
+        <li><code>game_boss_defeated_medium</code> → 200 XP</li>
+        <li><code>game_boss_defeated_hard</code> → 350 XP</li>
+        <li><code>game_boss_defeated_expert</code> → 500 XP</li>
+        <li><code>game_all_levels_clear</code> → 1000 XP</li>
+      </ul>
+    </div>
+    <div class="card-sm">
+      <h4>New Game Badges</h4>
+      <ul>
+        <li><strong>🎮 First Hunt</strong> — Complete first game battle</li>
+        <li><strong>🏆 Flu Slayer</strong> — Defeat Level 1 boss</li>
+        <li><strong>🦠 COVID Crusher</strong> — Defeat Level 2 boss</li>
+        <li><strong>⚡ Combo Master</strong> — 3 consecutive improvements</li>
+        <li><strong>🤖 AI General</strong> — Win using AI Army mode</li>
+        <li><strong>🌟 Pathogen Vanquisher</strong> — Defeat all 7 levels</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Difficulty System</h3>
+  <table>
+    <thead><tr><th>Difficulty</th><th>Seed SMILES</th><th>Mode</th><th>Max Attempts</th><th>Win Threshold</th><th>XP Multiplier</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill pill-green">Scientist Junior</span></td><td>Provided (known drug)</td><td>Quick Battle (2D)</td><td>Unlimited</td><td>Composite score ≥ 0.70</td><td>×1.0</td></tr>
+      <tr><td><span class="pill pill-blue">Research Fellow</span></td><td>Fragment hint only</td><td>Quick Battle or Docking</td><td>10 attempts</td><td>Composite score ≥ 0.75</td><td>×1.5</td></tr>
+      <tr><td><span class="pill pill-purple">Principal Investigator</span></td><td>No hint</td><td>Docking Battle (3D)</td><td>5 attempts</td><td>Docking ≤ −9.0 kcal/mol</td><td>×2.0</td></tr>
+      <tr><td><span class="pill pill-red">Nobel Prize</span></td><td>Custom sequence allowed</td><td>AI Army (3 rounds max)</td><td>3 rounds</td><td>Best composite ≥ 0.85</td><td>×3.0</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════ 6. BACKEND -->
+  <h2 id="game-backend"><span class="num" style="background:rgba(255,123,114,0.2);color:var(--accent5)">6</span> Game Backend Architecture</h2>
+
+  <h3>New Flask Blueprint: <code>api/game.py</code></h3>
+  <pre><code>GET  /game                             → Game Lobby (level select)
+GET  /game/battle/&lt;target_id&gt;          → Battle setup page
+POST /api/v3/game/session/start        → Create GameSession (target, mode, difficulty)
+GET  /api/v3/game/session/&lt;id&gt;         → Session state (HP, attacks, status)
+POST /api/v3/game/session/&lt;id&gt;/attack  → Execute attack (generate + score/dock molecule)
+GET  /api/v3/game/session/&lt;id&gt;/sse     → SSE stream for AI Army mode attacks
+POST /api/v3/game/session/&lt;id&gt;/abandon → End session without win
+GET  /api/v3/game/leaderboard          → Top scores by level and difficulty
+GET  /api/v3/game/bosses               → All boss definitions (from curated_targets)
+GET  /api/v3/game/history              → User's past battles</code></pre>
+
+  <h3>New Service: <code>services/game_service.py</code></h3>
+  <pre><code>class GameService:
+
+    def start_session(user_id, target_id, mode, difficulty) -&gt; GameSession:
+        """Create session, set boss HP from known drug baseline, return session_id"""
+        target = target_service.get_curated_target(target_id)
+        known_score = target['known_drug_score']   # pre-set in curated_targets.json
+        boss_hp = 100.0 - (known_score * 100.0)    # e.g., 0.72 score → 28% HP already gone
+        session = GameSession(user_id=user_id, target=target, mode=mode, ...)
+        ...
+
+    def execute_attack(session_id, smiles, user_id) -&gt; AttackResult:
+        """Generate molecules if needed, score/dock, calculate damage, update HP"""
+        session = get_session(session_id)
+        if session.mode == 'quick_battle':
+            candidates = molecule_generator.generate(smiles, ...)
+            scored = [property_calculator.compute_all(c) for c in candidates]
+            best = max(scored, key=lambda x: x['composite_score'])
+        elif session.mode == 'docking_battle':
+            # reuse existing docking_service pipeline
+            best = docking_service.run_docking_pipeline(smiles, session.pdb_path, ...)
+
+        damage = calculate_damage(best, session.previous_best)
+        new_hp = max(0.0, session.boss_current_hp - damage)
+
+        attack = GameAttack(session_id=session_id, smiles=best.smiles, ...)
+        session.boss_current_hp = new_hp
+
+        if new_hp &lt;= 0 or best.composite_score &gt;= win_threshold[session.difficulty]:
+            session.status = 'won'
+            xp_service.award_xp(user_id, f'game_boss_defeated_{difficulty}')
+
+        return AttackResult(damage=damage, new_hp=new_hp, best_candidate=best, ...)
+
+    def calculate_damage(current_best, previous_best) -&gt; float:
+        """Map score improvement to damage points"""
+        delta = current_best['composite_score'] - (previous_best or 0.0)
+        if delta &lt;= 0:
+            return 0.0  # no damage if no improvement
+        damage = delta * 100.0
+        # bonus points for special properties
+        if current_best.get('novelty_status') == 'novel':
+            damage += 15.0
+        if current_best.get('lipinski_pass'):
+            damage += 10.0
+        return min(damage, 60.0)  # cap per-attack damage</code></pre>
+
+  <h3>New DB Models: <code>models/game_models.py</code></h3>
+  <pre><code>class GameSession(db.Model):
+    __tablename__ = 'game_session'
+    id                = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id           = Column(String(36), ForeignKey('users.id'), nullable=False)
+    target_id         = Column(String(64), nullable=False)   # curated target slug
+    mode              = Column(Enum('quick_battle','docking_battle','ai_army'), nullable=False)
+    difficulty        = Column(Enum('junior','fellow','pi','nobel'), default='junior')
+    status            = Column(Enum('active','won','lost','abandoned'), default='active')
+    boss_initial_hp   = Column(Float, nullable=False)
+    boss_current_hp   = Column(Float, nullable=False)
+    attacks_count     = Column(Integer, default=0)
+    best_score        = Column(Float, default=0.0)
+    win_threshold     = Column(Float, nullable=False)
+    time_started      = Column(DateTime, default=datetime.utcnow)
+    time_ended        = Column(DateTime, nullable=True)
+    attacks           = relationship('GameAttack', back_populates='session', lazy='dynamic')
+
+class GameAttack(db.Model):
+    __tablename__ = 'game_attack'
+    id              = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    session_id      = Column(String(36), ForeignKey('game_session.id'), nullable=False)
+    smiles          = Column(Text, nullable=False)
+    composite_score = Column(Float, nullable=False)
+    docking_score   = Column(Float, nullable=True)    # kcal/mol, 3D mode only
+    damage_dealt    = Column(Float, default=0.0)
+    boss_hp_after   = Column(Float, nullable=False)
+    novelty_status  = Column(String(16), nullable=True)
+    lipinski_pass   = Column(Boolean, default=False)
+    is_best         = Column(Boolean, default=False)
+    created_at      = Column(DateTime, default=datetime.utcnow)
+    session         = relationship('GameSession', back_populates='attacks')</code></pre>
+
+  <!-- ═══════════════════════════════════ 7. FRONTEND -->
+  <h2 id="game-frontend"><span class="num" style="background:rgba(63,185,80,0.2);color:var(--accent2)">7</span> Game Frontend Architecture &amp; UI Flow</h2>
+
+  <h3>Screen Flow</h3>
+  <div class="flow">
+    <div class="flow-step">🏠 Game Lobby<br><code>/game</code><br>Level grid, leaderboard</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">⚙️ Battle Setup<br><code>/game/battle/&lt;id&gt;</code><br>Pick mode &amp; difficulty</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">🎯 Boss Intro<br>Modal overlay<br>Pathogen narrative</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">⚔️ Battle Screen<br>Split: Boss | Lab<br>Attack controls</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">📊 Attack Result<br>Damage animation<br>Score breakdown</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">🏆 Victory / Defeat<br>Educational summary<br>XP earned</div>
+  </div>
+
+  <h3>Battle Screen Layout (Split Pane)</h3>
+  <div class="game-screen" data-label="Battle Screen — Wireframe">
+    <div class="game-grid">
+      <div style="border:1px dashed var(--border);border-radius:8px;padding:16px;">
+        <p style="color:var(--accent3);font-weight:600;font-size:0.85rem;margin-bottom:12px;">LEFT PANE — BOSS</p>
+        <p style="font-size:0.82rem;color:var(--muted);">🦠 CORONA CUTTER (SARS-CoV-2 Mpro)</p>
+        <div class="boss-bar-bg" style="margin:8px 0;">
+          <div class="boss-bar" style="width:62%;">Simulation Health: 62%</div>
+        </div>
+        <p style="font-size:0.72rem;color:var(--muted);font-style:italic;">Computer simulation score only — not a real-world result</p>
+        <div style="background:var(--bg);border-radius:6px;height:200px;margin-top:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.8rem;">
+          3Dmol.js Protein Viewer (350px height)<br>Cartoon ribbon, binding site highlighted
+        </div>
+        <div style="margin-top:12px;font-size:0.82rem;">
+          <p style="color:var(--muted);">Battle Log:</p>
+          <p style="color:var(--accent2);">⚔️ Attack 1: +18.4 damage (QED improved)</p>
+          <p style="color:var(--accent4);">⚔️ Attack 2: 0 damage (no improvement)</p>
+          <p style="color:var(--accent2);">⚔️ Attack 3: +22.1 damage (COMBO ×1.5)</p>
+        </div>
+      </div>
+      <div style="border:1px dashed var(--border);border-radius:8px;padding:16px;">
+        <p style="color:var(--accent3);font-weight:600;font-size:0.85rem;margin-bottom:12px;">RIGHT PANE — RESEARCH LAB</p>
+        <p style="font-size:0.82rem;color:var(--muted);">Seed SMILES (your starting ammunition):</p>
+        <div style="background:var(--bg);border-radius:4px;padding:8px;margin:8px 0;font-family:monospace;font-size:0.78rem;color:var(--accent4);">CC1=CC=C(C=C1)NC2=NC=C(C(=N2)NC3=CC=CC(=C3)F)Cl</div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:12px;">Attack Options:</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <div style="background:var(--accent);color:white;border-radius:6px;padding:6px 14px;font-size:0.8rem;font-weight:600;">🧬 Generate with AI (Gemma4)</div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:0.8rem;">✏️ Enter Custom SMILES</div>
+        </div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:16px;">Generation Settings:</p>
+        <p style="font-size:0.78rem;color:var(--muted);">Molecules per attack: 5 | Noise: 0.2 | Strategy: Explorer</p>
+        <div style="margin-top:16px;background:var(--bg);border-radius:8px;padding:12px;">
+          <p style="font-size:0.8rem;font-weight:600;color:var(--accent3);">Last Attack — Top Candidate:</p>
+          <p style="font-size:0.78rem;font-family:monospace;color:var(--accent4);">COC1=CC=C(C=C1)NC2=NC=C(...)</p>
+          <p style="font-size:0.78rem;color:var(--muted);">QED: 0.71 | SAS: 2.8 | Tanimoto: 0.65 | Score: 0.79</p>
+          <p style="font-size:0.78rem;color:var(--accent2);">Lipinski: PASS | Novelty: Novel vs PubChem</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>New Static Files Required</h3>
+  <pre><code>templates/
+  game_lobby.html           # Level select grid + leaderboard sidebar
+  game_battle.html          # Main battle screen (split pane)
+  game_victory.html         # Victory celebration + educational debrief
+  game_defeat.html          # Defeat screen + try-again guidance
+
+static/js/
+  game_lobby.js             # Level card interactions, unlock animations
+  game_battle.js            # Attack submission, SSE for AI Army, HP animations
+  game_results.js           # Victory/defeat animations, XP display
+
+static/css/
+  game.css                  # Game-specific styles: boss bar, battle grid, animations</code></pre>
+
+  <div class="info"><strong>Reuse existing code:</strong> The game reuses <code>structure_viewer.js</code> for 3D protein display, <code>auto_experiment.js</code> SSE streaming for AI Army mode, and <code>gamification.js</code> XP toast notifications. The game service calls existing <code>molecule_generator</code>, <code>property_calculator</code>, and <code>docking_service</code> — no new chemistry code needed.</div>
+
+  <!-- ═══════════════════════════════════ 8. MODELS & API -->
+  <h2 id="game-models"><span class="num" style="background:rgba(88,166,255,0.2);color:var(--accent)">8</span> Curated Targets Expansion for Game</h2>
+  <p>Each curated target needs these additional fields in <code>data/curated_targets.json</code> for the game to work:</p>
+  <pre><code>{
+  "id": "covid19_mpro",
+  "name": "SARS-CoV-2 Main Protease",
+  "game_name": "Corona Cutter",
+  "game_emoji": "🦠",
+  "game_intro": "This enzyme cuts viral proteins to help COVID-19 replicate...",
+  "pdb_id": "6LU7",
+  "uniprot_id": "P0DTD1",
+  "category": "viral",
+  "disease": "COVID-19",
+  "organism": "SARS-CoV-2",
+  "binding_site_center": [-26.0, 11.5, -16.0],
+  "binding_site_size": [25, 25, 25],
+  "known_drug_name": "Nirmatrelvir",
+  "known_drug_smiles": "CC1(C2CC1NC(=O)C(F)(F)F)C(=O)NC(CC3CCNC3=O)C#N",
+  "known_drug_score": 0.72,          // composite score of known drug (boss initial HP basis)
+  "known_drug_docking_kcal": -7.2,   // Vina score for known drug (win threshold reference)
+  "win_threshold_easy": 0.70,
+  "win_threshold_docking": -9.0,     // kcal/mol (better than known drug)
+  "difficulty_unlock": 1,            // level required to unlock this boss
+  "plain_english": "The main protease of SARS-CoV-2 scissors viral proteins into working pieces. Without it, the virus cannot replicate."
+}</code></pre>
+
+  <h3>Target Expansion List (need to add to curated_targets.json)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Target</th><th>PDB</th><th>Game Level</th><th>Known Drug</th></tr></thead>
+    <tbody>
+      <tr><td>7</td><td>CDK2 (Cell Cycle Kinase)</td><td>1HCL</td><td>7</td><td>Seliciclib</td></tr>
+      <tr><td>8</td><td>BCR-ABL Kinase</td><td>2HIW</td><td>4</td><td>Imatinib</td></tr>
+      <tr><td>9</td><td>mTOR Kinase</td><td>4JSV</td><td>6</td><td>Rapamycin</td></tr>
+      <tr><td>10</td><td>p53 Tumor Suppressor</td><td>2OCJ</td><td>6</td><td>APR-246</td></tr>
+      <tr><td>11</td><td>NLRP3 Inflammasome</td><td>6NPY</td><td>7</td><td>MCC950</td></tr>
+      <tr><td>12</td><td>SARS-CoV-2 Spike RBD</td><td>7BZ5</td><td>3</td><td>Antibody fragment</td></tr>
+      <tr><td>13</td><td>Dengue NS5 Polymerase</td><td>4V0Q</td><td>5</td><td>No approved drug yet</td></tr>
+      <tr><td>14</td><td>Mycobacterium TB InhA</td><td>2AQ8</td><td>5</td><td>Isoniazid</td></tr>
+      <tr><td>15</td><td>Plasmodium falciparum DHODH</td><td>3I65</td><td>6</td><td>DSM265</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════ 9. JADERBERG -->
+  <h2 id="jaderberg"><span class="num" style="background:rgba(63,185,80,0.2);color:var(--accent2)">9</span> Max Jaderberg Framework — Applied to Deep2Lead</h2>
+  <p>Key insights from the Max Jaderberg drug discovery conversation, mapped to actionable decisions for Deep2Lead v3 architecture.</p>
+
+  <div class="jaderberg-box">
+    <p><span class="jb-num">1</span><strong>Move Beyond Local Models — Build Foundation-Style, Cross-Target Generalization</strong></p>
+    <p style="font-size:0.88rem;color:var(--muted);margin-top:6px;"><em>"Avoid focusing on models that fit specific local data for a single target. Aim to build general, foundation-style models that can be applied across the entire protein universe without constant fine-tuning."</em></p>
+    <p style="font-size:0.9rem;margin-top:8px;"><strong>Deep2Lead Application:</strong> The current Gemma4 molecule generator uses a fixed prompt template per experiment — a "local" approach. The fine-tuning plan (see finetune-gemma.html) addresses this by training on cross-target datasets (ChEMBL, BindingDB) so that Gemma generates better molecules regardless of which pathogen is targeted. The game's 8 different bosses naturally push students to think cross-target.</p>
+  </div>
+
+  <div class="jaderberg-box">
+    <p><span class="jb-num">2</span><strong>Half a Dozen Hard Problems — What Deep2Lead Must Solve</strong></p>
+    <p style="font-size:0.88rem;color:var(--muted);margin-top:6px;"><em>"Solving ~6 fundamental biological/biochemical problems with AlphaFold-level accuracy creates a transformative drug design engine."</em></p>
+    <p style="font-size:0.9rem;margin-top:8px;"><strong>Deep2Lead Current Coverage:</strong></p>
+    <table style="margin-top:8px;">
+      <thead><tr><th>Problem</th><th>Status in Deep2Lead</th></tr></thead>
+      <tbody>
+        <tr><td>① Protein structure prediction</td><td><span class="pill pill-green">Solved (AlphaFold EBI + ESMFold)</span></td></tr>
+        <tr><td>② Binding site prediction</td><td><span class="pill pill-orange">Partial (manual binding site coords in JSON)</span></td></tr>
+        <tr><td>③ Molecular docking / binding affinity</td><td><span class="pill pill-green">Solved (AutoDock Vina)</span></td></tr>
+        <tr><td>④ Drug-likeness / ADMET properties</td><td><span class="pill pill-blue">Partial (QED, SAS, Lipinski — no full ADMET)</span></td></tr>
+        <tr><td>⑤ Molecule generation (generative model)</td><td><span class="pill pill-orange">Partial (Gemma4 fine-tune in progress)</span></td></tr>
+        <tr><td>⑥ Selectivity / off-target prediction</td><td><span class="pill pill-red">Missing (no multi-target selectivity checks)</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.88rem;margin-top:8px;"><strong>Next action:</strong> Integrate auto-binding site detection (e.g., fpocket/SiteMap via OpenBabel) and add a simple off-target flag using ChEMBL similarity against approved drugs.</p>
+  </div>
+
+  <div class="jaderberg-box">
+    <p><span class="jb-num">3</span><strong>Generative Agents + Search — The Auto Experiment Loop IS the Innovation</strong></p>
+    <p style="font-size:0.88rem;color:var(--muted);margin-top:6px;"><em>"Because the chemical design space is vast (10^60 potential molecules), you must develop generative models and agents that intelligently navigate this space — like AlphaGo explored moves rather than brute-forcing."</em></p>
+    <p style="font-size:0.9rem;margin-top:8px;"><strong>Deep2Lead Application:</strong> The Auto Experiment runner (<code>auto_exp_runner.py</code>) already implements this loop — Generate → Score → Keep best → Repeat. The game's "AI Army" mode makes this visible and educational. Enhancement: add a visualized search tree (molecule lineage graph, Phase 3) to show students how the AI navigates chemical space across rounds.</p>
+  </div>
+
+  <div class="jaderberg-box">
+    <p><span class="jb-num">4</span><strong>Diffusion Architectures — Future Direction for Molecule Generation</strong></p>
+    <p style="font-size:0.88rem;color:var(--muted);margin-top:6px;"><em>"Diffusion-based architectures allow atomic-resolution tokenization and coordinate prediction of proteins, DNA, RNA, and ligands simultaneously."</em></p>
+    <p style="font-size:0.9rem;margin-top:8px;"><strong>Deep2Lead Application:</strong> Current generation is SMILES-text-based (Gemma4). Phase 3 enhancement: integrate DiffDock (diffusion-based docking) when the public API becomes available. The DGX GB10's 128GB memory pool can run DiffDock locally. For educational context: explain to students that diffusion is "like sculpting a molecule's 3D shape atom by atom, not just writing a text description."</p>
+  </div>
+
+  <div class="jaderberg-box">
+    <p><span class="jb-num">5</span><strong>Synthetic Data — Train on Physics, Not Just Historical Records</strong></p>
+    <p style="font-size:0.88rem;color:var(--muted);margin-top:6px;"><em>"Historical data is often not optimized for ML. Leverage synthetic data from physics-based theories (quantum mechanics) and simulation to augment training."</em></p>
+    <p style="font-size:0.9rem;margin-top:8px;"><strong>Deep2Lead Application:</strong> The fine-tuning plan incorporates QM9 (134K molecules with DFT-calculated properties) and ZINC drug-like compounds as synthetic / physics-derived training data for Gemma. Additionally, Vina docking scores generated during game/experiment sessions can be collected as a growing dataset for continuous learning — a "live synthetic data flywheel" effect.</p>
+  </div>
+
+  <div class="jaderberg-box">
+    <p><span class="jb-num">6</span><strong>Interdisciplinary Teams — Embed Science in Every Feature</strong></p>
+    <p style="font-size:0.88rem;color:var(--muted);margin-top:6px;"><em>"Hire world-class AI experts and medicinal chemists. Foster a culture where they speak each other's languages. Hire curious generalists who challenge industry dogma."</em></p>
+    <p style="font-size:0.9rem;margin-top:8px;"><strong>Deep2Lead Application:</strong> Deep2Lead IS the educational infrastructure for building this next generation. Every platform interaction — generating a molecule, reading a boss's plain-English intro, seeing why their attack dealt no damage — is training future medicinal chemists to think computationally and future AI engineers to understand biology. The game mode operationalizes this interdisciplinary thinking by making both a chemistry problem (design better molecules) and an AI problem (understand what the generation loop is doing).</p>
+  </div>
+
+  <!-- ═══════════════════════════════════ 10. ROADMAP -->
+  <h2 id="phase-plan"><span class="num" style="background:rgba(255,166,87,0.2);color:var(--accent4)">10</span> Updated Phased Roadmap</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-label tl-blue">Phase 1B — Game Foundation (3–4 weeks)</div>
+      <div class="card-sm">
+        <strong>Goal: PathoHunt game playable for first 3 levels (Quick Battle mode only)</strong>
+        <ul>
+          <li>Expand curated_targets.json to 15 targets (add binding site coords + game metadata)</li>
+          <li>New models: <code>game_models.py</code> (GameSession, GameAttack)</li>
+          <li>New service: <code>game_service.py</code> (session, attack, damage calc)</li>
+          <li>New blueprint: <code>api/game.py</code> (8 endpoints above)</li>
+          <li>New templates: <code>game_lobby.html</code>, <code>game_battle.html</code>, <code>game_victory.html</code></li>
+          <li>New JS/CSS: <code>game_battle.js</code>, <code>game.css</code> (boss HP bar, attack animations)</li>
+          <li>DB migration: add game_session and game_attack tables</li>
+          <li>Fix plain-English score labels on existing experiment pages (score-name mapping)</li>
+          <li>6 new game badges in xp_service.py</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="timeline-item phase2">
+      <div class="timeline-label tl-purple">Phase 2A — Docking Battle + Game Completion (4–5 weeks)</div>
+      <div class="card-sm">
+        <strong>Goal: All 3 game modes working, Levels 1–7, Gemma fine-tune v1</strong>
+        <ul>
+          <li>Docking Battle mode (3D mode with Vina integration in game)</li>
+          <li>AI Army mode (Auto-Experiment wired to game session)</li>
+          <li>Level 5 Mutation Challenge backend (AA mutation + before/after docking)</li>
+          <li>Game leaderboard (per-level top scores, difficulty badges)</li>
+          <li>Gemma fine-tuning v1 on SMolInstruct + ChEMBL (see finetune-gemma.html)</li>
+          <li>Student report export — finish PDF template and styling</li>
+          <li>Boss Health Bar as shared reusable web component</li>
+          <li>Expand curated targets to 25 (all game levels covered)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="timeline-item phase3">
+      <div class="timeline-label tl-green">Phase 3 — Polish + Advanced Features (ongoing)</div>
+      <div class="card-sm">
+        <strong>Goal: Teacher dashboard, molecule lineage, DiffDock, Gemma v2 fine-tune</strong>
+        <ul>
+          <li>Teacher dashboard: track student game progress by level/mode/score</li>
+          <li>Molecule lineage graph (D3.js) — shown in game victory screen</li>
+          <li>Story Campaign: 7-mission narrative arc using game bosses</li>
+          <li>Classroom Tournament mode: class vs class, shared leaderboard</li>
+          <li>Gemma fine-tune v2 — continuous learning from game session data</li>
+          <li>DiffDock integration when available (better 3D pose prediction)</li>
+          <li>ESM-2 protein embedding DTI model for selectivity scoring</li>
+          <li>Mobile-responsive game UI (tablet-friendly for school labs)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box" style="margin-top:40px;">
+    <strong>Summary in one sentence:</strong>
+    <p style="margin-top:8px;">PathoHunt turns the existing drug discovery engine into a mission-driven browser game — where pathogens are boss enemies, molecules are ammunition, docking scores are damage, and every battle teaches a student that real drug discovery requires computational rigor, chemical creativity, and scientific humility about what "winning" actually means.</p>
+  </div>
+
+  <div style="text-align:center;margin-top:48px;color:var(--muted);font-size:0.82rem;">
+    enhancement-v2.html · Deep2Lead v3.1 · Generated 2026-05-10 · Platform: DGX Spark GB10 · Author: Tarun Chawdhury
+  </div>
+
+</div>
+</body>
+</html>

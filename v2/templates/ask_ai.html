@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Ask AI — Deep2Lead{% endblock %}
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/ask_ai.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ask_ai.css', v='1.0.2') }}">
 {% endblock %}
 {% block content %}
 
@@ -81,6 +81,7 @@
 
 {% endblock %}
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/globe_viz.js') }}"></script>
-<script src="{{ url_for('static', filename='js/ask_ai.js') }}"></script>
+<script src="{{ url_for('static', filename='js/globe_viz.js', v='1.0.2') }}"></script>
+<script src="{{ url_for('static', filename='js/voice_bot_v2.js', v='1.0.2') }}"></script>
+<script src="{{ url_for('static', filename='js/ask_ai.js', v='1.0.2') }}"></script>
 {% endblock %}

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deep2Lead — Gemma Fine-Tuning Plan for Drug Discovery</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #d2a8ff;
+      --accent4: #ffa657;
+      --accent5: #ff7b72;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --pill-blue: rgba(88,166,255,0.15);
+      --pill-green: rgba(63,185,80,0.15);
+      --pill-purple: rgba(210,168,255,0.15);
+      --pill-orange: rgba(255,166,87,0.15);
+      --pill-red: rgba(255,123,114,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; }
+
+    .wrapper { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+    header { text-align: center; padding: 60px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+    header h1 { font-size: 2.6rem; font-weight: 700; background: linear-gradient(135deg, var(--accent4), var(--accent3), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    header .subtitle { color: var(--muted); margin-top: 10px; font-size: 1.05rem; }
+    header .meta { display: flex; justify-content: center; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+    header .meta span { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px; font-size: 0.82rem; color: var(--muted); }
+
+    h2 { font-size: 1.5rem; font-weight: 600; margin: 48px 0 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    h2 .num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; font-size: 0.85rem; font-weight: 700; flex-shrink: 0; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 10px; color: var(--accent); }
+    h4 { font-size: 0.95rem; font-weight: 600; margin: 16px 0 6px; color: var(--accent3); }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; margin-bottom: 16px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .card-sm { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+
+    .pill { display: inline-block; border-radius: 12px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600; margin: 2px; }
+    .pill-blue { background: var(--pill-blue); color: var(--accent); }
+    .pill-green { background: var(--pill-green); color: var(--accent2); }
+    .pill-purple { background: var(--pill-purple); color: var(--accent3); }
+    .pill-orange { background: var(--pill-orange); color: var(--accent4); }
+    .pill-red { background: var(--pill-red); color: var(--accent5); }
+
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+    th { background: var(--surface2); color: var(--muted); text-align: left; padding: 8px 12px; font-weight: 600; border-bottom: 2px solid var(--border); }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+
+    code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.84rem; background: var(--surface2); border-radius: 4px; padding: 1px 6px; color: var(--accent4); }
+    pre { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 18px; overflow-x: auto; margin: 12px 0; }
+    pre code { background: none; padding: 0; color: var(--text); font-size: 0.83rem; }
+
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 16px 0; }
+    .flow-step { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 0.85rem; font-weight: 500; }
+    .flow-arrow { color: var(--muted); font-size: 1.1rem; }
+
+    .note { background: rgba(255,166,87,0.08); border-left: 3px solid var(--accent4); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .note strong { color: var(--accent4); }
+    .info { background: rgba(88,166,255,0.08); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .info strong { color: var(--accent); }
+    .success { background: rgba(63,185,80,0.08); border-left: 3px solid var(--accent2); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .success strong { color: var(--accent2); }
+    .danger { background: rgba(255,123,114,0.08); border-left: 3px solid var(--accent5); border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; font-size: 0.9rem; }
+    .danger strong { color: var(--accent5); }
+
+    .timeline { border-left: 2px solid var(--border); padding-left: 24px; margin: 16px 0; }
+    .timeline-item { position: relative; margin-bottom: 24px; }
+    .timeline-item::before { content: ''; position: absolute; left: -30px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+    .timeline-item.phase2::before { background: var(--accent3); }
+    .timeline-item.phase3::before { background: var(--accent2); }
+    .timeline-label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .tl-blue { color: var(--accent); }
+    .tl-purple { color: var(--accent3); }
+    .tl-green { color: var(--accent2); }
+
+    .highlight-box { background: linear-gradient(135deg, rgba(255,166,87,0.08), rgba(210,168,255,0.08)); border: 1px solid rgba(255,166,87,0.3); border-radius: 10px; padding: 20px 24px; margin: 16px 0; }
+    .dataset-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 14px; }
+    .dataset-card .dc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .dataset-card .dc-name { font-size: 1.05rem; font-weight: 700; }
+    .dataset-card .dc-meta { font-size: 0.8rem; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    .dataset-card .dc-meta span { background: var(--surface2); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); }
+
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin: 12px 0; }
+    .score-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
+    .score-box .score-val { font-size: 1.6rem; font-weight: 700; }
+    .score-box .score-label { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 40px; }
+    .toc h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 12px; }
+    .toc ol { padding-left: 18px; }
+    .toc li { margin-bottom: 6px; }
+    .toc a { font-size: 0.9rem; }
+
+    ul { padding-left: 18px; }
+    li { margin-bottom: 5px; font-size: 0.9rem; color: var(--text); }
+    p { margin-bottom: 10px; font-size: 0.93rem; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.8rem; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <h1>Gemma Fine-Tuning Plan</h1>
+    <p class="subtitle">Drug Discovery AI · NVIDIA DGX Spark GB10 · Unsloth + QLoRA Pipeline</p>
+    <div class="meta">
+      <span>Version 1.0 Draft</span>
+      <span>Date: 2026-05-10</span>
+      <span>Hardware: DGX Spark GB10 (128GB Unified Memory)</span>
+      <span>Model: Gemma4 (2B + 12B variants)</span>
+    </div>
+  </header>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#why">Why Fine-Tune Gemma for Drug Discovery?</a></li>
+      <li><a href="#current">Current Gemma4 Usage in Deep2Lead</a></li>
+      <li><a href="#hardware">Hardware: DGX Spark GB10 Capabilities</a></li>
+      <li><a href="#methodology">Fine-Tuning Methodology: Unsloth + QLoRA</a></li>
+      <li><a href="#datasets">Dataset Research &amp; Recommendations</a></li>
+      <li><a href="#pipeline">Training Pipeline Design</a></li>
+      <li><a href="#prompts">Instruction Dataset Design (Drug-Discovery Prompts)</a></li>
+      <li><a href="#integration">Integration with Deep2Lead v3</a></li>
+      <li><a href="#evaluation">Evaluation Strategy</a></li>
+      <li><a href="#roadmap">Implementation Roadmap &amp; Milestones</a></li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════ 1. WHY -->
+  <h2 id="why"><span class="num" style="background:rgba(255,166,87,0.2);color:var(--accent4)">1</span> Why Fine-Tune Gemma for Drug Discovery?</h2>
+
+  <div class="highlight-box">
+    <strong>Core Problem:</strong>
+    <p style="margin-top:8px;">The base Gemma4 model was trained on general-purpose text. When asked to "generate drug-like SMILES for a target that inhibits SARS-CoV-2 Main Protease," it produces structurally plausible but often chemically invalid, non-drug-like, or previously-known molecules. Fine-tuning on domain-specific molecular datasets makes the model dramatically better at: (1) generating valid SMILES, (2) respecting Lipinski/drug-likeness rules, (3) generating novel chemical space relative to known drugs, and (4) understanding target-specific structural constraints.</p>
+  </div>
+
+  <div class="card-grid">
+    <div class="card-sm">
+      <h4>Current Limitations (Base Gemma4)</h4>
+      <ul>
+        <li>~50–70% SMILES validity rate (estimated)</li>
+        <li>Generates many duplicates within a session</li>
+        <li>No preference for drug-like MW/LogP ranges</li>
+        <li>Cannot reason about target binding pocket chemistry</li>
+        <li>Cannot relate protein sequence to required pharmacophore</li>
+      </ul>
+    </div>
+    <div class="card-sm">
+      <h4>Expected After Fine-Tuning</h4>
+      <ul>
+        <li>≥90% SMILES validity rate</li>
+        <li>Higher diversity within generation batch</li>
+        <li>Built-in Lipinski compliance tendency</li>
+        <li>Better correlation: generated molecule properties match target context</li>
+        <li>Richer rationale generation explaining structure choices</li>
+      </ul>
+    </div>
+    <div class="card-sm">
+      <h4>Educational Value</h4>
+      <ul>
+        <li>Students see better, more meaningful results</li>
+        <li>Auto Experiment converges faster → better game UX</li>
+        <li>Fine-tuned model can explain its molecules in plain English</li>
+        <li>Demonstrates ML improvement cycle: data → training → better AI</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 2. CURRENT USAGE -->
+  <h2 id="current"><span class="num" style="background:rgba(88,166,255,0.2);color:var(--accent)">2</span> Current Gemma4 Usage in Deep2Lead</h2>
+
+  <div class="card">
+    <h4>How Gemma4 Is Currently Called (<code>services/molecule_generator.py</code>)</h4>
+    <pre><code># Current prompt construction (base model, no fine-tuning)
+SYSTEM_PROMPT = """You are a drug discovery AI assistant specializing in generating
+novel drug candidate molecules. Generate SMILES strings for drug-like molecules..."""
+
+USER_PROMPT = """
+Target protein sequence (first 200 AA): {amino_acid_sequence[:200]}
+Seed molecule (SMILES): {seed_smiles}
+Noise/variation level: {noise_level}  (0=conservative, 1=high diversity)
+
+Generate {num_requested} novel drug-like molecules as SMILES strings.
+Requirements:
+- Molecular weight 150-500 Da
+- QED drug-likeness score > 0.4
+- Synthesizable (SAS score < 6)
+- Different from seed (Tanimoto < 0.95)
+
+Return only SMILES strings, one per line, numbered 1-N.
+"""
+
+# API call to DGX Spark (Gemma4 inference server)
+response = requests.post(f"{DGX_API_HOST}/generate", json={
+    "model": "gemma4",
+    "messages": [{"role": "system", "content": SYSTEM_PROMPT},
+                 {"role": "user",   "content": USER_PROMPT}],
+    "temperature": 0.8,
+    "max_tokens": 500
+})</code></pre>
+    <p style="font-size:0.88rem;color:var(--muted);margin-top:8px;">The current approach is entirely prompt-engineering based — it works, but the base model has no "memory" of what makes a good drug molecule for a specific target class. Fine-tuning gives the model this inherent knowledge.</p>
+  </div>
+
+  <!-- ═══════════════════════ 3. HARDWARE -->
+  <h2 id="hardware"><span class="num" style="background:rgba(63,185,80,0.2);color:var(--accent2)">3</span> Hardware: DGX Spark GB10 Capabilities</h2>
+
+  <div class="success"><strong>DGX Spark GB10 (NVIDIA Grace Blackwell Superchip):</strong> 128GB unified memory (CPU + GPU share the same pool), GB10 Tensor Core GPU, ~1 PFLOPS FP4 AI performance. This is significant — most tutorials assume 40–80GB VRAM. The GB10 can fine-tune models that would require multi-GPU setups elsewhere.</div>
+
+  <div class="score-grid">
+    <div class="score-box">
+      <div class="score-val" style="color:var(--accent2)">128 GB</div>
+      <div class="score-label">Unified Memory</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val" style="color:var(--accent)">~1 PF</div>
+      <div class="score-label">FP4 AI Performance</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val" style="color:var(--accent3)">12B</div>
+      <div class="score-label">Max Model (Full FT)</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val" style="color:var(--accent4)">27B</div>
+      <div class="score-label">Max Model (QLoRA)</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val" style="color:var(--accent5)">2–4 hr</div>
+      <div class="score-label">Est. Fine-Tune Time (2B)</div>
+    </div>
+    <div class="score-box">
+      <div class="score-val" style="color:var(--accent2)">8–16 hr</div>
+      <div class="score-label">Est. Fine-Tune Time (12B)</div>
+    </div>
+  </div>
+
+  <h3>Memory Budget Analysis</h3>
+  <table>
+    <thead><tr><th>Model</th><th>Base Size</th><th>QLoRA VRAM</th><th>Full Fine-Tune VRAM</th><th>Feasibility on GB10</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Gemma 4 2B</strong></td>
+        <td>~4 GB (BF16)</td>
+        <td>~8 GB (4-bit + activations)</td>
+        <td>~24 GB</td>
+        <td><span class="pill pill-green">✅ Comfortable — full FT possible</span></td>
+      </tr>
+      <tr>
+        <td><strong>Gemma 4 12B</strong></td>
+        <td>~24 GB (BF16)</td>
+        <td>~18 GB (4-bit)</td>
+        <td>~96 GB</td>
+        <td><span class="pill pill-green">✅ QLoRA easy, Full FT marginal</span></td>
+      </tr>
+      <tr>
+        <td><strong>Gemma 4 27B</strong></td>
+        <td>~54 GB (BF16)</td>
+        <td>~32 GB (4-bit)</td>
+        <td>OOM</td>
+        <td><span class="pill pill-orange">⚠️ QLoRA feasible; full FT OOM</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info"><strong>Recommended target:</strong> Fine-tune <strong>Gemma 4 12B</strong> with QLoRA (4-bit NF4 quantization). The 12B model offers significantly better chemistry reasoning than the 2B variant, and fits comfortably in GB10 memory with QLoRA. Use the 2B variant for fast iteration/testing of the training pipeline.</div>
+
+  <!-- ═══════════════════════ 4. METHODOLOGY -->
+  <h2 id="methodology"><span class="num" style="background:rgba(210,168,255,0.2);color:var(--accent3)">4</span> Fine-Tuning Methodology: Unsloth + QLoRA</h2>
+
+  <h3>Why Unsloth?</h3>
+  <div class="card-grid">
+    <div class="card-sm">
+      <h4>Speed</h4>
+      <p>Unsloth uses custom CUDA kernels for LoRA computation — 2–5× faster training than HuggingFace PEFT alone. Critical when fine-tuning on a single GB10.</p>
+    </div>
+    <div class="card-sm">
+      <h4>Memory Efficiency</h4>
+      <p>60% less VRAM than standard PEFT approaches. Allows training with larger batch sizes, which stabilizes loss and produces better models.</p>
+    </div>
+    <div class="card-sm">
+      <h4>Kaggle-Proven</h4>
+      <p>The Kaggle notebook (gpreda/fine-tune-gemma-4-e2b-with-unsloth) demonstrates Gemma 4 fine-tuning with Unsloth on T4 GPUs — far weaker than GB10. Our setup has much more headroom.</p>
+    </div>
+    <div class="card-sm">
+      <h4>Simple API</h4>
+      <p>Unsloth wraps HuggingFace Transformers, so the resulting model is a standard HuggingFace model. Easy to serve via vLLM or keep using the existing DGX inference server.</p>
+    </div>
+  </div>
+
+  <h3>QLoRA Configuration for Drug Discovery</h3>
+  <pre><code># Install dependencies (on DGX Spark with Python 3.11+)
+# pip install unsloth[colab-new] datasets trl transformers accelerate bitsandbytes
+
+from unsloth import FastLanguageModel
+import torch
+
+# Load Gemma 4 12B in 4-bit quantization
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name = "google/gemma-4-12b-it",     # instruction-tuned base
+    max_seq_length = 2048,                     # SMILES + prompt fits easily in 2048
+    dtype = None,                              # auto (BF16 on Blackwell)
+    load_in_4bit = True,                       # NF4 quantization
+)
+
+# Apply LoRA adapters
+model = FastLanguageModel.get_peft_model(
+    model,
+    r = 32,                                    # rank — higher = more capacity, more memory
+    target_modules = [                         # which weight matrices to adapt
+        "q_proj", "k_proj", "v_proj",          # attention
+        "o_proj",                              # output projection
+        "gate_proj", "up_proj", "down_proj",   # MLP layers (important for chemistry reasoning)
+    ],
+    lora_alpha = 64,                           # scaling = alpha/r = 2.0 (standard)
+    lora_dropout = 0.05,
+    bias = "none",
+    use_gradient_checkpointing = "unsloth",    # unsloth's memory-efficient checkpointing
+    random_state = 42,
+    use_rslora = True,                         # Rank-Stabilized LoRA — better for high-r
+    loftq_config = None,
+)
+
+# Trainable parameters
+model.print_trainable_parameters()
+# Expected: ~50M trainable / 12B total (~0.4% of parameters — efficient)</code></pre>
+
+  <h3>Training Configuration</h3>
+  <pre><code">from trl import SFTTrainer
+from transformers import TrainingArguments
+from unsloth import is_bfloat16_supported
+
+training_args = TrainingArguments(
+    output_dir              = "./gemma4_drug_discovery_v1",
+    num_train_epochs        = 3,               # 3 epochs on SMolInstruct subset
+    per_device_train_batch_size = 4,           # ~4 samples/batch on GB10
+    gradient_accumulation_steps = 8,           # effective batch size = 32
+    warmup_steps            = 100,
+    learning_rate           = 2e-4,            # standard for LoRA fine-tuning
+    fp16                    = not is_bfloat16_supported(),
+    bf16                    = is_bfloat16_supported(),  # True on Blackwell
+    logging_steps           = 50,
+    optim                   = "adamw_8bit",    # 8-bit Adam (saves ~3GB)
+    weight_decay            = 0.01,
+    lr_scheduler_type       = "cosine",
+    save_strategy           = "epoch",
+    dataloader_num_workers  = 4,
+    report_to               = "none",          # add "wandb" if you want experiment tracking
+)
+
+trainer = SFTTrainer(
+    model           = model,
+    tokenizer       = tokenizer,
+    train_dataset   = train_dataset,
+    dataset_text_field = "text",               # our formatted instruction field
+    max_seq_length  = 2048,
+    dataset_num_proc = 4,
+    packing         = True,                    # pack multiple short examples per batch
+    args            = training_args,
+)
+
+trainer.train()
+
+# Save LoRA adapter (small — ~200MB for 12B model)
+model.save_pretrained("./gemma4_drug_lora_v1")
+tokenizer.save_pretrained("./gemma4_drug_lora_v1")
+
+# For inference: merge back into full model (optional, or load adapter at runtime)
+model.save_pretrained_merged("./gemma4_drug_merged_v1",
+                             tokenizer, save_method="merged_16bit")</code></pre>
+
+  <!-- ═══════════════════════ 5. DATASETS -->
+  <h2 id="datasets"><span class="num" style="background:rgba(63,185,80,0.2);color:var(--accent2)">5</span> Dataset Research &amp; Recommendations</h2>
+
+  <p>Based on comprehensive research across published papers, HuggingFace Hub, and database documentation. Datasets are ranked by priority for our use case: <em>improving SMILES generation quality for drug discovery, targeting students and researchers.</em></p>
+
+  <!-- Dataset 1 -->
+  <div class="dataset-card">
+    <div class="dc-header">
+      <span style="font-size:1.8rem;">⭐</span>
+      <div>
+        <div class="dc-name">SMolInstruct — 3M Chemistry Instruction Pairs</div>
+        <div class="pill pill-red">Top Pick — Instruction Tuning</div>
+      </div>
+    </div>
+    <div class="dc-meta">
+      <span>Size: 3M samples</span>
+      <span>Format: Instruction pairs (text)</span>
+      <span>Source: LlaSMol paper (arXiv:2402.09391)</span>
+      <span>License: CC BY</span>
+      <span>HuggingFace: osunlp/SMolInstruct</span>
+    </div>
+    <p><strong>What it contains:</strong> 3 million high-quality instruction-response pairs covering 14 chemistry tasks: molecule generation, property prediction, reaction prediction, retrosynthesis, molecular captioning. Covers SMILES, IUPAC names, reaction SMARTS.</p>
+    <p><strong>Why it's ideal:</strong> It's specifically designed for instruction-tuning LLMs for chemistry. The LlaSMol paper shows that fine-tuning Llama2 on SMolInstruct dramatically improved chemistry task performance. The same approach applies to Gemma4.</p>
+    <p><strong>How to use:</strong> Filter for molecule generation tasks (task_type in ['molecule_generation', 'mol_to_text', 'text_to_mol']). Mix with our custom Deep2Lead drug-discovery instruction dataset (see Section 7).</p>
+    <pre><code"># Load from HuggingFace
+from datasets import load_dataset
+ds = load_dataset("osunlp/SMolInstruct")
+# Filter for generation tasks
+mol_gen = ds.filter(lambda x: x['task_type'] in
+    ['molecule_generation', 'text_to_mol', 'property_prediction'])
+print(len(mol_gen['train']))  # ~800K relevant samples</code></pre>
+  </div>
+
+  <!-- Dataset 2 -->
+  <div class="dataset-card">
+    <div class="dc-header">
+      <span style="font-size:1.8rem;">🧬</span>
+      <div>
+        <div class="dc-name">ChEMBL 35 — 2.5M Drug-Like Molecules</div>
+        <div class="pill pill-green">Pre-training + SMILES Fluency</div>
+      </div>
+    </div>
+    <div class="dc-meta">
+      <span>Size: 2.5M molecules + 21M bioactivities</span>
+      <span>Format: SMILES + property data</span>
+      <span>Source: EMBL-EBI</span>
+      <span>License: CC BY-SA 3.0</span>
+      <span>URL: ebi.ac.uk/chembl</span>
+    </div>
+    <p><strong>What it contains:</strong> 2.5 million bioactive molecules from real drug discovery literature. Includes IC50, Ki, Kd binding affinity data for 1.7 million assays across 14,000 targets.</p>
+    <p><strong>Why it's ideal:</strong> ChEMBL molecules are real drug candidates that passed at least some validation. Training on ChEMBL SMILES teaches the model the "shape" of real drug-like molecules. ChemBERTa and many other molecular AI models pre-train on ChEMBL.</p>
+    <p><strong>How to use for Deep2Lead:</strong> Build SMILES-completion and property-to-SMILES tasks. Example: "Generate a molecule with IC50 &lt; 100nM against [target_name]" → ChEMBL-verified SMILES. Creates 2.5M additional instruction examples.</p>
+    <pre><code"># Download via ChEMBL Python client
+from chembl_webresource_client.new_client import new_client
+molecules = new_client.molecule.filter(
+    molecule_properties__mw_freebase__lte=500,  # Lipinski MW
+    molecule_properties__alogp__lte=5,          # Lipinski LogP
+).only('molecule_chembl_id', 'molecule_structures')
+
+# Or bulk download: chembl.org → Downloads → chembl_35_chemreps.txt.gz</code></pre>
+  </div>
+
+  <!-- Dataset 3 -->
+  <div class="dataset-card">
+    <div class="dc-header">
+      <span style="font-size:1.8rem;">🔗</span>
+      <div>
+        <div class="dc-name">BindingDB — 3.2M Protein-Ligand Binding Data Points</div>
+        <div class="pill pill-blue">Drug-Target Context Training</div>
+      </div>
+    </div>
+    <div class="dc-meta">
+      <span>Size: 3.2M data points</span>
+      <span>Format: SMILES + protein sequence + binding affinity (Kd/IC50/Ki)</span>
+      <span>Source: bindingdb.org</span>
+      <span>License: Open access</span>
+      <span>TDC Platform: tdcommons.ai</span>
+    </div>
+    <p><strong>What it contains:</strong> Experimentally measured binding affinities between 1.4 million small molecules and 11,400 protein targets. Each record has SMILES + protein sequence + affinity value.</p>
+    <p><strong>Why it's critical for Deep2Lead:</strong> This dataset enables target-aware generation — teaching the model to understand that "a molecule that fits BCR-ABL kinase should look different from one that fits SIRT1." This is the most important dataset for making our molecule generation target-specific.</p>
+    <p><strong>How to use:</strong> Build instruction pairs: "Given the protein sequence [seq excerpt], generate a SMILES that binds with Kd &lt; 100nM" → BindingDB-verified high-affinity SMILES. Fine-tuning on this teaches target-conditioned generation.</p>
+    <pre><code"># Download from TDC (recommended — clean, split, normalized)
+from tdc.single_pred import DTI
+data = DTI(name = 'BindingDB_Kd')
+split = data.get_split()
+# train: ~120K pairs, valid: 15K, test: 15K
+# Each: drug_smiles, target_sequence, Y (Kd value)</code></pre>
+  </div>
+
+  <!-- Dataset 4 -->
+  <div class="dataset-card">
+    <div class="dc-header">
+      <span style="font-size:1.8rem;">📊</span>
+      <div>
+        <div class="dc-name">MOSES — 1.9M Drug-Like SMILES (Benchmark Platform)</div>
+        <div class="pill pill-purple">Evaluation + Diversity Training</div>
+      </div>
+    </div>
+    <div class="dc-meta">
+      <span>Size: 1.9M molecules</span>
+      <span>Format: SMILES only</span>
+      <span>Source: Molecular Sets (Moscow Institute)</span>
+      <span>License: MIT</span>
+      <span>HuggingFace: katielink/moses</span>
+    </div>
+    <p><strong>What it contains:</strong> 1.6M training + 176K test molecules. All filtered for drug-likeness (MW 250–350, LogP −1 to 3.5, heavy atoms 10–25). Split by Bemis-Murcko scaffold for measuring generalization.</p>
+    <p><strong>Why to use:</strong> MOSES is the standard benchmark for molecular generation. We use it two ways: (1) training data for base SMILES fluency, (2) evaluation — our fine-tuned model should score well on MOSES metrics (validity, uniqueness, novelty, FCD).</p>
+    <pre><code"># Use as evaluation benchmark
+# After training, generate 10K molecules and run MOSES metrics:
+# pip install molsets
+from moses.metrics.metrics import get_all_metrics
+generated_smiles = model.generate(n=10000)
+metrics = get_all_metrics(generated_smiles, test=moses_test_set)
+print(metrics)
+# Target: Validity>0.9, Uniqueness>0.95, Novelty>0.7, FCD<5.0</code></pre>
+  </div>
+
+  <!-- Dataset 5 -->
+  <div class="dataset-card">
+    <div class="dc-header">
+      <span style="font-size:1.8rem;">💊</span>
+      <div>
+        <div class="dc-name">MolPILE — 222M Synthesizable Molecules</div>
+        <div class="pill pill-orange">Foundation Pre-Training (Large Scale)</div>
+      </div>
+    </div>
+    <div class="dc-meta">
+      <span>Size: 222M molecules (curated subsets: 1M, 5M, 10M)</span>
+      <span>Format: SMILES</span>
+      <span>Source: scikit-fingerprints research group</span>
+      <span>License: Open</span>
+      <span>HuggingFace: scikit-fingerprints/MolPILE</span>
+    </div>
+    <p><strong>What it contains:</strong> 222 million experimentally validated, synthesizable molecules. Larger and more diverse than ChEMBL, GDB-17, and ZINC combined. Represents real-world synthesizable chemical space.</p>
+    <p><strong>Why useful:</strong> Max Jaderberg's point — train on data that reflects actual synthesizable chemistry, not theoretical space. Molecules in MolPILE have been made in labs. Use the 5M subset for our fine-tuning to cover vast chemical space without overwhelming compute budget.</p>
+    <p><strong>Practical recommendation:</strong> Download the 1M subset for fast experimentation. Use the 10M subset for production training if compute allows. Each SMILES becomes a "complete this molecule" or "next token" pretraining example.</p>
+  </div>
+
+  <!-- Dataset 6 -->
+  <div class="dataset-card">
+    <div class="dc-header">
+      <span style="font-size:1.8rem;">⚛️</span>
+      <div>
+        <div class="dc-name">QM9 — 134K Molecules with Quantum Properties</div>
+        <div class="pill pill-blue">Physics-Grounded Training (Jaderberg Insight)</div>
+      </div>
+    </div>
+    <div class="dc-meta">
+      <span>Size: 134K molecules</span>
+      <span>Format: SMILES + 19 quantum mechanical properties (DFT-calculated)</span>
+      <span>Source: quantum-machine.org</span>
+      <span>License: MIT</span>
+      <span>HuggingFace: alxfgh/qm9</span>
+    </div>
+    <p><strong>What it contains:</strong> Small organic molecules (up to 9 heavy atoms, CHNO+F) with B3LYP/6-31G(2df,p) calculated properties: HOMO-LUMO gap, dipole moment, polarizability, enthalpy, heat capacity, zero-point energy.</p>
+    <p><strong>Jaderberg alignment:</strong> <em>"Leverage synthetic data from physics-based theories (quantum mechanics) and simulation."</em> QM9 is exactly this — DFT calculations are physics-based synthetic data. Teaching Gemma about HOMO-LUMO gaps improves its understanding of electronic structure relevant to binding.</p>
+    <p><strong>How to use:</strong> Build property-conditioned generation tasks: "Generate a SMILES with HOMO-LUMO gap ~3.5eV and dipole moment ~2D, suitable as a kinase inhibitor fragment." This is advanced — use in fine-tuning Stage 2.</p>
+  </div>
+
+  <!-- Dataset 7 -->
+  <div class="dataset-card">
+    <div class="dc-header">
+      <span style="font-size:1.8rem;">📚</span>
+      <div>
+        <div class="dc-name">PubMedQA + DrugBank — Biomedical QA Context</div>
+        <div class="pill pill-purple">Explanation &amp; Rationale Generation</div>
+      </div>
+    </div>
+    <div class="dc-meta">
+      <span>PubMedQA: 274K QA pairs from PubMed abstracts</span>
+      <span>DrugBank: 15K approved/experimental drugs with full property data</span>
+      <span>License: Open (PubMedQA), CC BY-NC (DrugBank)</span>
+    </div>
+    <p><strong>Why for Deep2Lead:</strong> We need Gemma to explain molecular decisions in plain English — critical for the educational platform. PubMedQA trains the model to answer "why does this molecule bind better?" questions. DrugBank teaches it the vocabulary of real approved drugs.</p>
+    <p><strong>Custom construction:</strong> Build rationale pairs from DrugBank: "Drug: Imatinib (SMILES: ...) | Target: BCR-ABL kinase | Mechanism: Imatinib binds the ATP-binding pocket of BCR-ABL..." These teach Gemma to generate molecule-specific plain-English explanations shown in the game and experiment results.</p>
+  </div>
+
+  <!-- ═══════════════════════ 6. PIPELINE -->
+  <h2 id="pipeline"><span class="num" style="background:rgba(88,166,255,0.2);color:var(--accent)">6</span> Training Pipeline Design</h2>
+
+  <h3>Multi-Stage Training Strategy</h3>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-label tl-blue">Stage 0 — Baseline Evaluation (1 day)</div>
+      <div class="card-sm">
+        <p>Benchmark current base Gemma4 on 500 generation prompts from our app. Record: SMILES validity %, unique molecules %, average QED, average SAS, Tanimoto to seed. This is the baseline to beat.</p>
+        <pre style="font-size:0.78rem;"><code># Run the existing molecule_generator.py 500 times with varied seeds/targets
+# Record all metrics to CSV for comparison after fine-tuning</code></pre>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-label tl-blue">Stage 1 — SMILES Fluency (2–3 days of training)</div>
+      <div class="card-sm">
+        <strong>Goal: Model generates valid SMILES ≥90% of the time</strong>
+        <p>Dataset: MOSES (1.6M drug-like SMILES) + ChEMBL (1M sampled) + MolPILE (1M sampled)</p>
+        <p>Task format: Next-token prediction on SMILES strings. Trains the model to understand SMILES grammar fluently.</p>
+        <pre style="font-size:0.78rem;"><code>"text": "Generate a drug-like molecule: CC(C)Cc1ccc(cc1)[C@@H](C)C(=O)O"
+"text": "Generate a drug-like molecule: c1ccc(cc1)C[C@@H](N)C(=O)O"</code></pre>
+        <p>Epochs: 1 | LR: 2e-4 | Batch: 32 (effective) | Est. time: 6–8 hours on GB10</p>
+      </div>
+    </div>
+
+    <div class="timeline-item phase2">
+      <div class="timeline-label tl-purple">Stage 2 — Instruction Tuning for Chemistry Tasks (3–4 days)</div>
+      <div class="card-sm">
+        <strong>Goal: Model understands chemistry instructions and generates drug-like candidates</strong>
+        <p>Dataset: SMolInstruct (800K filtered samples) + custom Deep2Lead instructions (50K, see Section 7)</p>
+        <p>Task format: ChatML instruction pairs. Model learns to follow drug discovery prompts.</p>
+        <pre style="font-size:0.78rem;"><code>{
+  "messages": [
+    {"role": "system", "content": "You are a drug discovery AI..."},
+    {"role": "user",   "content": "Generate 5 SMILES that inhibit SARS-CoV-2 Main Protease with MW 250-450"},
+    {"role": "assistant", "content": "1. CC1=CN=C(NC2=NC=C...)\\n2. COC1=CC=C(...)..."}
+  ]
+}</code></pre>
+        <p>Epochs: 3 | LR: 1e-4 | Est. time: 18–24 hours on GB10</p>
+      </div>
+    </div>
+
+    <div class="timeline-item phase2">
+      <div class="timeline-label tl-purple">Stage 3 — Target-Conditioned Generation (2–3 days)</div>
+      <div class="card-sm">
+        <strong>Goal: Model generates molecules appropriate for specific protein targets</strong>
+        <p>Dataset: BindingDB (120K high-quality drug-target pairs, Kd &lt; 1µM)</p>
+        <p>Task format: Given protein sequence excerpt → generate high-affinity SMILES. This is the most important stage for improving Deep2Lead's core experiment quality.</p>
+        <pre style="font-size:0.78rem;"><code>{
+  "messages": [
+    {"role": "user", "content": "Target protein (first 100 AA): MGSSHHHHHHSSGLVPRGSHM...\nGenerate 3 novel SMILES with predicted binding affinity Kd < 100nM and QED > 0.5"},
+    {"role": "assistant", "content": "Reasoning: This target is [target class]. Key pharmacophore features:\n1. COC1=CC...  (QED: 0.71, targets binding pocket residue H163)\n2. CC(C)NC...  (QED: 0.65, aromatic ring for pi-stacking)\n3. ..."}
+  ]
+}</code></pre>
+        <p>Epochs: 2 | LR: 5e-5 | Est. time: 10–14 hours on GB10</p>
+      </div>
+    </div>
+
+    <div class="timeline-item phase3">
+      <div class="timeline-label tl-green">Stage 4 — Continuous Learning from App Data (Ongoing)</div>
+      <div class="card-sm">
+        <strong>Goal: Model improves from real Deep2Lead experiment data</strong>
+        <p>Every experiment run through Deep2Lead generates: target sequence, seed SMILES, generated candidates, computed scores, and docking results. This is a growing, high-quality drug discovery dataset specific to our targets.</p>
+        <p>Pipeline: Collect successful experiments (composite score &gt;0.7) → add to training queue → weekly micro-fine-tune (1 epoch on new data) → A/B test new vs old model → deploy if better.</p>
+        <div class="note"><strong>Data flywheel:</strong> The more students use the app (especially the game), the better the training data, the better Gemma gets, the better the student experience. Self-reinforcing improvement cycle.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ 7. INSTRUCTION DATASET -->
+  <h2 id="prompts"><span class="num" style="background:rgba(255,166,87,0.2);color:var(--accent4)">7</span> Instruction Dataset Design — Deep2Lead Custom Prompts</h2>
+
+  <p>We need to build a <strong>custom instruction dataset</strong> that mirrors exactly how the app uses Gemma. This ensures the fine-tuned model performs better on our specific use case. Target: <strong>50,000 instruction-response pairs</strong> covering all app interaction patterns.</p>
+
+  <h3>Task Type 1: Standard Molecule Generation (30K samples)</h3>
+  <pre><code>{
+  "instruction": "You are a drug discovery AI for educational use. Generate novel drug-like candidate molecules as SMILES strings.",
+  "input": "Target protein (first 150 AA): {aa_sequence}\nSeed molecule: {seed_smiles}\nGenerate {n} molecules. Requirements: MW 150-500, QED>0.4, SAS<6, different from seed (Tanimoto<0.9).",
+  "output": "1. {valid_smiles_1}\n2. {valid_smiles_2}\n..."
+}
+# Sourced from: ChEMBL molecules + BindingDB pairs + MOSES</code></pre>
+
+  <h3>Task Type 2: Target-Specific Generation with Rationale (10K samples)</h3>
+  <pre><code>{
+  "instruction": "You are an educational drug discovery AI. Generate molecules for the given target AND explain why each molecule might work.",
+  "input": "Target: {target_name} ({pdb_id})\nTarget class: {category} (kinase/protease/viral/etc)\nKnown drug for reference: {known_drug_smiles} ({known_drug_name})\nGenerate 3 novel candidates that improve on the known drug.",
+  "output": "Reasoning about target:\n{target_reasoning}\n\n1. {smiles_1}\nExplanation: {plain_english_why_this_molecule_might_bind}\n\n2. {smiles_2}\nExplanation: ..."
+}
+# Sourced from: DrugBank mechanism data + our curated targets JSON</code></pre>
+
+  <h3>Task Type 3: Game Damage Explanation (5K samples)</h3>
+  <pre><code>{
+  "instruction": "Explain to a high school student why this molecule scored better/worse than the previous one in simple terms.",
+  "input": "Previous molecule: {prev_smiles} | Score: {prev_score}\nNew molecule: {new_smiles} | Score: {new_score}\nTarget: {target_name}",
+  "output": "Your new molecule scored {better/worse} because:\n- {plain_english_explanation_of_chemical_difference}\n- The {feature} helps/hurts because {kid_friendly_reason}.\nScientifically: {brief_technical_note}."
+}
+# Sourced from: synthetic construction using RDKit property diffs</code></pre>
+
+  <h3>Task Type 4: Property-Conditioned Generation (5K samples)</h3>
+  <pre><code>{
+  "instruction": "Generate molecules with specific drug-like properties.",
+  "input": "Target properties: MW between {mw_low}-{mw_high}, LogP {logp_range}, QED > {qed_min}, must pass Lipinski rule of 5. Seed concept: {molecular_scaffold_description}.",
+  "output": "Molecules matching criteria:\n1. {smiles_1}  # MW:{mw}, LogP:{logp}, QED:{qed}\n2. {smiles_2}  ..."
+}
+# Sourced from: MoleculeNet + ZINC filtered subsets</code></pre>
+
+  <h3>Building the Dataset Script</h3>
+  <pre><code"># scripts/build_finetune_dataset.py
+# New file to create (runs separately from the Flask app)
+
+import json, random
+from datasets import Dataset
+from rdkit import Chem
+from rdkit.Chem import Descriptors, QED
+from chembl_webresource_client.new_client import new_client
+
+def build_standard_generation_tasks(n=30000):
+    """Pull ChEMBL molecules, build instruction pairs"""
+    molecules = new_client.molecule.filter(
+        molecule_properties__mw_freebase__range=[150, 500],
+        molecule_properties__alogp__range=[-1, 5],
+        molecule_type='Small molecule'
+    ).only('molecule_structures')
+    tasks = []
+    for mol_data in random.sample(list(molecules), n):
+        smiles = mol_data['molecule_structures']['canonical_smiles']
+        if not Chem.MolFromSmiles(smiles):
+            continue
+        # Build synthetic instruction pair
+        tasks.append({
+            "text": format_as_chatml(
+                system="You are a drug discovery AI for educational use...",
+                user=f"Generate 5 drug-like molecules similar to: {smiles}\nRequirements: MW 150-500, QED>0.4, SAS<6",
+                assistant=generate_synthetic_response(smiles)
+            )
+        })
+    return tasks
+
+def generate_synthetic_response(seed_smiles, n=5):
+    """Use existing molecule_generator to create training responses"""
+    # Call the app's generator — use existing Gemma4 output as initial training data
+    # Bootstrap problem: use base model to generate, then fine-tune on validated outputs
+    candidates = molecule_generator.generate(seed_smiles, n=n*2)
+    # Filter to only valid, drug-like ones (this creates the 'good' examples)
+    valid = [c for c in candidates if is_drug_like(c)][:n]
+    return "\n".join([f"{i+1}. {s}" for i, s in enumerate(valid)])
+
+if __name__ == "__main__":
+    all_tasks = (
+        build_standard_generation_tasks(30000) +
+        build_target_specific_tasks(10000) +    # from curated targets + DrugBank
+        build_game_explanation_tasks(5000) +    # synthetic, using RDKit diffs
+        build_property_conditioned_tasks(5000)  # from ZINC/MOSES filtered subsets
+    )
+    dataset = Dataset.from_list(all_tasks)
+    dataset.save_to_disk("./data/deep2lead_finetune_v1")
+    print(f"Built {len(all_tasks)} instruction pairs")</code></pre>
+
+  <!-- ═══════════════════════ 8. INTEGRATION -->
+  <h2 id="integration"><span class="num" style="background:rgba(210,168,255,0.2);color:var(--accent3)">8</span> Integration with Deep2Lead v3</h2>
+
+  <h3>Deployment Strategy: LoRA Adapter Loading (Zero Infrastructure Change)</h3>
+  <div class="card">
+    <p>The DGX Spark already runs Gemma4 as an inference server. The fine-tuned LoRA adapter can be loaded on top of the existing model without restarting or changing the server. The Deep2Lead Flask app needs minimal changes.</p>
+    <div class="flow">
+      <div class="flow-step">Fine-tuning complete<br>LoRA adapter saved<br>(~200MB)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Upload adapter<br>to DGX Spark<br><code>/models/drug_lora_v1/</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Inference server<br>loads: base model<br>+ adapter weights</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Same API endpoint<br>DGX:9001/generate<br>Better outputs</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">molecule_generator.py<br>unchanged — just<br>better results</div>
+    </div>
+    <div class="info"><strong>Zero downtime deployment:</strong> Load adapter on a staging endpoint first, A/B test on 10% of requests, then switch 100% when quality confirmed. The Flask app calls the same URL — adapter swap is transparent.</div>
+  </div>
+
+  <h3>Config Change Required (<code>config/settings.py</code>)</h3>
+  <pre><code># config/settings.py — add fine-tuning model versioning
+
+class DGXConfig:
+    HOST = os.getenv("DGX_HOST", "dgx1")
+    PORT = os.getenv("DGX_PORT", 9001)
+    # Add: model version selection
+    MODEL_VERSION = os.getenv("GEMMA_MODEL_VERSION", "base")  # or "drug_v1"
+    MODEL_ENDPOINTS = {
+        "base": "/generate",           # existing base Gemma4
+        "drug_v1": "/generate_drug",   # fine-tuned drug discovery model
+        "drug_v2": "/generate_drug_v2" # future continuous learning version
+    }
+
+# molecule_generator.py — one-line change to support model version
+endpoint = DGXConfig.MODEL_ENDPOINTS[DGXConfig.MODEL_VERSION]
+response = requests.post(f"{DGX_BASE_URL}{endpoint}", json={...})</code></pre>
+
+  <h3>New Prompt Format (Post Fine-Tuning)</h3>
+  <p>After fine-tuning, the prompt becomes richer and model-aware. The fine-tuned model understands drug discovery context without needing extensive prompting:</p>
+  <pre><code>"# New prompt for fine-tuned model — more structured, model understands these fields
+
+SYSTEM = "You are Deep2Lead's drug discovery AI. You generate novel, drug-like SMILES molecules for educational drug discovery experiments. Always generate valid SMILES and explain your choices in plain English for high school students."
+
+USER = """## Drug Discovery Task
+**Target:** {target_name}
+**Target Class:** {category}
+**Protein Sequence (first 200 AA):** {aa_sequence[:200]}
+**Seed Molecule (reference starting point):** {seed_smiles}
+**Known Drug for Reference:** {known_drug_name} — {known_drug_smiles}
+
+## Requirements
+- Generate {n} novel candidate molecules as SMILES
+- Drug-like: MW 150-500 Da, QED > 0.4, SAS < 6
+- Novel: Tanimoto similarity to seed < {1.0 - noise_level}
+- For each molecule, add 1 sentence explaining why it might bind better
+
+## Format
+1. {SMILES_1}
+   Why: {one sentence plain English explanation}
+2. ...
+"""
+# Expected output after fine-tuning:
+# 1. COc1ccc(NC(=O)c2cccc(Cl)c2)cc1F
+#    Why: The fluorine atom improves binding affinity and the amide group forms a hydrogen bond with the catalytic residue in the binding pocket.
+# 2. ...</code></pre>
+
+  <!-- ═══════════════════════ 9. EVALUATION -->
+  <h2 id="evaluation"><span class="num" style="background:rgba(63,185,80,0.2);color:var(--accent2)">9</span> Evaluation Strategy</h2>
+
+  <h3>Quantitative Metrics (MOSES Standard)</h3>
+  <table>
+    <thead><tr><th>Metric</th><th>Description</th><th>Base Gemma4 Target</th><th>Fine-Tuned Target</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Validity</strong></td><td>% of generated SMILES parseable by RDKit</td><td>&gt;60%</td><td>&gt;92%</td></tr>
+      <tr><td><strong>Uniqueness</strong></td><td>% unique within a generation batch (10K)</td><td>&gt;80%</td><td>&gt;97%</td></tr>
+      <tr><td><strong>Novelty</strong></td><td>% not in MOSES training set</td><td>—</td><td>&gt;85%</td></tr>
+      <tr><td><strong>FCD</strong></td><td>Fréchet ChemNet Distance (lower=better, measures distribution similarity)</td><td>—</td><td>&lt;5.0</td></tr>
+      <tr><td><strong>QED Mean</strong></td><td>Average QED of valid generated molecules</td><td>~0.55</td><td>&gt;0.65</td></tr>
+      <tr><td><strong>SAS Mean</strong></td><td>Average SA Score (lower=better)</td><td>~4.5</td><td>&lt;3.5</td></tr>
+      <tr><td><strong>Lipinski Pass %</strong></td><td>% passing Lipinski Rule of 5</td><td>~70%</td><td>&gt;88%</td></tr>
+      <tr><td><strong>Docking Score (3D)</strong></td><td>Average Vina score of top candidate per session</td><td>baseline</td><td>−0.5 kcal/mol improvement</td></tr>
+    </tbody>
+  </table>
+
+  <h3>App-Specific Evaluation</h3>
+  <pre><code"># scripts/eval_molecule_generator.py
+# Run before and after fine-tuning. Compare metrics.
+
+import json
+from services import molecule_generator, property_calculator
+
+TEST_CASES = [
+    {"target": "COVID-19 Mpro", "aa_seq": "...", "seed": "CC1=CN=C(...)"},
+    {"target": "EGFR kinase",   "aa_seq": "...", "seed": "COc1cc2nccc(...)"},
+    {"target": "HIV Protease",  "aa_seq": "...", "seed": "CC(C)CC1(...)"},
+    # 20 test cases covering all curated targets
+]
+
+def evaluate_generator(n_per_case=10):
+    results = []
+    for case in TEST_CASES:
+        generated = molecule_generator.generate(case['seed'], case['aa_seq'], n=n_per_case)
+        props = [property_calculator.compute_all(s) for s in generated]
+        results.append({
+            "target": case['target'],
+            "validity": len(generated) / n_per_case,
+            "mean_qed": sum(p['qed'] for p in props) / len(props),
+            "mean_sas": sum(p['sas'] for p in props) / len(props),
+            "lipinski_pass_pct": sum(1 for p in props if p['lipinski_pass']) / len(props),
+            "mean_composite": sum(p['composite_score'] for p in props) / len(props),
+        })
+    return results
+
+# Run: python eval_molecule_generator.py --output eval_baseline.json
+# After fine-tuning: python eval_molecule_generator.py --output eval_finetune_v1.json
+# Compare with: python compare_evals.py eval_baseline.json eval_finetune_v1.json</code></pre>
+
+  <!-- ═══════════════════════ 10. ROADMAP -->
+  <h2 id="roadmap"><span class="num" style="background:rgba(255,166,87,0.2);color:var(--accent4)">10</span> Implementation Roadmap &amp; Milestones</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-label tl-blue">Week 1–2 — Dataset Preparation</div>
+      <div class="card-sm">
+        <ul>
+          <li>Download ChEMBL 35 bulk SMILES (<code>chembl_35_chemreps.txt.gz</code>)</li>
+          <li>Download MOSES dataset from HuggingFace (<code>katielink/moses</code>)</li>
+          <li>Download SMolInstruct (<code>osunlp/SMolInstruct</code>), filter for generation tasks</li>
+          <li>Download BindingDB via TDC (<code>BindingDB_Kd</code>, &lt;1µM subset)</li>
+          <li>Run <code>scripts/build_finetune_dataset.py</code> to build 50K custom instruction pairs</li>
+          <li>Validate dataset: check SMILES validity, format consistency, deduplication</li>
+          <li>Run baseline evaluation: <code>eval_molecule_generator.py</code> → save as <code>eval_baseline.json</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-label tl-blue">Week 3 — Stage 1 Training (SMILES Fluency)</div>
+      <div class="card-sm">
+        <ul>
+          <li>Set up Unsloth + QLoRA on DGX Spark: <code>pip install unsloth[cu124] datasets trl</code></li>
+          <li>Load Gemma 4 2B first (fast iteration). Run Stage 1 (MOSES + ChEMBL).</li>
+          <li>Monitor training loss. Target: loss &lt; 0.8 after 1 epoch.</li>
+          <li>Quick evaluation: generate 100 SMILES, check validity %</li>
+          <li>If 2B results are good, proceed with 12B for production training</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="timeline-item phase2">
+      <div class="timeline-label tl-purple">Week 4–5 — Stage 2+3 Training (Instruction + Target-Specific)</div>
+      <div class="card-sm">
+        <ul>
+          <li>Stage 2: Fine-tune on SMolInstruct (filtered, 800K samples). 3 epochs. ~20 hours.</li>
+          <li>Mid-training checkpoint eval: run app-specific eval on 5 targets</li>
+          <li>Stage 3: Fine-tune on BindingDB + custom Deep2Lead instructions. 2 epochs. ~12 hours.</li>
+          <li>Save LoRA adapter: <code>gemma4_drug_lora_v1/</code> (~200MB)</li>
+          <li>Full MOSES benchmark evaluation: validity, uniqueness, novelty, FCD, QED, SAS</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="timeline-item phase2">
+      <div class="timeline-label tl-purple">Week 6 — Integration &amp; A/B Testing</div>
+      <div class="card-sm">
+        <ul>
+          <li>Deploy fine-tuned adapter to DGX Spark staging endpoint</li>
+          <li>Update <code>config/settings.py</code> with model versioning</li>
+          <li>A/B test: 50% requests to base model, 50% to fine-tuned model</li>
+          <li>Collect comparison metrics for 1 week across real experiment runs</li>
+          <li>Student survey: do students notice better molecules? (subjective quality check)</li>
+          <li>If fine-tuned wins on all metrics: switch 100% traffic to new model</li>
+          <li>Update game: fine-tuned model generates better molecules → better game outcomes</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="timeline-item phase3">
+      <div class="timeline-label tl-green">Month 3+ — Continuous Learning Pipeline</div>
+      <div class="card-sm">
+        <ul>
+          <li>Build data collection pipeline: capture high-scoring game/experiment sessions</li>
+          <li>Weekly micro-fine-tune on new app data (Stage 4 continuous loop)</li>
+          <li>Train Gemma 4 12B for production upgrade (better reasoning)</li>
+          <li>Explore DiffDock integration on GB10 for 3D pose-aware generation</li>
+          <li>Consider ESM-2 protein embedding as additional input to generation prompt</li>
+          <li>Publish results as educational research: "Fine-tuning Gemma for High-School Drug Discovery AI"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Files to Create (New)</h3>
+  <pre><code">Deep2Lead-v2/
+├── finetune/                      # New top-level directory (outside Flask app)
+│   ├── README.md                  # Fine-tuning how-to guide
+│   ├── train.py                   # Main training script (Unsloth + QLoRA)
+│   ├── eval.py                    # Evaluation: MOSES metrics + app-specific
+│   ├── build_dataset.py           # Dataset construction (ChEMBL + SMolInstruct + custom)
+│   ├── dataset_utils.py           # SMILES validation, deduplication, formatting helpers
+│   ├── prompt_templates.py        # All 4 instruction task type templates
+│   ├── requirements_finetune.txt  # unsloth, datasets, trl, chembl-client, tdc, molsets
+│   └── configs/
+│       ├── train_2b.yaml          # Hyperparams for 2B model (fast iteration)
+│       └── train_12b.yaml         # Hyperparams for 12B model (production)
+│
+└── v2/
+    └── scripts/
+        └── eval_molecule_generator.py  # App-integrated evaluation script</code></pre>
+
+  <div class="highlight-box" style="margin-top:40px;">
+    <strong>Summary in one sentence:</strong>
+    <p style="margin-top:8px;">By fine-tuning Gemma 4 12B with Unsloth QLoRA on a carefully curated stack of SMolInstruct (instruction pairs), ChEMBL (drug-like SMILES), BindingDB (target-conditioned generation), and our own Deep2Lead experiment data, we transform a general-purpose language model into a drug-discovery-specific AI that generates better molecules, explains its reasoning in plain English, and continuously improves as students and researchers use the platform.</p>
+  </div>
+
+  <h3>Key References</h3>
+  <table>
+    <thead><tr><th>Paper / Resource</th><th>Why Relevant</th></tr></thead>
+    <tbody>
+      <tr><td>LlaSMol (arXiv:2402.09391)</td><td>Primary reference: instruction-tuning LLMs for chemistry using SMolInstruct. Same approach applied to Gemma4.</td></tr>
+      <tr><td>SmileyLlama (arXiv:2409.02231)</td><td>Two-stage LLM fine-tuning for directed drug-like molecule generation. Architecture reference.</td></tr>
+      <tr><td>ChemBERTa-2 (arXiv:2209.01712)</td><td>Pre-training molecular models on ZINC/PubChem. Dataset selection reference.</td></tr>
+      <tr><td>Kaggle: gpreda/fine-tune-gemma-4-e2b-with-unsloth</td><td>Specific Gemma4 + Unsloth implementation reference. Confirms approach works on weaker hardware than GB10.</td></tr>
+      <tr><td>MOSES (Frontiers in Pharmacology)</td><td>Standard benchmark for molecular generation models. Our evaluation framework.</td></tr>
+      <tr><td>MolPILE (arXiv:2509.18353)</td><td>Largest synthesizable molecule dataset — Stage 1 pre-training option.</td></tr>
+      <tr><td>Unsloth GitHub (github.com/unslothai/unsloth)</td><td>Implementation library. 2–5× faster fine-tuning, 60% memory reduction.</td></tr>
+      <tr><td>Max Jaderberg Interview (Transcript)</td><td>Strategic framework: use physics-based synthetic data, build generative agents, move beyond single-target models.</td></tr>
+    </tbody>
+  </table>
+
+  <div style="text-align:center;margin-top:48px;color:var(--muted);font-size:0.82rem;">
+    finetune-gemma.html · Deep2Lead v3 · Generated 2026-05-10 · Hardware: DGX Spark GB10 · Author: Tarun Chawdhury
+  </div>
+
+</div>
+</body>
+</html>
