@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% block title %}My Experiments — Deep2Lead V2{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
 
 {% block content %}
 <div class="flex items-center justify-between" style="margin-bottom:16px;">
@@ -37,63 +40,98 @@
   <button class="tab-btn" onclick="showTab('published')">Published ({{ published|length }})</button>
 </div>
 
-<div id="tab-drafts">
+<!-- ── Drafts tab ── -->
+<div id="tab-drafts" data-tab="drafts">
+
+  <!-- Bulk toolbar -->
+  <div class="bulk-toolbar" id="bulk-toolbar-drafts">
+    <span class="sel-count" id="sel-count-drafts">0 selected</span>
+    <button class="btn-delete" onclick="bulkDelete('drafts')">Delete Selected</button>
+  </div>
+
   {% if drafts %}
-    {% for exp in drafts %}
-    <div class="card card-sm" style="margin-bottom:10px;">
-      <div class="flex items-center justify-between">
-        <div>
+  <label class="select-all-row">
+    <input type="checkbox" id="select-all-drafts" onchange="onSelectAll(this,'drafts')"> Select all drafts
+  </label>
+  {% for exp in drafts %}
+  <div class="exp-card" data-exp-id="{{ exp.id }}">
+    <input type="checkbox" class="exp-card-check" data-id="{{ exp.id }}"
+           onchange="onCardCheck(this,'{{ exp.id }}')">
+    <div class="exp-card-body">
+      <div class="exp-card-header">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <span class="badge badge-draft">Draft</span>
-          <strong style="margin-left:8px;">{{ exp.title or "Untitled" }}</strong>
-          <span class="text-muted text-sm" style="margin-left:8px;">{{ exp.created_at.strftime('%b %d, %Y') if exp.created_at }}</span>
+          {% if exp.mode == '3d' %}<span class="badge" style="background:#1f6feb22;color:#58a6ff;border:1px solid #1f6feb44;font-size:.7rem;">3D</span>{% endif %}
+          <strong>{{ exp.title or "Untitled" }}</strong>
+          <span class="text-muted text-sm">{{ exp.created_at.strftime('%b %d, %Y') if exp.created_at }}</span>
         </div>
-        <div class="flex gap-8">
+        <div class="exp-card-actions">
           <a href="{{ url_for('experiments.experiment_detail', experiment_id=exp.id) }}" class="btn btn-sm btn-outline">View / Edit</a>
+          <button class="btn-delete" onclick="deleteSingle('{{ exp.id }}','{{ (exp.title or 'Untitled')|e }}')">Delete</button>
         </div>
       </div>
       <div class="text-sm text-muted mt-8">Seed: <code>{{ exp.seed_smile[:60] }}{% if exp.seed_smile|length > 60 %}…{% endif %}</code></div>
       <div class="text-sm text-muted">{{ exp.num_valid_generated or 0 }} candidates generated</div>
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
   {% else %}
-    <div class="empty-state">
-      <strong>No drafts yet.</strong>
-      <p><a href="{{ url_for('experiments.run_page') }}">Run your first experiment</a></p>
-    </div>
+  <div class="empty-state">
+    <strong>No drafts yet.</strong>
+    <p><a href="{{ url_for('experiments.run_page') }}">Run your first experiment</a></p>
+  </div>
   {% endif %}
 </div>
 
-<div id="tab-published" style="display:none;">
+<!-- ── Published tab ── -->
+<div id="tab-published" data-tab="published" style="display:none;">
+
+  <!-- Bulk toolbar -->
+  <div class="bulk-toolbar" id="bulk-toolbar-published">
+    <span class="sel-count" id="sel-count-published">0 selected</span>
+    <button class="btn-delete" onclick="bulkDelete('published')">Delete Selected</button>
+  </div>
+
   {% if published %}
-    {% for exp in published %}
-    <div class="card card-sm" style="margin-bottom:10px;">
-      <div class="flex items-center justify-between">
-        <div>
+  <label class="select-all-row">
+    <input type="checkbox" id="select-all-published" onchange="onSelectAll(this,'published')"> Select all published
+  </label>
+  {% for exp in published %}
+  <div class="exp-card" data-exp-id="{{ exp.id }}">
+    <input type="checkbox" class="exp-card-check" data-id="{{ exp.id }}"
+           onchange="onCardCheck(this,'{{ exp.id }}')">
+    <div class="exp-card-body">
+      <div class="exp-card-header">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <span class="badge badge-published">Published</span>
-          <strong style="margin-left:8px;">{{ exp.title }}</strong>
-          <span class="text-muted text-sm" style="margin-left:8px;">{{ exp.published_at.strftime('%b %d, %Y') if exp.published_at }}</span>
+          {% if exp.mode == '3d' %}<span class="badge" style="background:#1f6feb22;color:#58a6ff;border:1px solid #1f6feb44;font-size:.7rem;">3D</span>{% endif %}
+          <strong>{{ exp.title }}</strong>
+          <span class="text-muted text-sm">{{ exp.published_at.strftime('%b %d, %Y') if exp.published_at }}</span>
         </div>
-        <div class="flex gap-8">
+        <div class="exp-card-actions">
           <span class="text-muted text-sm">♥ {{ exp.like_count }} · 💬 {{ exp.comment_count }}</span>
           <a href="{{ url_for('experiments.experiment_detail', experiment_id=exp.id) }}" class="btn btn-sm btn-outline">View</a>
+          <button class="btn-delete" onclick="deleteSingle('{{ exp.id }}','{{ (exp.title or 'Untitled')|e }}')">Delete</button>
         </div>
       </div>
       <div class="text-sm text-muted mt-8">Seed: <code>{{ exp.seed_smile[:60] }}{% if exp.seed_smile|length > 60 %}…{% endif %}</code></div>
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
   {% else %}
-    <div class="empty-state">
-      <strong>Nothing published yet.</strong>
-      <p>Run an experiment, add a title, and share it with classmates.</p>
-    </div>
+  <div class="empty-state">
+    <strong>Nothing published yet.</strong>
+    <p>Run an experiment, add a title, and share it with classmates.</p>
+  </div>
   {% endif %}
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script>
 function showTab(name) {
-  document.getElementById("tab-drafts").style.display = name === "drafts" ? "block" : "none";
+  document.getElementById("tab-drafts").style.display  = name === "drafts"    ? "block" : "none";
   document.getElementById("tab-published").style.display = name === "published" ? "block" : "none";
   document.querySelectorAll(".tab-btn").forEach((b, i) => {
     b.classList.toggle("active", (i === 0 && name === "drafts") || (i === 1 && name === "published"));

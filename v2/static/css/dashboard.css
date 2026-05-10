@@ -1,0 +1,111 @@
+/* Dashboard — experiment cards with checkboxes and bulk delete */
+
+.exp-card {
+  position: relative;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.exp-card:hover { border-color: #58a6ff44; }
+.exp-card.selected {
+  border-color: #58a6ff;
+  background: #1c2433;
+}
+
+.exp-card-check {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #58a6ff;
+}
+
+.exp-card-body {
+  margin-left: 28px;
+}
+
+.exp-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.exp-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-delete {
+  background: transparent;
+  border: 1px solid #da363333;
+  color: #ff7b72;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.btn-delete:hover {
+  background: #da363322;
+  border-color: #da3633;
+}
+
+/* Bulk toolbar */
+.bulk-toolbar {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: #1c2433;
+  border: 1px solid #58a6ff44;
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  font-size: .85rem;
+  color: #e6edf3;
+}
+.bulk-toolbar.visible { display: flex; }
+.bulk-toolbar .sel-count { font-weight: 600; color: #58a6ff; }
+.bulk-toolbar button { margin-left: auto; }
+
+.select-all-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .8rem;
+  color: #8b949e;
+  margin-bottom: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.select-all-row input { accent-color: #58a6ff; cursor: pointer; }
+
+/* Confirm modal */
+.del-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.del-modal {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 28px 32px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+.del-modal h3 { font-size: 1.05rem; margin-bottom: 10px; }
+.del-modal p  { font-size: .85rem; color: #8b949e; margin-bottom: 22px; line-height: 1.5; }
+.del-modal-btns { display: flex; gap: 10px; justify-content: center; }

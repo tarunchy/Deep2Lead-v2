@@ -228,6 +228,35 @@ def retract(experiment_id):
     return jsonify({"status": "retracted"})
 
 
+# ── API: delete ────────────────────────────────────────────────────
+
+@bp.route("/api/v2/experiments/<experiment_id>", methods=["DELETE"])
+@login_required
+def delete_experiment(experiment_id):
+    exp = Experiment.query.get_or_404(experiment_id)
+    if str(exp.user_id) != str(current_user.id) and current_user.role != "admin":
+        return jsonify({"error": "Forbidden"}), 403
+    db.session.delete(exp)
+    db.session.commit()
+    return jsonify({"deleted": experiment_id})
+
+
+@bp.route("/api/v2/experiments/bulk-delete", methods=["POST"])
+@login_required
+def bulk_delete_experiments():
+    ids = (request.get_json() or {}).get("ids", [])
+    if not ids:
+        return jsonify({"error": "No ids provided"}), 400
+    deleted = []
+    for eid in ids:
+        exp = Experiment.query.filter_by(id=eid, user_id=current_user.id).first()
+        if exp:
+            db.session.delete(exp)
+            deleted.append(eid)
+    db.session.commit()
+    return jsonify({"deleted": deleted, "count": len(deleted)})
+
+
 # ── API: AI metadata suggestion ─────────────────────────────────────
 
 @bp.route("/api/v2/suggest-metadata", methods=["POST"])
