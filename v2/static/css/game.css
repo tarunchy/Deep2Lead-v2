@@ -1,0 +1,455 @@
+/* PathoHunt Game Styles */
+
+/* ── variables ── */
+:root {
+  --g-hp-full: #ef4444;
+  --g-hp-mid: #f97316;
+  --g-hp-low: #22c55e;
+  --g-dmg: #4ade80;
+  --g-miss: #6b7280;
+  --g-combo: #a78bfa;
+  --g-glow: rgba(88,166,255,0.18);
+}
+
+/* ── lobby ── */
+.game-hero {
+  text-align: center;
+  padding: 48px 0 36px;
+}
+.game-hero h1 {
+  font-size: 2.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #58a6ff, #a78bfa, #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.game-hero p {
+  color: var(--muted);
+  margin-top: 8px;
+  font-size: 1rem;
+}
+
+.boss-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 32px;
+}
+
+.boss-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 20px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  display: block;
+}
+.boss-card:hover {
+  border-color: #58a6ff;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px var(--g-glow);
+  text-decoration: none;
+}
+.boss-card.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.boss-card.beaten {
+  border-color: rgba(63,185,80,0.5);
+  box-shadow: 0 0 0 1px rgba(63,185,80,0.15);
+}
+
+.boss-level-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  color: var(--muted);
+}
+.boss-card.beaten .boss-level-badge { background: rgba(63,185,80,0.15); color: #4ade80; border-color: rgba(63,185,80,0.4); }
+
+.boss-emoji { font-size: 2.8rem; margin-bottom: 10px; display: block; }
+.boss-name { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+.boss-subtitle { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+.boss-card .boss-difficulty { margin-top: 10px; }
+
+.boss-best-score {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.lock-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13,17,23,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  border-radius: 14px;
+}
+
+/* ── pill ── */
+.diff-pill {
+  display: inline-block;
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.diff-junior   { background: rgba(63,185,80,0.15);  color: #4ade80; }
+.diff-fellow   { background: rgba(88,166,255,0.15); color: #58a6ff; }
+.diff-pi       { background: rgba(167,139,250,0.15);color: #a78bfa; }
+.diff-nobel    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+
+/* ── battle layout ── */
+.battle-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+}
+@media (max-width: 800px) {
+  .battle-layout { grid-template-columns: 1fr; }
+}
+
+.battle-pane {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.pane-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+/* ── boss HP bar ── */
+.hp-track {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 32px;
+  margin: 10px 0;
+}
+.hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--g-hp-full), var(--g-hp-mid));
+  transition: width 0.7s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  min-width: 60px;
+}
+.hp-fill.low { background: linear-gradient(90deg, #16a34a, var(--g-hp-low)); }
+.hp-disclaimer {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* ── boss protein viewer ── */
+.protein-viewer-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  height: 220px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  overflow: hidden;
+  position: relative;
+}
+#battle3dmol { width: 100%; height: 100%; }
+
+/* ── battle log ── */
+.battle-log {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 14px;
+  max-height: 160px;
+  overflow-y: auto;
+  font-size: 0.82rem;
+}
+.battle-log::-webkit-scrollbar { width: 4px; }
+.battle-log::-webkit-scrollbar-track { background: transparent; }
+.battle-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.log-entry { padding: 3px 0; border-bottom: 1px solid rgba(48,54,61,0.5); }
+.log-entry:last-child { border-bottom: none; }
+.log-damage { color: var(--g-dmg); font-weight: 600; }
+.log-miss   { color: var(--g-miss); }
+.log-combo  { color: var(--g-combo); font-weight: 700; }
+
+/* ── lab pane controls ── */
+.smiles-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  color: #ffa657;
+  resize: vertical;
+  min-height: 64px;
+}
+.smiles-input:focus { outline: none; border-color: #58a6ff; }
+
+.attack-btn {
+  background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  width: 100%;
+  margin-top: 12px;
+}
+.attack-btn:hover { opacity: 0.88; }
+.attack-btn:active { transform: scale(0.97); }
+.attack-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.attack-loading {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.attack-loading.visible { display: flex; }
+
+/* ── result card ── */
+.result-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 14px;
+  display: none;
+}
+.result-card.visible { display: block; }
+.result-smiles {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  color: #ffa657;
+  word-break: break-all;
+  margin-bottom: 8px;
+}
+.result-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.metric-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+}
+.metric-chip span { color: var(--accent); font-weight: 600; }
+
+/* ── damage pop ── */
+.damage-pop {
+  position: fixed;
+  font-size: 1.8rem;
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 9000;
+  transition: none;
+  text-shadow: 0 0 12px currentColor;
+}
+.damage-pop.miss { color: var(--g-miss); font-size: 1.2rem; }
+.damage-pop.hit  { color: var(--g-dmg); }
+
+/* ── battle header ── */
+.battle-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+.battle-boss-emoji { font-size: 2rem; }
+.battle-boss-name  { font-size: 1.2rem; font-weight: 700; }
+.battle-boss-sub   { font-size: 0.8rem; color: var(--muted); }
+
+/* ── mode selector ── */
+.mode-selector {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.mode-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--muted);
+  transition: border-color 0.15s, color 0.15s;
+}
+.mode-btn.active { border-color: #58a6ff; color: #58a6ff; background: rgba(88,166,255,0.08); }
+.mode-btn:hover:not(.active) { border-color: #58a6ff80; color: var(--text); }
+
+/* ── difficulty selector ── */
+.diff-selector { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 16px; }
+.diff-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.diff-btn[data-d="junior"].active   { background: rgba(63,185,80,0.15);  border-color: #4ade80; color: #4ade80; }
+.diff-btn[data-d="fellow"].active   { background: rgba(88,166,255,0.15); border-color: #58a6ff; color: #58a6ff; }
+.diff-btn[data-d="pi"].active       { background: rgba(167,139,250,0.15);border-color: #a78bfa; color: #a78bfa; }
+.diff-btn[data-d="nobel"].active    { background: rgba(239,68,68,0.15);  border-color: #ef4444; color: #ef4444; }
+
+/* ── start battle card ── */
+.start-battle-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.start-battle-btn {
+  background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-top: 16px;
+}
+.start-battle-btn:hover { opacity: 0.88; }
+
+/* ── overlay ── */
+.game-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13,17,23,0.92);
+  z-index: 8000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.overlay-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px 40px;
+  max-width: 520px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+}
+.overlay-emoji { font-size: 3.6rem; display: block; margin-bottom: 12px; }
+.overlay-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+.overlay-sub   { color: var(--muted); font-size: 0.95rem; margin-bottom: 20px; }
+.overlay-btn {
+  background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 6px;
+}
+.overlay-btn.outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.overlay-btn:hover { opacity: 0.88; }
+
+/* ── session setup section ── */
+#sessionSetup { }
+#battleArena   { display: none; }
+
+/* ── spinner ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: #58a6ff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── XP toast ── */
+.xp-pop {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  background: rgba(63,185,80,0.2);
+  border: 1px solid rgba(63,185,80,0.4);
+  color: #4ade80;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  z-index: 9998;
+  pointer-events: none;
+  animation: fadeUp 2.5s ease forwards;
+}
+@keyframes fadeUp {
+  0%   { opacity:0; transform: translateY(10px); }
+  15%  { opacity:1; transform: translateY(0); }
+  75%  { opacity:1; }
+  100% { opacity:0; transform: translateY(-12px); }
+}
+
+/* ── progress bar in session setup ── */
+.boss-intro-hp {
+  margin-top: 16px;
+}

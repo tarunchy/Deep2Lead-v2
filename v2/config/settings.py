@@ -81,4 +81,12 @@ XP_EVENTS = {
     "auto_exp_round": 40,
     "auto_exp_complete": 100,
     "report_generated": 75,
+    # PathoHunt game events
+    "game_battle_started": 10,
+    "game_first_attack": 15,
+    "game_boss_damaged": 20,
+    "game_boss_defeated_easy": 100,
+    "game_boss_defeated_medium": 200,
+    "game_boss_defeated_hard": 350,
+    "game_boss_defeated_expert": 500,
 }

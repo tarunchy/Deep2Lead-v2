@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}PathoHunt — Deep2Lead{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="game-hero">
+  <h1>⚔️ PathoHunt</h1>
+  <p>Design molecules that defeat pathogens. Every attack is real computational chemistry.</p>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:8px;">
+  <div>
+    <span style="color:var(--muted);font-size:0.9rem;">
+      Choose a pathogen boss to battle. Levels unlock as you progress.
+    </span>
+  </div>
+  <a href="/api/v3/game/history" id="historyLink"
+     style="font-size:0.82rem;color:var(--accent);text-decoration:none;">View battle history →</a>
+</div>
+
+<!-- Boss grid -->
+<div class="boss-grid" id="bossGrid">
+  {% for boss in bosses %}
+  {% set diff_map = {
+      'junior': ('diff-junior', 'Scientist Junior'),
+      'fellow': ('diff-fellow', 'Research Fellow'),
+      'pi':     ('diff-pi',    'Principal Investigator'),
+      'nobel':  ('diff-nobel', 'Nobel Prize')
+  } %}
+  {% set diff_cls, diff_label = diff_map.get(boss.game_difficulty_label | lower | replace(' ', '_'),
+      diff_map.get(
+          'junior' if boss.game_level <= 2 else
+          'fellow' if boss.game_level <= 4 else
+          'pi'     if boss.game_level <= 6 else 'nobel',
+          ('diff-junior', 'Scientist Junior')
+      )
+  ) %}
+  <a href="{{ url_for('game.game_battle', target_id=boss.id) }}"
+     class="boss-card{% if boss.game_level > 2 %} needs-unlock{% endif %}"
+     data-level="{{ boss.game_level }}"
+     data-target="{{ boss.id }}">
+
+    <span class="boss-level-badge">LVL {{ boss.game_level }}</span>
+    <span class="boss-emoji">{{ boss.game_emoji }}</span>
+    <div class="boss-name">{{ boss.game_name }}</div>
+    <div class="boss-subtitle">{{ boss.short_name }} · PDB: {{ boss.pdb_id }}</div>
+    <div class="boss-card-disease" style="font-size:0.78rem;color:var(--muted);margin-top:2px;">
+      Disease: {{ boss.disease }}
+    </div>
+    <div class="boss-difficulty" style="margin-top:10px;">
+      <span class="diff-pill
+        {% if boss.game_level <= 2 %}diff-junior
+        {% elif boss.game_level <= 4 %}diff-fellow
+        {% elif boss.game_level <= 6 %}diff-pi
+        {% else %}diff-nobel{% endif %}">
+        {% if boss.game_level <= 2 %}Scientist Junior
+        {% elif boss.game_level <= 4 %}Research Fellow
+        {% elif boss.game_level <= 6 %}Principal Investigator
+        {% else %}Nobel Prize{% endif %}
+      </span>
+    </div>
+    <div class="boss-best-score" id="bestScore_{{ boss.id }}" style="display:none;"></div>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- How to play card -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin-top:36px;">
+  <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;color:var(--accent3);">How PathoHunt Works</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;font-size:0.85rem;color:var(--muted);">
+    <div>
+      <div style="font-size:1.2rem;margin-bottom:6px;">🧬</div>
+      <strong style="color:var(--text);">1. Pick a Pathogen Boss</strong>
+      <p style="margin-top:4px;">Each boss is a real protein involved in disease. Higher levels = tougher targets.</p>
+    </div>
+    <div>
+      <div style="font-size:1.2rem;margin-bottom:6px;">⚗️</div>
+      <strong style="color:var(--text);">2. Design Your Molecule</strong>
+      <p style="margin-top:4px;">Use AI (Gemma4) to generate drug candidates, or enter your own SMILES.</p>
+    </div>
+    <div>
+      <div style="font-size:1.2rem;margin-bottom:6px;">⚔️</div>
+      <strong style="color:var(--text);">3. Launch an Attack</strong>
+      <p style="margin-top:4px;">Your molecules are scored using real cheminformatics. Better scores = more boss damage.</p>
+    </div>
+    <div>
+      <div style="font-size:1.2rem;margin-bottom:6px;">🏆</div>
+      <strong style="color:var(--text);">4. Win the Battle</strong>
+      <p style="margin-top:4px;">Defeat the boss by designing a molecule that scores above the win threshold. Earn XP and badges.</p>
+    </div>
+  </div>
+  <div style="margin-top:14px;background:rgba(88,166,255,0.07);border-left:3px solid #58a6ff;border-radius:0 6px 6px 0;padding:10px 14px;font-size:0.83rem;color:var(--muted);">
+    <strong style="color:#58a6ff;">Science disclaimer:</strong>
+    All scores are computational simulations only. A high score does not mean the molecule is a real drug candidate. PathoHunt is an educational tool for learning drug discovery concepts.
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game_lobby.js') }}"></script>
+{% endblock %}

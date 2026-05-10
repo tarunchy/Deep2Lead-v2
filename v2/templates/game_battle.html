@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}{{ boss.game_name }} — PathoHunt{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.0.3/3Dmol-min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:0.85rem;color:var(--muted);">
+  <a href="/game" style="color:var(--accent);">PathoHunt</a>
+  <span>›</span>
+  <span>{{ boss.game_emoji }} {{ boss.game_name }}</span>
+</div>
+
+<!-- ═══ SESSION SETUP ═══ -->
+<div id="sessionSetup">
+  <div class="battle-layout">
+    <!-- Left: Boss intro -->
+    <div class="battle-pane">
+      <div class="battle-header">
+        <span class="battle-boss-emoji">{{ boss.game_emoji }}</span>
+        <div>
+          <div class="battle-boss-name">{{ boss.game_name }}</div>
+          <div class="battle-boss-sub">{{ boss.name }} · PDB: {{ boss.pdb_id }}</div>
+        </div>
+      </div>
+
+      <div style="font-size:0.88rem;color:var(--muted);margin-top:10px;">
+        {{ boss.game_intro }}
+      </div>
+
+      <div class="boss-intro-hp">
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted);margin-bottom:4px;">
+          <span>Known Drug Baseline ({{ boss.known_drug }})</span>
+          <span id="setupHpPct">{{ (100 - boss.known_drug_score * 100) | round(0) | int }}%</span>
+        </div>
+        <div class="hp-track">
+          <div class="hp-fill" id="setupHpFill"
+               style="width:{{ (100 - boss.known_drug_score * 100) | round(0) | int }}%;">
+            Simulation HP: {{ (100 - boss.known_drug_score * 100) | round(0) | int }}%
+          </div>
+        </div>
+        <div class="hp-disclaimer">
+          HP represents where {{ boss.known_drug }} leaves the boss. Your goal: push it lower.
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:14px;font-size:0.85rem;">
+        <div style="font-weight:600;color:var(--accent3);margin-bottom:6px;">🔬 Boss Biology</div>
+        <p style="color:var(--muted);margin:0;">{{ boss.plain_english }}</p>
+      </div>
+    </div>
+
+    <!-- Right: Battle config -->
+    <div class="battle-pane">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:14px;">⚙️ Configure Your Battle</div>
+
+      <!-- Mode selector -->
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Game Mode</div>
+      <div class="mode-selector">
+        <button class="mode-btn active" data-mode="quick_battle" onclick="selectMode('quick_battle', this)">
+          ⚡ Quick Battle <span style="font-size:0.72rem;display:block;color:var(--muted);">2D scoring, fast</span>
+        </button>
+        <button class="mode-btn" data-mode="docking_battle" onclick="selectMode('docking_battle', this)" title="Coming soon">
+          🎯 Docking Battle <span style="font-size:0.72rem;display:block;color:var(--muted);">3D Vina (coming soon)</span>
+        </button>
+      </div>
+
+      <!-- Difficulty -->
+      <div style="font-size:0.82rem;color:var(--muted);margin:10px 0 6px;">Difficulty</div>
+      <div class="diff-selector">
+        <button class="diff-btn active" data-d="junior" onclick="selectDiff('junior', this)">Scientist Junior</button>
+        <button class="diff-btn" data-d="fellow" onclick="selectDiff('fellow', this)">Research Fellow</button>
+        <button class="diff-btn" data-d="pi" onclick="selectDiff('pi', this)">Principal Investigator</button>
+        <button class="diff-btn" data-d="nobel" onclick="selectDiff('nobel', this)">Nobel Prize</button>
+      </div>
+
+      <div id="diffHint" style="font-size:0.8rem;color:var(--muted);padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:4px;">
+        Seed SMILES provided. Unlimited attempts. Best for beginners.
+      </div>
+
+      <!-- Known drug info -->
+      <div style="margin-top:14px;font-size:0.82rem;">
+        <div style="color:var(--muted);margin-bottom:4px;">Known reference drug</div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;">
+          <div style="font-weight:600;color:var(--text);">{{ boss.known_drug }}</div>
+          <div style="font-family:monospace;font-size:0.76rem;color:#ffa657;word-break:break-all;margin-top:4px;">
+            {{ boss.known_drug_smiles | truncate(80) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Win threshold info -->
+      <div style="margin-top:12px;background:rgba(63,185,80,0.07);border-left:3px solid #4ade80;border-radius:0 6px 6px 0;padding:10px 12px;font-size:0.82rem;">
+        <strong style="color:#4ade80;">Win condition (Quick Battle):</strong>
+        Composite score ≥ <strong>{{ boss.win_threshold_easy }}</strong>
+        — better than the known drug baseline.
+      </div>
+
+      <button class="start-battle-btn" id="startBattleBtn" onclick="startBattle()">
+        ⚔️ Start Battle!
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BATTLE ARENA ═══ -->
+<div id="battleArena">
+  <div class="battle-layout">
+    <!-- Left: Boss pane -->
+    <div class="battle-pane">
+      <div class="pane-label">🦠 PATHOGEN BOSS</div>
+
+      <div class="battle-header">
+        <span class="battle-boss-emoji">{{ boss.game_emoji }}</span>
+        <div>
+          <div class="battle-boss-name">{{ boss.game_name }}</div>
+          <div class="battle-boss-sub" id="bossHpLabel">Simulation HP: —</div>
+        </div>
+      </div>
+
+      <div class="hp-track" style="margin-top:10px;">
+        <div class="hp-fill" id="hpFill" style="width:100%;">Simulation HP: 100%</div>
+      </div>
+      <div class="hp-disclaimer">Simulation score only — not a real-world result</div>
+
+      <!-- 3D protein viewer -->
+      <div class="protein-viewer-box">
+        <div id="battle3dmol" style="width:100%;height:100%;"></div>
+        <div id="viewerPlaceholder" style="position:absolute;text-align:center;pointer-events:none;">
+          <div style="font-size:1.4rem;">🔬</div>
+          <div style="margin-top:4px;">Loading protein structure…</div>
+        </div>
+      </div>
+
+      <!-- Battle log -->
+      <div style="font-size:0.8rem;color:var(--muted);margin:12px 0 6px;">Battle Log</div>
+      <div class="battle-log" id="battleLog">
+        <div class="log-entry" style="color:var(--muted);">Battle starting — good luck, scientist!</div>
+      </div>
+    </div>
+
+    <!-- Right: Lab pane -->
+    <div class="battle-pane">
+      <div class="pane-label">⚗️ RESEARCH LAB</div>
+
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">
+        Seed SMILES <span id="seedHint" style="color:#ffa657;">(pre-filled with reference drug)</span>
+      </div>
+      <textarea class="smiles-input" id="smilesInput" rows="3"
+                placeholder="Enter SMILES or use AI generation below…">{{ boss.known_drug_smiles }}</textarea>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+        <div style="font-size:0.78rem;color:var(--muted);">Molecules/attack:</div>
+        <select id="nMolecules" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:0.78rem;color:var(--text);">
+          <option value="5">5</option>
+          <option value="8">8</option>
+          <option value="10">10</option>
+        </select>
+        <div style="font-size:0.78rem;color:var(--muted);margin-left:8px;">Diversity:</div>
+        <select id="noiseSel" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:0.78rem;color:var(--text);">
+          <option value="0.2">Low (0.2)</option>
+          <option value="0.35" selected>Medium (0.35)</option>
+          <option value="0.5">High (0.5)</option>
+        </select>
+      </div>
+
+      <!-- Attack button -->
+      <button class="attack-btn" id="attackBtn" onclick="launchAttack()">
+        🧬 Generate &amp; Attack with AI
+      </button>
+
+      <div class="attack-loading" id="attackLoading">
+        <div class="spinner"></div>
+        <span id="loadingMsg">Generating molecules with Gemma4…</span>
+      </div>
+
+      <!-- Last attack result -->
+      <div class="result-card" id="resultCard">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--accent3);margin-bottom:8px;" id="resultTitle">
+          Last Attack — Best Candidate
+        </div>
+        <div class="result-smiles" id="resultSmiles">—</div>
+        <div class="result-metrics" id="resultMetrics"></div>
+      </div>
+
+      <!-- Stats panel -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:14px;">
+        <div style="font-size:0.8rem;font-weight:700;margin-bottom:8px;color:var(--muted);">Session Stats</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem;">
+          <div>Attacks: <strong id="statAttacks">0</strong></div>
+          <div>Best Score: <strong id="statBest">—</strong></div>
+          <div>Damage Dealt: <strong id="statDamage">0</strong></div>
+          <div>Boss HP: <strong id="statHp">—</strong></div>
+        </div>
+      </div>
+
+      <!-- Abandon -->
+      <div style="margin-top:12px;text-align:right;">
+        <button onclick="abandonBattle()"
+                style="background:none;border:none;color:var(--muted);font-size:0.78rem;cursor:pointer;text-decoration:underline;">
+          Abandon battle
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VICTORY OVERLAY ═══ -->
+<div class="game-overlay" id="victoryOverlay" style="display:none;">
+  <div class="overlay-card">
+    <span class="overlay-emoji">🏆</span>
+    <div class="overlay-title" style="color:#4ade80;">Victory!</div>
+    <div class="overlay-sub" id="victoryMsg">You defeated the boss!</div>
+    <div style="background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.25);border-radius:8px;padding:14px;margin:14px 0;font-size:0.85rem;color:var(--muted);">
+      <strong style="color:#4ade80;">Scientific result:</strong>
+      <span id="victoryScience"></span>
+    </div>
+    <button class="overlay-btn" onclick="window.location.href='/game'">🎮 Back to Lobby</button>
+    <button class="overlay-btn outline" onclick="window.location.reload()">↺ Play Again</button>
+  </div>
+</div>
+
+<!-- ═══ DEFEAT OVERLAY ═══ -->
+<div class="game-overlay" id="defeatOverlay" style="display:none;">
+  <div class="overlay-card">
+    <span class="overlay-emoji">💀</span>
+    <div class="overlay-title" style="color:#ef4444;">Defeated</div>
+    <div class="overlay-sub" id="defeatMsg">The pathogen held on. Try a different strategy.</div>
+    <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:14px;margin:14px 0;font-size:0.85rem;color:var(--muted);">
+      <strong style="color:#ef4444;">Science tip:</strong>
+      In real drug discovery, most molecules fail. Failure is data — use it to improve your next attempt.
+    </div>
+    <button class="overlay-btn" onclick="window.location.reload()">↺ Try Again</button>
+    <button class="overlay-btn outline" onclick="window.location.href='/game'">← Back to Lobby</button>
+  </div>
+</div>
+
+<!-- Boss data for JS -->
+<script>
+window.BOSS_DATA = {
+  target_id: {{ boss.id | tojson }},
+  game_name: {{ boss.game_name | tojson }},
+  pdb_id: {{ boss.pdb_id | tojson }},
+  known_drug_smiles: {{ boss.known_drug_smiles | tojson }},
+  known_drug_score: {{ boss.known_drug_score }},
+  win_threshold_easy: {{ boss.win_threshold_easy }},
+  boss_initial_hp: {{ (100 - boss.known_drug_score * 100) | round(1) }},
+};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game_battle.js') }}"></script>
+{% endblock %}

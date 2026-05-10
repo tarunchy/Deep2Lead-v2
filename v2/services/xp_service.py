@@ -16,6 +16,15 @@ BADGE_DEFINITIONS = [
     {"slug": "safety_scientist",   "name": "Safety Scientist",       "icon": "🛡️", "xp_reward": 150, "category": "science",        "description": "Chose a safer molecule over a higher-scoring risky one"},
     {"slug": "communicator",       "name": "Research Communicator",  "icon": "📢", "xp_reward": 200, "category": "communication",  "description": "Published an experiment with a strong hypothesis"},
     {"slug": "loop_master",        "name": "Loop Master",            "icon": "🔁", "xp_reward": 300, "category": "science",        "description": "Completed a full Auto Experiment run"},
+    # PathoHunt game badges
+    {"slug": "game_first_hunt",    "name": "First Hunt",             "icon": "🎮", "xp_reward": 50,  "category": "game",           "description": "Completed your first PathoHunt battle"},
+    {"slug": "flu_slayer",         "name": "Flu Slayer",             "icon": "🤧", "xp_reward": 100, "category": "game",           "description": "Defeated the Flu Commander boss"},
+    {"slug": "covid_crusher",      "name": "COVID Crusher",          "icon": "🦠", "xp_reward": 100, "category": "game",           "description": "Defeated the Corona Cutter boss"},
+    {"slug": "hiv_vanquisher",     "name": "HIV Vanquisher",         "icon": "🔴", "xp_reward": 200, "category": "game",           "description": "Defeated the HIV Hydra boss"},
+    {"slug": "cancer_fighter",     "name": "Cancer Fighter",         "icon": "🧬", "xp_reward": 200, "category": "game",           "description": "Defeated the EGFR Enforcer boss"},
+    {"slug": "resistance_breaker", "name": "Resistance Breaker",     "icon": "⚡", "xp_reward": 350, "category": "game",           "description": "Defeated the Mutant BRAF boss"},
+    {"slug": "longevity_seeker",   "name": "Longevity Seeker",       "icon": "⏳", "xp_reward": 350, "category": "game",           "description": "Defeated the Aging Architect boss"},
+    {"slug": "cycle_stopper",      "name": "Cycle Stopper",          "icon": "🔥", "xp_reward": 500, "category": "game",           "description": "Defeated CDK2 Overlord — the final boss"},
 ]
 
 MISSION_DEFINITIONS = [

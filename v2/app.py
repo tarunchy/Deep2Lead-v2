@@ -33,6 +33,7 @@ def create_app() -> Flask:
     import models.structure_models       # noqa: F401
     import models.gamification           # noqa: F401
     import models.auto_experiment_models # noqa: F401
+    import models.game_models            # noqa: F401
 
     # v2 blueprints
     from api.auth import bp as auth_bp
@@ -50,12 +51,13 @@ def create_app() -> Flask:
     from api.gamification import bp as gamification_bp
     from api.auto_experiment import bp as auto_exp_bp
     from api.ask_ai import bp as ask_ai_bp
+    from api.game import bp as game_bp
 
     for blueprint in [
         auth_bp, exp_bp, feed_bp, admin_bp, tutorial_bp,
         enrich_bp, chatbot_bp,
         target_bp, structure_bp, docking_bp, gamification_bp, auto_exp_bp,
-        ask_ai_bp,
+        ask_ai_bp, game_bp,
     ]:
         app.register_blueprint(blueprint)
 
