@@ -61,7 +61,7 @@
       <div class="exp-card-header">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <span class="badge badge-draft">Draft</span>
-          {% if exp.mode == '3d' %}<span class="badge" style="background:#1f6feb22;color:#58a6ff;border:1px solid #1f6feb44;font-size:.7rem;">3D</span>{% endif %}
+          {% if exp.mode == '3d' %}<span class="badge" style="background:var(--accent-light);color:var(--accent);border:1px solid var(--accent);font-size:.7rem;">3D</span>{% endif %}
           <strong>{{ exp.title or "Untitled" }}</strong>
           <span class="text-muted text-sm">{{ exp.created_at.strftime('%b %d, %Y') if exp.created_at }}</span>
         </div>
@@ -104,7 +104,7 @@
       <div class="exp-card-header">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <span class="badge badge-published">Published</span>
-          {% if exp.mode == '3d' %}<span class="badge" style="background:#1f6feb22;color:#58a6ff;border:1px solid #1f6feb44;font-size:.7rem;">3D</span>{% endif %}
+          {% if exp.mode == '3d' %}<span class="badge" style="background:var(--accent-light);color:var(--accent);border:1px solid var(--accent);font-size:.7rem;">3D</span>{% endif %}
           <strong>{{ exp.title }}</strong>
           <span class="text-muted text-sm">{{ exp.published_at.strftime('%b %d, %Y') if exp.published_at }}</span>
         </div>
