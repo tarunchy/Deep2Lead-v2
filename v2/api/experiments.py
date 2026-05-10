@@ -171,11 +171,12 @@ def generate():
 @bp.route("/api/v2/experiments")
 @login_required
 def list_experiments():
-    exps = (
-        Experiment.query.filter_by(user_id=current_user.id)
-        .order_by(Experiment.created_at.desc()).all()
-    )
-    return jsonify([e.to_dict() for e in exps])
+    q = Experiment.query.filter_by(user_id=current_user.id)
+    mode_filter = request.args.get("mode")
+    if mode_filter:
+        q = q.filter_by(mode=mode_filter)
+    exps = q.order_by(Experiment.created_at.desc()).all()
+    return jsonify({"experiments": [e.to_dict() for e in exps]})
 
 
 @bp.route("/api/v2/experiments/<experiment_id>", methods=["GET", "PATCH"])

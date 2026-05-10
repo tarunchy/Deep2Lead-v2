@@ -96,11 +96,16 @@
     feed.innerHTML = _rounds.map(r => {
       const icon = r.status === "keep" ? "✅" : r.status === "discard" ? "↩️" : "❌";
       const cls = r.status === "keep" ? "kept" : r.status === "discard" ? "discard" : "failed";
-      const delta = r.improved ? `<span class="score-up">↑ ${(r.best_score * 100).toFixed(1)}%</span>` : `<span class="score-same">No improvement</span>`;
+      const delta = r.improved
+        ? `<span class="score-up">↑ ${(r.best_score * 100).toFixed(1)}%</span>`
+        : `<span class="score-same">No improvement</span>`;
+      const stratTag = r.strategy
+        ? `<span style="font-size:.68rem;padding:1px 6px;border-radius:10px;background:#30363d;color:#8b949e;margin-left:6px;">${r.strategy}</span>`
+        : "";
       return `<div class="round-card ${cls}">
         <div class="round-icon">${icon}</div>
         <div class="round-body">
-          <div class="round-title">Round ${r.round_num} — ${r.status.toUpperCase()}</div>
+          <div class="round-title">Round ${r.round_num}${stratTag} — ${r.status.toUpperCase()}</div>
           <div class="round-rationale">${r.rationale || ""}</div>
           <div class="round-score">${delta} · ${r.candidates_tried || 0} molecules tried</div>
         </div>

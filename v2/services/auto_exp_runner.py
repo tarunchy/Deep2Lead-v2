@@ -2,6 +2,10 @@
 Autonomous experiment loop — inspired by Karpathy's autoresearch.
 Pattern: Generate → Validate → Score → Keep/Discard → Repeat.
 Runs in a background thread; streams progress via a shared state dict.
+
+Modes:
+  evolve  — start from top candidate, optimize with chosen strategy
+  rescue  — 0 candidates in source experiment, cycles through all strategies
 """
 import threading
 import time
@@ -18,6 +22,8 @@ STRATEGY_PARAMS = {
     "novelty":      {"noise_level": 0.5, "tanimoto_min": 0.30, "novelty_weight": 0.40, "safety_weight": 0.10},
     "balanced":     {"noise_level": 0.4, "tanimoto_min": 0.40, "novelty_weight": 0.20, "safety_weight": 0.20},
 }
+
+RESCUE_CYCLE = ["conservative", "explorer", "novelty", "safety_first", "balanced"]
 
 # Global run state: run_id → RunState dict
 _runs: dict[str, dict] = {}
@@ -47,13 +53,15 @@ def start_auto_experiment(run_id: str, config: dict, app):
     """
     Kick off the loop in a daemon thread.
     config keys: seed_smiles, amino_acid_seq, rounds, molecules_per_round,
-                 strategy, target_info, structure_path, binding_site_center
+                 mode, strategy, target_info, structure_path, binding_site_center
     """
     with _lock:
         _runs[run_id] = {
             "run_id": run_id,
             "status": "starting",
             "phase": "init",
+            "mode": config.get("mode", "evolve"),
+            "target_info": config.get("target_info", {}),
             "logs": [],
             "rounds": [],
             "best_score": None,
@@ -105,8 +113,8 @@ def _loop(run_id: str, config: dict, app):
     import uuid
 
     with app.app_context():
+        mode = config.get("mode", "evolve")
         strategy = config.get("strategy", "balanced")
-        params = STRATEGY_PARAMS.get(strategy, STRATEGY_PARAMS["balanced"])
         rounds = config.get("rounds", 3)
         mol_per_round = config.get("molecules_per_round", 5)
         seed_smiles = config["seed_smiles"]
@@ -116,8 +124,12 @@ def _loop(run_id: str, config: dict, app):
         exp_id = config.get("experiment_id")
         use_docking = is_docking_available() and bool(structure_path)
 
-        _append_log(run_id, f"Auto Experiment started. Strategy: {strategy}, Rounds: {rounds}, Molecules/round: {mol_per_round}")
-        _append_log(run_id, f"Docking: {'enabled' if use_docking else 'disabled (scoring in 2D mode)'}")
+        mode_label = "Evolve" if mode == "evolve" else "Rescue"
+        if mode == "rescue":
+            _append_log(run_id, f"RESCUE mode: cycling through {len(RESCUE_CYCLE)} strategies to find valid molecules")
+        else:
+            _append_log(run_id, f"EVOLVE mode: improving top candidate with {strategy} strategy")
+        _append_log(run_id, f"Rounds: {rounds}, Molecules/round: {mol_per_round}, Docking: {'enabled' if use_docking else 'disabled'}")
         _set_state(run_id, {"status": "running", "phase": "baseline"})
 
         # Establish baseline
@@ -131,11 +143,20 @@ def _loop(run_id: str, config: dict, app):
                 _append_log(run_id, "Loop stopped by user.")
                 break
 
+            # In rescue mode, cycle through strategies per round
+            if mode == "rescue":
+                round_strategy = RESCUE_CYCLE[(round_num - 1) % len(RESCUE_CYCLE)]
+                params = STRATEGY_PARAMS[round_strategy]
+            else:
+                round_strategy = strategy
+                params = STRATEGY_PARAMS.get(strategy, STRATEGY_PARAMS["balanced"])
+
             _set_state(run_id, {"phase": f"round-{round_num}"})
-            _append_log(run_id, f"Round {round_num}/{rounds}: generating {mol_per_round} candidates from current best...")
+            _append_log(run_id, f"Round {round_num}/{rounds} [{round_strategy}]: generating {mol_per_round} candidates...")
 
             round_record = {
                 "round_num": round_num,
+                "strategy": round_strategy,
                 "seed_smiles": best_smiles,
                 "status": "running",
                 "best_score": None,

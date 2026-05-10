@@ -7,54 +7,75 @@
 {% block content %}
 
 <div class="page-header" style="margin-bottom:20px;">
-  <h1 style="font-size:1.6rem;font-weight:700;">🔁 Auto Experiment</h1>
-  <p style="color:#8b949e;margin-top:4px;">Let the AI iterate autonomously — generate, score, keep the best, repeat. Inspired by <a href="https://github.com/karpathy/autoresearch" target="_blank" style="color:#58a6ff;">Karpathy's autoresearch</a>.</p>
+  <h1 style="font-size:1.6rem;font-weight:700;">Auto Experiment</h1>
+  <p style="color:#8b949e;margin-top:4px;">Pick a previous 3D experiment and let the AI iterate autonomously. <strong>Evolve</strong> improves an existing top candidate. <strong>Rescue</strong> retries a failed experiment across multiple strategies.</p>
 </div>
 
 <div class="auto-exp-layout">
-  <!-- Config panel -->
+  <!-- Left: Config panel -->
   <div>
-    <div class="auto-exp-config">
-      <h3 style="font-size:.95rem;margin-bottom:14px;">⚙️ Configuration</h3>
 
+    <!-- Step 1: Experiment selector -->
+    <div class="auto-exp-config">
+      <h3 style="font-size:.92rem;font-weight:600;margin-bottom:14px;color:#e6edf3;">Step 1 — Choose a 3D Experiment</h3>
       <div class="form-group">
-        <label>Experiment to run</label>
-        <select id="expSelect" class="form-control">
-          <option value="">Loading experiments…</option>
+        <label>Your 3D experiments</label>
+        <select id="expSelect" class="form-control" onchange="onExpChange(this.value)">
+          <option value="">Loading…</option>
         </select>
       </div>
 
-      <div class="form-group">
-        <label>Strategy</label>
-        <div class="strategy-grid">
-          <div class="strategy-btn selected" data-strategy="balanced" onclick="selectStrategy(this)">
-            <div class="sb-icon">⚖️</div>
-            <div class="sb-name">Balanced</div>
-            <div class="sb-desc">Equal weights across all objectives</div>
-          </div>
-          <div class="strategy-btn" data-strategy="conservative" onclick="selectStrategy(this)">
-            <div class="sb-icon">🛡️</div>
-            <div class="sb-name">Conservative</div>
-            <div class="sb-desc">Stay close to seed molecule</div>
-          </div>
-          <div class="strategy-btn" data-strategy="explorer" onclick="selectStrategy(this)">
-            <div class="sb-icon">🔭</div>
-            <div class="sb-name">Explorer</div>
-            <div class="sb-desc">Try diverse chemical space</div>
-          </div>
-          <div class="strategy-btn" data-strategy="novelty" onclick="selectStrategy(this)">
-            <div class="sb-icon">✨</div>
-            <div class="sb-name">Novelty Hunter</div>
-            <div class="sb-desc">Prioritize unknown molecules</div>
-          </div>
-          <div class="strategy-btn" data-strategy="safety_first" onclick="selectStrategy(this)">
-            <div class="sb-icon">💊</div>
-            <div class="sb-name">Safety First</div>
-            <div class="sb-desc">Prioritize drug-likeness</div>
-          </div>
+      <!-- Target info card (hidden until experiment selected) -->
+      <div id="targetInfoCard" style="display:none;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 14px;margin-top:10px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <div id="modeBadge" style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.5px;"></div>
+          <span id="targetName" style="font-weight:600;font-size:.9rem;color:#e6edf3;"></span>
+        </div>
+        <div id="targetDisease" style="font-size:.78rem;color:#8b949e;margin-bottom:6px;"></div>
+        <div style="font-size:.75rem;color:#8b949e;">
+          Seed: <span id="seedSmiles" style="font-family:monospace;color:#79c0ff;word-break:break-all;"></span>
         </div>
       </div>
+    </div>
 
+    <!-- Step 2: Strategy (only shown in evolve mode) -->
+    <div class="auto-exp-config" id="strategyPanel" style="margin-top:12px;">
+      <h3 style="font-size:.92rem;font-weight:600;margin-bottom:10px;color:#e6edf3;">Step 2 — Optimization Strategy</h3>
+      <p id="rescueModeNote" style="display:none;font-size:.8rem;color:#8b949e;line-height:1.5;background:#0d1117;border-radius:6px;padding:10px 12px;border:1px solid #30363d;">
+        Rescue mode auto-cycles through all 5 strategies (Conservative → Explorer → Novelty → Safety First → Balanced) one per round. No manual selection needed.
+      </p>
+      <div class="strategy-grid" id="strategyGrid">
+        <div class="strategy-btn selected" data-strategy="balanced" onclick="selectStrategy(this)">
+          <div class="sb-icon">⚖️</div>
+          <div class="sb-name">Balanced</div>
+          <div class="sb-desc">Equal weights</div>
+        </div>
+        <div class="strategy-btn" data-strategy="conservative" onclick="selectStrategy(this)">
+          <div class="sb-icon">🛡️</div>
+          <div class="sb-name">Conservative</div>
+          <div class="sb-desc">Close to seed</div>
+        </div>
+        <div class="strategy-btn" data-strategy="explorer" onclick="selectStrategy(this)">
+          <div class="sb-icon">🔭</div>
+          <div class="sb-name">Explorer</div>
+          <div class="sb-desc">Diverse space</div>
+        </div>
+        <div class="strategy-btn" data-strategy="novelty" onclick="selectStrategy(this)">
+          <div class="sb-icon">✨</div>
+          <div class="sb-name">Novelty</div>
+          <div class="sb-desc">Unknown mols</div>
+        </div>
+        <div class="strategy-btn" data-strategy="safety_first" onclick="selectStrategy(this)">
+          <div class="sb-icon">💊</div>
+          <div class="sb-name">Safety First</div>
+          <div class="sb-desc">Drug-likeness</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Rounds config -->
+    <div class="auto-exp-config" style="margin-top:12px;">
+      <h3 style="font-size:.92rem;font-weight:600;margin-bottom:10px;color:#e6edf3;">Step 3 — Run Settings</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="form-group">
           <label>Rounds (max 5)</label>
@@ -65,7 +86,6 @@
           <input type="number" id="molsPerRound" class="form-control" value="5" min="1" max="10">
         </div>
       </div>
-
       <div style="display:flex;gap:8px;margin-top:4px;">
         <button id="startAutoBtn" class="btn btn-primary" style="flex:1;" onclick="startAutoExp()">
           ▶ Start Loop
@@ -78,15 +98,15 @@
     </div>
 
     <!-- Best molecule box -->
-    <div class="best-mol-box" id="bestMolBox" style="display:none;">
+    <div class="best-mol-box" id="bestMolBox" style="display:none;margin-top:12px;">
       <div style="font-size:.8rem;color:#8b949e;margin-bottom:4px;">Best molecule found</div>
       <div class="best-mol-score" id="bestMolScore">—</div>
       <div style="font-family:monospace;font-size:.75rem;word-break:break-all;color:#8b949e;margin-top:6px;" id="bestMolSmiles"></div>
     </div>
 
     <!-- Boss bar -->
-    <div class="boss-card" style="margin-top:16px;" id="bossCard" style="display:none;">
-      <div class="boss-name" id="bossName">🎯 Target</div>
+    <div class="boss-card" id="bossCard" style="display:none;margin-top:12px;">
+      <div class="boss-name" id="bossName">Target</div>
       <div class="boss-category" id="bossCategory"></div>
       <div class="boss-bar-bg">
         <div class="boss-bar-fill" id="bossBarFill" style="width:100%;"></div>
@@ -96,18 +116,19 @@
         <span id="bossHpLabel">Simulation Health: 100%</span>
       </div>
       <div class="boss-disclaimer">
-        This is a computer simulation score — not a real-world result. A lower health means a better computational binding score.
+        Simulation score only — not a real-world result.
       </div>
     </div>
   </div>
 
-  <!-- Monitor panel -->
+  <!-- Right: Monitor panel -->
   <div>
     <div class="auto-exp-monitor">
       <div class="monitor-header">
         <div class="monitor-status">
           <div class="status-dot idle" id="statusDot"></div>
           <span id="statusText">Idle</span>
+          <span id="modeLabel" style="font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:8px;display:none;"></span>
         </div>
         <div style="font-size:.8rem;color:#8b949e;">
           Rounds: <strong id="roundsCompletedLabel">0</strong> &nbsp;|&nbsp; Best: <strong id="bestScoreLabel">—</strong>
@@ -122,9 +143,9 @@
         </div>
       </div>
 
-      <!-- Round cards -->
-      <div style="padding:12px 18px;border-bottom:1px solid #30363d;">
-        <div style="font-size:.82rem;color:#8b949e;margin-bottom:8px;">Round history</div>
+      <!-- Round history -->
+      <div style="padding:10px 18px;border-bottom:1px solid #30363d;">
+        <div style="font-size:.82rem;color:#8b949e;">Round history</div>
       </div>
       <div class="round-feed" id="roundFeed">
         <div style="color:#555;font-size:.83rem;padding:16px 0;text-align:center;">
@@ -134,14 +155,14 @@
 
       <!-- Log console -->
       <div class="log-console" id="logConsole">
-        <div class="log-line">Ready. Configure settings and press Start Loop.</div>
+        <div class="log-line">Ready. Select an experiment and press Start Loop.</div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="disclaimer-box" style="margin-top:24px;">
-  <strong>⚠️ Auto Experiment is a simulation loop.</strong> The "improvement" is based on a composite computational score — not real laboratory results. Every promising candidate must eventually be validated through real chemistry and biological experiments.
+  <strong>Auto Experiment is a simulation loop.</strong> The "improvement" is based on a composite computational score — not real laboratory results. Every promising candidate must be validated through real chemistry and biological experiments.
 </div>
 {% endblock %}
 
@@ -149,58 +170,88 @@
 <script src="{{ url_for('static', filename='js/auto_experiment.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
 <script>
-window.PAGE_GUIDE = {
-  title: "Auto Experiment Demo",
-  character: "🤖",
-  voice: "af_heart",
-  steps: [
-    {
-      bubble: "Auto Experiment runs an AI loop: generate molecules → score → keep the best → repeat. Like a robot scientist.",
-      text: "Welcome to Auto Experiment! This is your AI-powered molecule optimization loop. Just like a scientist runs multiple rounds of experiments, the AI here generates candidate drug molecules, scores them on drug-likeness and binding strength, keeps the best one as the new seed, and then repeats. It's inspired by Andrej Karpathy's autoresearch concept, adapted here for drug discovery.",
-      target: ".page-header", action: "none"
-    },
-    {
-      bubble: "Click this dropdown to select an experiment. It gives the AI a seed molecule — a starting structure to evolve from.",
-      text: "Start by clicking this dropdown to select one of your previous experiments. Each experiment contains a seed SMILES molecule, which is the chemical structure the AI will use as its starting point for optimization. Think of it as choosing which molecule to evolve. If you haven't run an experiment yet, go to Run Experiment first.",
-      target: "#expSelect", action: "click"
-    },
-    {
-      bubble: "Click a strategy card. Balanced works for most cases. Explorer tries diverse chemistry. Safety First focuses on drug-likeness.",
-      text: "Now click a strategy card to choose your optimization approach. Balanced weights all objectives equally. Conservative stays close to your starting molecule. Explorer tries structurally diverse molecules. Novelty Hunter prioritizes molecules not yet in chemical databases. Safety First focuses heavily on Lipinski drug-likeness rules for oral medicines.",
-      target: ".strategy-grid", action: "click"
-    },
-    {
-      bubble: "Set rounds to 3 and molecules per round to 5. Click the rounds input to change it.",
-      text: "Configure how many optimization rounds to run — up to 5 — and how many candidate molecules to generate each round. Each round the AI generates these molecules, scores them all, and picks the best one as the new seed. Start with 3 rounds and 5 molecules. More rounds means more optimization but takes longer.",
-      target: "#rounds", action: "click"
-    },
-    {
-      bubble: "Click Start Loop — and watch the score chart, round cards, and log update live as the AI iterates!",
-      text: "Now click Start Loop to begin! You'll see a live log showing exactly what the AI is doing. The score chart tracks improvement round by round. Each round card shows Keep — score improved — or Discard — no improvement found. The AI always keeps the best molecule found across all rounds, even if later rounds don't improve.",
-      target: "#startAutoBtn", action: "click"
-    },
-    {
-      bubble: "The Boss Health Bar fills down as your molecules improve. Lower health = better binding. This is a simulation!",
-      text: "Watch the Boss Health Bar! As your molecules get better composite scores, the boss health drops. One hundred percent health means no binding. Lower health means stronger predicted binding. The score trend chart on the right shows your improvement across rounds. Remember — this is an educational computer simulation. Real drug candidates require lab testing and clinical trials before they mean anything medically.",
-      target: "#bossCard", action: "none"
-    }
-  ]
-};
-</script>
-<script>
   let selectedStrategy = "balanced";
+  let _currentMode = "evolve";
+  let _experiments = [];
 
-  // Load user's experiments into dropdown
   document.addEventListener("DOMContentLoaded", async () => {
     const sel = document.getElementById("expSelect");
     try {
-      const res = await apiFetch("/api/v2/experiments");
-      const exps = res.experiments || [];
-      sel.innerHTML = exps.length
-        ? exps.map(e => `<option value="${e.id}">${e.title || "Untitled"} (${e.status})</option>`).join("")
-        : `<option value="">No experiments yet — run one first</option>`;
-    } catch (e) { sel.innerHTML = `<option value="">Error loading experiments</option>`; }
+      const res = await apiFetch("/api/v2/experiments?mode=3d");
+      _experiments = res.experiments || [];
+      if (_experiments.length) {
+        sel.innerHTML = '<option value="">— Select an experiment —</option>' +
+          _experiments.map(e => {
+            const label = e.title || "Untitled";
+            const hasCandidates = (e.num_valid_generated || 0) > 0;
+            const modeTag = hasCandidates ? "[Evolve]" : "[Rescue]";
+            return `<option value="${e.id}">${modeTag} ${label} (${e.status})</option>`;
+          }).join("");
+      } else {
+        sel.innerHTML = '<option value="">No 3D experiments yet — run one first on /run-3d</option>';
+      }
+    } catch (e) {
+      sel.innerHTML = '<option value="">Error loading experiments</option>';
+    }
   });
+
+  function onExpChange(expId) {
+    const card = document.getElementById("targetInfoCard");
+    const strategyPanel = document.getElementById("strategyPanel");
+    const rescueNote = document.getElementById("rescueModeNote");
+    const strategyGrid = document.getElementById("strategyGrid");
+
+    if (!expId) { card.style.display = "none"; return; }
+
+    const exp = _experiments.find(e => e.id === expId);
+    if (!exp) return;
+
+    const hasCandidates = (exp.num_valid_generated || 0) > 0;
+    _currentMode = hasCandidates ? "evolve" : "rescue";
+
+    // Mode badge
+    const badge = document.getElementById("modeBadge");
+    if (_currentMode === "evolve") {
+      badge.textContent = "EVOLVE";
+      badge.style.background = "#1f6feb33";
+      badge.style.color = "#58a6ff";
+      badge.style.border = "1px solid #1f6feb";
+    } else {
+      badge.textContent = "RESCUE";
+      badge.style.background = "#da3633 22";
+      badge.style.color = "#ff7b72";
+      badge.style.border = "1px solid #da363333";
+    }
+
+    // Target info
+    document.getElementById("targetName").textContent = exp.target_id
+      ? exp.target_id.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+      : (exp.title || "Custom experiment");
+    document.getElementById("targetDisease").textContent =
+      _currentMode === "evolve"
+        ? `Starting from top-scored candidate (${exp.num_valid_generated} molecules generated)`
+        : `Rescue: 0 candidates generated — will try all strategies`;
+    document.getElementById("seedSmiles").textContent = exp.seed_smile || "—";
+    card.style.display = "block";
+
+    // Strategy panel: show note in rescue, hide grid in rescue
+    if (_currentMode === "rescue") {
+      rescueNote.style.display = "block";
+      strategyGrid.style.display = "none";
+    } else {
+      rescueNote.style.display = "none";
+      strategyGrid.style.display = "grid";
+    }
+
+    // Boss card
+    const bossCard = document.getElementById("bossCard");
+    const bossName = document.getElementById("bossName");
+    const bossCategory = document.getElementById("bossCategory");
+    bossName.textContent = exp.target_id
+      ? exp.target_id.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+      : "Target Protein";
+    bossCategory.textContent = _currentMode === "evolve" ? "Evolve Mode — improving top candidate" : "Rescue Mode — finding first valid molecule";
+  }
 
   function selectStrategy(el) {
     document.querySelectorAll(".strategy-btn").forEach(b => b.classList.remove("selected"));
@@ -210,14 +261,28 @@ window.PAGE_GUIDE = {
 
   async function startAutoExp() {
     const expId = document.getElementById("expSelect").value;
-    if (!expId) { showAlert("Please select an experiment first.", "warning"); return; }
+    if (!expId) { showAlert("Please select a 3D experiment first.", "warning"); return; }
     const rounds = parseInt(document.getElementById("rounds").value);
     const mols = parseInt(document.getElementById("molsPerRound").value);
+
     document.getElementById("bestMolBox").style.display = "block";
     document.getElementById("bossCard").style.display = "block";
+
+    // Show mode label in monitor
+    const modeLabel = document.getElementById("modeLabel");
+    modeLabel.textContent = _currentMode === "evolve" ? "EVOLVE" : "RESCUE";
+    modeLabel.style.display = "inline-block";
+    if (_currentMode === "evolve") {
+      modeLabel.style.background = "#1f6feb33";
+      modeLabel.style.color = "#58a6ff";
+    } else {
+      modeLabel.style.background = "#da363322";
+      modeLabel.style.color = "#ff7b72";
+    }
+
     AutoExp.start({
       experiment_id: expId,
-      strategy: selectedStrategy,
+      strategy: _currentMode === "rescue" ? "auto" : selectedStrategy,
       rounds: rounds,
       molecules_per_round: mols,
     });

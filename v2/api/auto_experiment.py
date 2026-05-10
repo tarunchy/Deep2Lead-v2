@@ -24,16 +24,42 @@ def auto_exp_page():
 def start():
     data = request.get_json()
     experiment_id = data.get("experiment_id")
-    strategy = data.get("strategy", "balanced")
     rounds = min(int(data.get("rounds", 3)), AUTO_EXP_MAX_ROUNDS)
     molecules_per_round = min(int(data.get("molecules_per_round", 5)), AUTO_EXP_MAX_MOLECULES)
 
-    # Validate experiment belongs to user
     exp = Experiment.query.filter_by(id=experiment_id, user_id=current_user.id).first()
     if not exp:
         return jsonify({"error": "Experiment not found or not yours"}), 404
 
-    # Create DB run record
+    # Detect mode: evolve if top candidate exists, rescue if 0 candidates
+    top_candidate = exp.candidates.first()
+    if top_candidate:
+        mode = "evolve"
+        seed_smiles = top_candidate.smiles
+        strategy = data.get("strategy", "balanced")
+    else:
+        mode = "rescue"
+        seed_smiles = exp.seed_smile
+        strategy = "auto"  # runner will cycle through all strategies
+
+    # Get structure + target info
+    from services.structure_service import get_cached_pdb_path
+    from services.target_service import get_curated_target
+    structure_path = None
+    binding_center = [0, 0, 0]
+    target_info = {}
+    if exp.pdb_id:
+        structure_path = get_cached_pdb_path(exp.pdb_id)
+    if exp.target_id:
+        t = get_curated_target(exp.target_id)
+        if t:
+            binding_center = t.get("binding_site_center", [0, 0, 0])
+            target_info = {
+                "name": t.get("name", ""),
+                "disease": t.get("disease", ""),
+                "category": t.get("category", ""),
+            }
+
     run = AutoExperimentRun(
         experiment_id=exp.id,
         strategy=strategy,
@@ -45,33 +71,23 @@ def start():
     db.session.commit()
     run_id = str(run.id)
 
-    # Get structure path if this is a 3D experiment
-    from services.structure_service import get_cached_pdb_path
-    from services.target_service import get_curated_target
-    structure_path = None
-    binding_center = [0, 0, 0]
-    if exp.pdb_id:
-        structure_path = get_cached_pdb_path(exp.pdb_id)
-    if exp.target_id:
-        t = get_curated_target(exp.target_id)
-        if t:
-            binding_center = t.get("binding_site_center", [0, 0, 0])
-
     config = {
         "experiment_id": str(exp.id),
-        "seed_smiles": exp.seed_smile,
-        "amino_acid_seq": exp.amino_acid_seq,
+        "seed_smiles": seed_smiles,
+        "amino_acid_seq": exp.amino_acid_seq or "",
+        "mode": mode,
         "strategy": strategy,
         "rounds": rounds,
         "molecules_per_round": molecules_per_round,
         "structure_path": structure_path,
         "binding_site_center": binding_center,
+        "target_info": target_info,
     }
 
     from flask import current_app
     start_auto_experiment(run_id, config, current_app._get_current_object())
 
-    return jsonify({"run_id": run_id, "status": "running"})
+    return jsonify({"run_id": run_id, "status": "running", "mode": mode, "target_info": target_info})
 
 
 @bp.route("/api/v3/auto-experiment/<run_id>/stop", methods=["POST"])
