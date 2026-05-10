@@ -52,9 +52,13 @@
 
     <hr class="divider">
     <p class="section-title">Protein Sequence</p>
+    {% if experiment.amino_acid_seq %}
     <p class="text-sm" style="font-family:monospace;word-break:break-all;background:var(--bg);padding:8px;border-radius:4px;">
       {{ experiment.amino_acid_seq[:200] }}{% if experiment.amino_acid_seq|length > 200 %}…{% endif %}
     </p>
+    {% else %}
+    <p class="text-muted text-sm">No sequence provided.</p>
+    {% endif %}
   </div>
 
   <!-- Hypothesis -->
@@ -97,6 +101,53 @@
     {% endif %}
   </div>
 </div>
+
+<!-- Target context card -->
+{% if target_info or experiment.target_name or experiment.pdb_id %}
+<div class="card" style="margin-bottom:24px;">
+  <p class="section-title">🎯 Biological Target</p>
+  {% set t = target_info %}
+  <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+    <div style="flex:1;min-width:220px;">
+      <div style="font-size:1rem;font-weight:600;margin-bottom:4px;">
+        {{ t.name if t else experiment.target_name or "Unknown target" }}
+      </div>
+      {% if t %}
+      <div class="text-muted text-sm" style="margin-bottom:8px;">{{ t.disease }} · {{ t.organism }}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <span class="badge badge-draft" style="font-size:0.75rem;">{{ t.category }}</span>
+        <span class="badge badge-draft" style="font-size:0.75rem;">{{ t.difficulty }}</span>
+        {% for tag in t.tags[:3] %}<span class="badge badge-draft" style="font-size:0.75rem;">{{ tag }}</span>{% endfor %}
+      </div>
+      <p style="font-size:0.85rem;line-height:1.55;margin-bottom:10px;">{{ t.description }}</p>
+      {% if t.analogy %}
+      <p style="font-size:0.82rem;color:var(--text-muted);font-style:italic;border-left:3px solid var(--primary);padding-left:8px;">{{ t.analogy }}</p>
+      {% endif %}
+      {% endif %}
+    </div>
+    <div style="min-width:180px;">
+      <table style="font-size:0.83rem;width:100%;">
+        {% if experiment.pdb_id or (t and t.pdb_id) %}
+        <tr><td class="text-muted" style="padding:3px 0;width:80px;">PDB ID</td>
+            <td><code>{{ experiment.pdb_id or t.pdb_id }}</code></td></tr>
+        {% endif %}
+        {% if experiment.uniprot_id or (t and t.uniprot_id) %}
+        <tr><td class="text-muted" style="padding:3px 0;">UniProt</td>
+            <td><code>{{ experiment.uniprot_id or t.uniprot_id }}</code></td></tr>
+        {% endif %}
+        {% if t and t.known_drug %}
+        <tr><td class="text-muted" style="padding:3px 0;">Known Drug</td>
+            <td style="font-size:0.82rem;">{{ t.known_drug }}</td></tr>
+        {% endif %}
+        {% if t and t.key_residues %}
+        <tr><td class="text-muted" style="padding:3px 0;vertical-align:top;">Key Residues</td>
+            <td style="font-size:0.82rem;">{{ t.key_residues | join(", ") }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <!-- Candidates table -->
 <div class="card" style="margin-bottom:24px;">

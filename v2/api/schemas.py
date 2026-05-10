@@ -12,6 +12,7 @@ class GenerateSchema(Schema):
     target_id = fields.Str(load_default=None)
     pdb_id = fields.Str(load_default=None)
     target_name = fields.Str(load_default=None)
+    uniprot_id = fields.Str(load_default=None)
     mode = fields.Str(load_default="2d", validate=validate.OneOf(["2d", "3d"]))
 
 

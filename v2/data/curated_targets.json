@@ -9,16 +9,32 @@
     "uniprot_id": "P0DTD1",
     "pdb_id": "6LU7",
     "alphafold_available": true,
-    "binding_site_center": [-26.0, 12.0, 56.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      -26.0,
+      12.0,
+      56.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "CC1CC1NC(=O)C(F)(F)F",
     "known_drug": "Nirmatrelvir (Paxlovid)",
     "known_drug_smiles": "CC1(C2CC2NC(=O)C(F)(F)F)C(=O)N[C@@H](Cc2ccc(C#N)cc2)C1=O",
     "difficulty": "beginner",
     "description": "The main protease (Mpro) of SARS-CoV-2 is essential for the virus to copy itself inside your cells. Blocking this enzyme prevents the virus from making more copies. This is how Paxlovid works.",
     "analogy": "Think of this enzyme as a pair of scissors the virus uses to cut its proteins into the right shapes. If you block the scissors, the virus can't assemble itself.",
-    "key_residues": ["Cys145", "His41"],
-    "tags": ["antiviral", "protease", "beginner-friendly"]
+    "key_residues": [
+      "Cys145",
+      "His41"
+    ],
+    "tags": [
+      "antiviral",
+      "protease",
+      "beginner-friendly"
+    ],
+    "amino_acid_seq": "MESLVPGFNEKTHVQLSLPVLQVRDVLVRGFGDSVEEVLSEARQHLKDGTCGLVEVEKGVLPQLEQPYVFIKRSDARTAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNFCGPDGYPLECIKDLLARAGKASCTLSEQLDFIDTKRGVYCCREHEHEIAWYTERSEKSYELQTPFEIKLAKKFDTFNGECPNFVFPLNSIIKTIQPRVEKKKLDGFMGRI"
   },
   {
     "id": "influenza_na",
@@ -30,16 +46,33 @@
     "uniprot_id": "Q6DV55",
     "pdb_id": "2HU4",
     "alphafold_available": true,
-    "binding_site_center": [2.0, 30.0, 13.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      2.0,
+      30.0,
+      13.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "CCOC(=O)C1=CC(NC(C)=O)C(OC(CC)CC)CC1",
     "known_drug": "Oseltamivir (Tamiflu)",
     "known_drug_smiles": "CCOC(=O)[C@@H]1CC(=C[C@@H](O1)OC(CC)CC)NC(C)=O",
     "difficulty": "beginner",
     "description": "Neuraminidase is an enzyme on the surface of the influenza virus that helps newly made virus particles escape from infected cells. Blocking it traps the virus and stops it from spreading.",
     "analogy": "Neuraminidase acts like a door handle that lets the virus exit infected cells. Tamiflu blocks the door handle so the virus gets stuck.",
-    "key_residues": ["Arg118", "Arg292", "Tyr406"],
-    "tags": ["antiviral", "enzyme", "beginner-friendly"]
+    "key_residues": [
+      "Arg118",
+      "Arg292",
+      "Tyr406"
+    ],
+    "tags": [
+      "antiviral",
+      "enzyme",
+      "beginner-friendly"
+    ],
+    "amino_acid_seq": "MASSLKQGVSPKLRDVILVSKDIPEQLCDALFFYTSHNPKDYADAFAVRQKFDRNLQTGKQFKFETVCGLFLLKGVDKITPGVPAKVLKATSKLADLEDIFGVSPFARKYRELLKTACQWSLTVETLDARAQTLDEIFDSTEILWLQVAAKIQVSAMAMRRLVGEVTAKVMEALGSNLSVLFQIVKQQIARIFQKALAIFENVSELPQRIAALKMAFAKCAKSITVVVVERTLVVREFAGTCLASINGAVAKFFEELPNGFMGSKIFTTLAFFKEAAVKIVENIPNAPRGTRGFEVVGNA"
   },
   {
     "id": "hiv_protease",
@@ -51,16 +84,33 @@
     "uniprot_id": "P04585",
     "pdb_id": "1HSG",
     "alphafold_available": true,
-    "binding_site_center": [2.0, 5.0, -1.0],
-    "binding_site_size": [20, 20, 20],
+    "binding_site_center": [
+      2.0,
+      5.0,
+      -1.0
+    ],
+    "binding_site_size": [
+      20,
+      20,
+      20
+    ],
     "starter_smiles": "CC(C)CC1NC(=O)C(CC2=CC=CC=C2)NC(=O)C(CC(C)C)CC(O)C(CC3=CC=CC=C3)NC1=O",
     "known_drug": "Indinavir (Crixivan)",
     "known_drug_smiles": "CC(C)(C)NC(=O)[C@@H]1CN(Cc2cccnc2)CC[C@@H]1CC(O)C[C@@H](Cc2ccccc2)C(=O)NCC3=CC=CC=C3",
     "difficulty": "intermediate",
     "description": "HIV protease cuts large viral proteins into smaller functional pieces needed for the virus to mature. Without this enzyme, HIV produces non-infectious particles.",
     "analogy": "HIV protease is like a factory machine that cuts raw material into usable parts. Blocking it jams the factory, so the virus makes broken products.",
-    "key_residues": ["Asp25", "Asp125", "Gly27"],
-    "tags": ["antiviral", "protease", "classic-target"]
+    "key_residues": [
+      "Asp25",
+      "Asp125",
+      "Gly27"
+    ],
+    "tags": [
+      "antiviral",
+      "protease",
+      "classic-target"
+    ],
+    "amino_acid_seq": "MGARASVLSGGELDRWEKIRLRPGGKKKYKLKHIVWASRELERFAVNPGLLETSEGCRQILGQLQPSLQTGSEELRSLYNTVATLYCVHQRIEIKDTKEALDKIEEEQNKSKKKAQQAAADTGHSNQVSQNYPIVQNIQGQMVHQAISPRTLNAWVKVVEEKAFSPEVIPMFSALSEGATPQDLNTMLNTVGGHQAAMQMLKETINEEAAEWDRVHPVHAGPIAPGQMREPRGSDIAGTTSTLQEQIGWMTNNPPIPVGEIYKRWIILGLNKIVRMYSPTSILDIRQGPKEPFRDYVDRF"
   },
   {
     "id": "egfr_kinase",
@@ -72,16 +122,33 @@
     "uniprot_id": "P00533",
     "pdb_id": "1IEP",
     "alphafold_available": true,
-    "binding_site_center": [22.0, 36.0, 9.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      22.0,
+      36.0,
+      9.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
     "known_drug": "Imatinib (Gleevec)",
     "known_drug_smiles": "Cc1ccc(cc1Nc2nccc(n2)c3cccnc3)NC(=O)c4ccc(cc4)CN5CCN(CC5)C",
     "difficulty": "intermediate",
     "description": "EGFR is a protein on cell surfaces that tells cells to grow and divide. In some cancers, EGFR is permanently stuck in 'on' mode, causing uncontrolled growth. Drugs like Gleevec block the EGFR switch.",
     "analogy": "EGFR is like an accelerator pedal stuck to the floor, making cancer cells divide non-stop. Kinase inhibitors are like cutting the fuel line to slow the engine.",
-    "key_residues": ["Thr790", "Lys745", "Met793"],
-    "tags": ["cancer", "kinase", "targeted-therapy"]
+    "key_residues": [
+      "Thr790",
+      "Lys745",
+      "Met793"
+    ],
+    "tags": [
+      "cancer",
+      "kinase",
+      "targeted-therapy"
+    ],
+    "amino_acid_seq": "MRPSGTAGAALLALLAALCPASRALEEKKVCQGTSNKLTQLGTFEDHFLSLQRMFNNCEVVLGNLEITYVQRNYDLSFLKTIQEVAGYVLIALNTVERIPLENLQIIRGNMYYENSYALAVLSNYDANKTGLKELPMRNLQEILHGAVRFSNNPALCNVESIQWRDIVSSDFLSNMSMDFQNHLGSCQKCDPSCPNGSCWGAGEENCQKLTKIICAQQCSGRCRGKSPSDCCHNQCAAGCTGPRESDCLVCRKFRDEATCKDTCPPLMLYNPTTYQMDVNPEGKYSFGATCVKKCPRNYV"
   },
   {
     "id": "braf_v600e",
@@ -93,16 +160,33 @@
     "uniprot_id": "P15056",
     "pdb_id": "3OG7",
     "alphafold_available": true,
-    "binding_site_center": [3.0, 10.0, 19.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      3.0,
+      10.0,
+      19.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "CCOS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
     "known_drug": "Vemurafenib (Zelboraf)",
     "known_drug_smiles": "CCOS(=O)(=O)Nc1ccc(cc1)c2nc3ccc(OCC4CC4)cc3s2",
     "difficulty": "intermediate",
     "description": "BRAF V600E is a mutated form of a signaling protein that is found in about half of all melanoma skin cancers. The single mutation (V600E) locks the protein in 'always on' mode.",
     "analogy": "Imagine a light switch fused in the ON position due to a tiny mutation. Vemurafenib is designed specifically to fit into the mutated switch and turn it off.",
-    "key_residues": ["Val600", "Lys483", "Asp594"],
-    "tags": ["cancer", "kinase", "mutation-driven"]
+    "key_residues": [
+      "Val600",
+      "Lys483",
+      "Asp594"
+    ],
+    "tags": [
+      "cancer",
+      "kinase",
+      "mutation-driven"
+    ],
+    "amino_acid_seq": "MAALSGGGGGGAEPGQALFNGDMEPEAGAGAGAAASSAADPAIPEEVWNIKQMIKLTQEHIEALLDKFGGEHNPPSIYLEAYEEYTSKLDALQQREQQLLESLGNGTDFSVSSSASMDTVTSSSSSSLSVLPSSLSVFQNPTDVARSNPKSPQKPIVRVFLPNKQRTVVPARCGVTVRDSLKKALMMRGLIPECCAVYRIQDGEKKPIGWDTDISWLTGEELHVEVLENVPLTTHNFVRKTFFTLAFCDFCRKLLFQGFRCQTCGYKFHQRCSTEVPLMCVNYDQLDLLFVSKFFEHHPI"
   },
   {
     "id": "cdk2",
@@ -114,16 +198,33 @@
     "uniprot_id": "P24941",
     "pdb_id": "1HCL",
     "alphafold_available": true,
-    "binding_site_center": [22.0, 35.0, 52.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      22.0,
+      35.0,
+      52.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "c1ccc2[nH]c(c(c2c1)C#N)C3=CC(=O)c4ccccc4C3=O",
     "known_drug": "Palbociclib (Ibrance)",
     "known_drug_smiles": "Cc1cnc2n(c1=O)N=C(c1cc(N3CCCC3)nc(N)n1)C(=O)N2c1ccccc1F",
     "difficulty": "advanced",
     "description": "CDK2 is a protein that controls when cells divide. In many cancers, CDK2 is over-active, pushing cells to divide too fast. CDK inhibitors slow down this division cycle.",
     "analogy": "CDK2 is like a traffic light stuck on green for cell division. Inhibitors act as a temporary red light to restore normal traffic flow.",
-    "key_residues": ["Lys33", "Asp145", "Glu51"],
-    "tags": ["cancer", "kinase", "cell-cycle"]
+    "key_residues": [
+      "Lys33",
+      "Asp145",
+      "Glu51"
+    ],
+    "tags": [
+      "cancer",
+      "kinase",
+      "cell-cycle"
+    ],
+    "amino_acid_seq": "MENFQKVEKIGEGTYGVVYKARNKLTGEVVALKKIRLDTETEGVPSTAIREISLLKELNHPNIVKLLDVIHTENKLYLVFEFLHQDLKKFMDASALTGIPLPLIKSYLFQLLQGLAFCHSHRVLHRDLKPQNLLINTEGAIKLADFGLARAFGVPVRTYTHEVVTLWYRAPEILLGCKYYSTAVDIWSLGCIFAEMVTRRALFPGDSEIDQLFRIFRTLGTPDEVVWPGVTSMPDYKPSFPKWARQDFSKVVPPLDEDGRSLLSQMLHYDPNKRISAKAALAHPFFQDVTKPVPHLRL"
   },
   {
     "id": "sirt1",
@@ -135,16 +236,33 @@
     "uniprot_id": "Q96EB6",
     "pdb_id": "4ZZJ",
     "alphafold_available": true,
-    "binding_site_center": [11.0, 42.0, 28.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      11.0,
+      42.0,
+      28.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "OC1=CC2=CC(=CC(=C2C(=C1)O)O)C=CC3=CC(=C(C=C3)O)O",
     "known_drug": "Resveratrol (experimental activator)",
     "known_drug_smiles": "OC1=CC2=CC(=CC(=C2C(=C1)O)O)C=CC3=CC(=C(C=C3)O)O",
     "difficulty": "intermediate",
     "description": "SIRT1 is a protein associated with longevity that helps cells survive stress and regulates metabolism. Activating SIRT1 may slow some aging processes. Resveratrol (found in red wine) is thought to activate it.",
     "analogy": "SIRT1 is like a cell maintenance crew supervisor. When it's active, the crew fixes damage and keeps the cell healthy. Activating it is like calling in extra maintenance staff.",
-    "key_residues": ["His363", "Asn346", "Ile347"],
-    "tags": ["aging", "longevity", "deacetylase"]
+    "key_residues": [
+      "His363",
+      "Asn346",
+      "Ile347"
+    ],
+    "tags": [
+      "aging",
+      "longevity",
+      "deacetylase"
+    ],
+    "amino_acid_seq": "MADEAALALQPGGSPSAAGADREAASSPAGEPLRKRPRRDGPGLERSPGEPGGAAPEREVPAAARGCPGAAAAALWREAEAEAAAAGGEQEAQATAAAGEGDNGPGLQGPSREPPLADNLYDEDDDDEGEEEEEAAAAAIGYRDNLLFGDEIITNGFHSCESDEEDRASHASSSDWTPRPRIGPYTFVQQHLMIGTDPRTILKDLLPETIPPPELDDMTLWQIVINILSEPPKRKKRKDINTIEDAVKLLQECKKIIVLTGAGVSVSCGIPDFRSRDGIYARLAVDFPDLPDPQAMFDIE"
   },
   {
     "id": "nlrp3",
@@ -156,16 +274,32 @@
     "uniprot_id": "Q8WXV8",
     "pdb_id": "6NPY",
     "alphafold_available": true,
-    "binding_site_center": [-22.0, -18.0, 35.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      -22.0,
+      -18.0,
+      35.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "CS(=O)(=O)NC1=CC(=CC(=C1)Cl)C2=C(N3CCOCC3)C=NC=C2",
     "known_drug": "MCC950 (investigational)",
     "known_drug_smiles": "CS(=O)(=O)NC1=CC(=CC(=C1)Cl)C2=C(N3CCOCC3)C=NC=C2",
     "difficulty": "advanced",
     "description": "NLRP3 is a sensor protein that triggers inflammation. Chronic NLRP3 activation is linked to diseases like Alzheimer's, type 2 diabetes, and atherosclerosis. Blocking it could reduce chronic inflammation.",
     "analogy": "NLRP3 is like a fire alarm that keeps going off even when there's no real fire, causing ongoing inflammation damage. Inhibitors are like disabling the false-alarm trigger.",
-    "key_residues": ["Arg578", "Asp311"],
-    "tags": ["inflammation", "aging", "neurodegeneration"]
+    "key_residues": [
+      "Arg578",
+      "Asp311"
+    ],
+    "tags": [
+      "inflammation",
+      "aging",
+      "neurodegeneration"
+    ],
+    "amino_acid_seq": "MAHYITFLCMVLVLLLQNSVLAEDGEVRSSCRTAPTDLVFILDGSYSVGPENFEIVKKWLVNITKNFDIGPKFIQVGVVQYSDYPVLEIPLGSYDSGEHLTAAVESILYLGGNTKTGKAIQFALDYLFAKSSRFLTKIAVVLTDGKSQDDVKDAAQAARDSKITLFAIGVGSETEDAELRAIANKPSSTYVFYVEDYIAISKIREVMKQKLCEESVCPTRIPVAARDERGFDILLGLDVNKKVKKRIQLSPKKIKGYEVTSKVDLSELTSNVFPEGLPPSYVFVSTQRFKVKKIWDLWRI"
   },
   {
     "id": "cox2",
@@ -177,16 +311,34 @@
     "uniprot_id": "P35354",
     "pdb_id": "3LN1",
     "alphafold_available": true,
-    "binding_site_center": [27.0, 42.0, 15.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      27.0,
+      42.0,
+      15.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "Cc1ccc(-c2cc(C(F)(F)F)nn2-c2ccc(S(N)(=O)=O)cc2)cc1",
     "known_drug": "Celecoxib (Celebrex)",
     "known_drug_smiles": "Cc1ccc(-c2cc(C(F)(F)F)nn2-c2ccc(S(N)(=O)=O)cc2)cc1",
     "difficulty": "beginner",
     "description": "COX-2 is an enzyme that produces prostaglandins, which cause pain and inflammation. Anti-inflammatory drugs like ibuprofen and celecoxib work by blocking COX-2.",
     "analogy": "COX-2 is like a factory making pain signals. NSAIDs block the factory entrance so fewer pain signals are produced.",
-    "key_residues": ["Arg120", "Tyr355", "Val523"],
-    "tags": ["inflammation", "pain", "nsaid-target", "beginner-friendly"]
+    "key_residues": [
+      "Arg120",
+      "Tyr355",
+      "Val523"
+    ],
+    "tags": [
+      "inflammation",
+      "pain",
+      "nsaid-target",
+      "beginner-friendly"
+    ],
+    "amino_acid_seq": "MLARALLLCAVLALSHTANPCCSHPCQNRGVCMSVGFDQYKCDCTRTGFYGENCSTPEFLTRIKLFLKPTPNTVHYILTHFKGFWNVVNNIPFLRNAIMSYVLTSRSHLIDSPPTYNADYGYKSWEAFSNLSYYTRALPPVPDDCPTPLGVKGKKQLPDSNEIVEKLLLRRKFIPDPQGSNMMFAFFAQHFTHQFFKTDHKRGPAFTNGLGHGVDLNHIYGETLARQRKLRLFKDGKMKYQIIDGEMYPPTVKDTQAEMIYPPQVPEHLRFAVGQEVFGLVPGLMMYATIWLREHNRVCD"
   },
   {
     "id": "ace2",
@@ -198,16 +350,33 @@
     "uniprot_id": "Q9BYF1",
     "pdb_id": "1R42",
     "alphafold_available": true,
-    "binding_site_center": [10.0, 45.0, 30.0],
-    "binding_site_size": [25, 25, 25],
+    "binding_site_center": [
+      10.0,
+      45.0,
+      30.0
+    ],
+    "binding_site_size": [
+      25,
+      25,
+      25
+    ],
     "starter_smiles": "CCCC1=NN(C(=O)c2ccccc21)c3ccc(cc3)N4CCN(CC4)CC5=CC=C(O5)c6ccccc6",
     "known_drug": "ACE inhibitors (losartan - related)",
     "known_drug_smiles": "CCCC1=NC(=C(N1CC2=CC=C(C=C2)C3=CC=CC=C3C4=NN=NN4C)C(=O)O)Cl",
     "difficulty": "intermediate",
     "description": "ACE2 is a human protein on cell surfaces that SARS-CoV-2 uses as its entry point. The virus spike protein binds to ACE2 like a key in a lock, allowing it to enter cells.",
     "analogy": "ACE2 is the door that SARS-CoV-2 uses to enter human cells. Blocking this door (or blocking the viral key) could prevent infection.",
-    "key_residues": ["Lys31", "Tyr41", "Lys353"],
-    "tags": ["antiviral", "receptor", "covid"]
+    "key_residues": [
+      "Lys31",
+      "Tyr41",
+      "Lys353"
+    ],
+    "tags": [
+      "antiviral",
+      "receptor",
+      "covid"
+    ],
+    "amino_acid_seq": "MSSSSWLLLSLVAVTAAQSTIEEQAKTFLDKFNHEAEDLFYQSSLASWNYNTNITEENVQNMNNAGDKWSAFLKEQSTLAQMYPLQEIQNLTVKLQLQALQQNGSSVLSEDKSKRLNTILNTMSTIYSTGKVCNPDNPQECLLLEPGLNEIMANSLDYNERLWAWESWRSEVGKQLRPLYEEYVVLKNEMARANHYEDYGDYWRGDYEVNGVDGYDYSRGQLIEDVEHTFEEIKPLYEHLHAYVRAKLMNAYPSYISPIGCLPAHLLGDMWGRFWTNLYSLTVPFGQKPNIDVTDAMVDQ"
   },
   {
     "id": "dhfr",
@@ -219,16 +388,34 @@
     "uniprot_id": "P00374",
     "pdb_id": "1DRF",
     "alphafold_available": true,
-    "binding_site_center": [3.0, 12.0, 8.0],
-    "binding_site_size": [20, 20, 20],
+    "binding_site_center": [
+      3.0,
+      12.0,
+      8.0
+    ],
+    "binding_site_size": [
+      20,
+      20,
+      20
+    ],
     "starter_smiles": "CN(CC1=CN=C2N=C(N)N=CC2=N1)c3ccc(cc3)C(=O)N[C@@H](CCC(=O)O)C(=O)O",
     "known_drug": "Methotrexate (chemotherapy)",
     "known_drug_smiles": "CN(CC1=CN=C2N=C(N)N=CC2=N1)c3ccc(cc3)C(=O)N[C@@H](CCC(=O)O)C(=O)O",
     "difficulty": "intermediate",
     "description": "DHFR is an enzyme essential for cells to make DNA building blocks (folate metabolism). Cancer cells need a lot of DHFR because they divide rapidly. Methotrexate blocks DHFR to starve cancer cells.",
     "analogy": "DHFR is like a vitamin-processing machine that cells need to make DNA. Blocking it starves fast-dividing cancer cells of the building blocks they need.",
-    "key_residues": ["Asp27", "Leu22", "Phe31"],
-    "tags": ["cancer", "antibiotic", "folate", "classic-target"]
+    "key_residues": [
+      "Asp27",
+      "Leu22",
+      "Phe31"
+    ],
+    "tags": [
+      "cancer",
+      "antibiotic",
+      "folate",
+      "classic-target"
+    ],
+    "amino_acid_seq": "MVGSLNCIVAVSQNMGIGKNGDLPWPPLRNEFRYFQRMTTTSSVEGKQNLVIMGKKTWFSIPEKNRPLKGRINLVLSRELKEPPQGAHFLSRSLDDALKLTEQPELANKVDMVWIVGGSSVYKEAMNHPGHLKLFVTRIMQDFESDTFFPEIDLEKYKLLPEYPGVLSDVQEEKGIKYKFEVYEKND"
   },
   {
     "id": "ache",
@@ -240,16 +427,33 @@
     "uniprot_id": "P22303",
     "pdb_id": "1EVE",
     "alphafold_available": true,
-    "binding_site_center": [4.0, -14.0, -3.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      4.0,
+      -14.0,
+      -3.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "O=C(Oc1ccccc1OCC)N2CCC(CC2)Cc3ccc4ccccc4n3",
     "known_drug": "Donepezil (Aricept)",
     "known_drug_smiles": "COc1ccc2c(c1OC)CC(CC2=O)CC3CCN(CC3)Cc4ccccc4",
     "difficulty": "beginner",
     "description": "AChE breaks down acetylcholine, a neurotransmitter important for memory and learning. In Alzheimer's disease, there is less acetylcholine. Blocking AChE lets acetylcholine last longer in the brain.",
     "analogy": "AChE is like a janitor that sweeps away memory-signal molecules too quickly. Donepezil slows down the janitor so the memory signals last longer.",
-    "key_residues": ["Ser203", "His447", "Glu334"],
-    "tags": ["neurological", "alzheimers", "beginner-friendly"]
+    "key_residues": [
+      "Ser203",
+      "His447",
+      "Glu334"
+    ],
+    "tags": [
+      "neurological",
+      "alzheimers",
+      "beginner-friendly"
+    ],
+    "amino_acid_seq": "MRPPQCLLHTPSLASPLLLLLLWLLGGGVGAEGREDAELLVTVRGGRLRGIRLKTPGGPVSAFLGIPFAEPPMGPRRFLPPEPKQPWSGVVDATTFQSVCYQYVDTLYPGFEGTEMWNPNRELSEDCLYLNVWTPYPRPTSPTPVLVWIYGGGFYSGASSLDVYDGRFLVQAERTVLVSMNYRVGAFGFLALPGSREAPGNVGLLDQRLALQWVQENVAAFGGDPTSVTLFGESAGAASVGMHLLSPPSRGLFHRAVLQSGAPNGPWATVGMGEARRRATQLAHLVGCPPGGTGGNDTEL"
   },
   {
     "id": "bace1",
@@ -261,16 +465,34 @@
     "uniprot_id": "P56817",
     "pdb_id": "2OHM",
     "alphafold_available": true,
-    "binding_site_center": [-8.0, 4.0, 16.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      -8.0,
+      4.0,
+      16.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "CC(C)(C)OC(=O)NC1CC(O)C(NC(=O)c2cc(F)ccc2F)Cc3ccccc13",
     "known_drug": "Verubecestat (clinical trial, withdrawn)",
     "known_drug_smiles": "CC(C)(C)OC(=O)N[C@@H]1C[C@H](O)[C@@H](Cc2ccccc21)NC(=O)c2cc(F)ccc2F",
     "difficulty": "advanced",
     "description": "BACE1 is an enzyme that cuts a protein called APP to produce amyloid-beta, the sticky protein that forms plaques in Alzheimer's brains. Blocking BACE1 reduces amyloid production.",
     "analogy": "BACE1 is like a knife that creates sticky protein pieces that pile up as plaques in the brain. Inhibiting it reduces the production of these harmful pieces.",
-    "key_residues": ["Asp32", "Asp228", "Tyr71"],
-    "tags": ["neurological", "alzheimers", "protease", "advanced"]
+    "key_residues": [
+      "Asp32",
+      "Asp228",
+      "Tyr71"
+    ],
+    "tags": [
+      "neurological",
+      "alzheimers",
+      "protease",
+      "advanced"
+    ],
+    "amino_acid_seq": "MAQALPWLLLWMGAGVLPAHGTQHGIRLPLRSGLGGAPLGLRLPRETDEEPEEPGRRGSFVEMVDNLRGKSGQGYYVEMTVGSPPQTLNILVDTGSSNFAVGAAPHPFLHRYYQRQLSSTYRDLRKGVYVPYTQGKWEGELGTDLVSIPHGPNVTVRANIAAITESDKFFINGSNWEGILGLAYAEIARPDDSLEPFFDSLVKQTHVPNLFSLQLCGAGFPLNQSEVLASVGGSMIIGGIDHSLYTGSLWYTPIRREWYYEVIIVRVEINGQDLKMDCKEYNYDKSIVDSGTTNLRLPKK"
   },
   {
     "id": "dna_gyrase",
@@ -282,16 +504,33 @@
     "uniprot_id": "P0AES4",
     "pdb_id": "1KZN",
     "alphafold_available": true,
-    "binding_site_center": [1.0, 2.0, -2.0],
-    "binding_site_size": [20, 20, 20],
+    "binding_site_center": [
+      1.0,
+      2.0,
+      -2.0
+    ],
+    "binding_site_size": [
+      20,
+      20,
+      20
+    ],
     "starter_smiles": "OC(=O)c1cn(C2CC2)c3cc(N4CCNCC4)c(F)cc3c1=O",
     "known_drug": "Ciprofloxacin (Cipro)",
     "known_drug_smiles": "OC(=O)c1cn(C2CC2)c3cc(N4CCNCC4)c(F)cc3c1=O",
     "difficulty": "intermediate",
     "description": "DNA Gyrase is an enzyme that bacteria need to uncoil their DNA during replication. Without it, bacteria cannot copy their DNA and die. Fluoroquinolone antibiotics (like Cipro) target this enzyme.",
     "analogy": "DNA gyrase is like a machine that unwinds a tightly coiled spring (the bacterial DNA). If you jam this machine, the bacteria cannot copy their genetic blueprint and die.",
-    "key_residues": ["Asp87", "Glu447", "Tyr122"],
-    "tags": ["antibiotic", "bacterial", "dna"]
+    "key_residues": [
+      "Asp87",
+      "Glu447",
+      "Tyr122"
+    ],
+    "tags": [
+      "antibiotic",
+      "bacterial",
+      "dna"
+    ],
+    "amino_acid_seq": "MSDLAREITPVNIEEELKSSYLDYAMSVIVGRALPDVRDGLKPVHRRVLYAMNVLGNDWNKAYKKSARVVGDVIGKYHPHGDSAVYDTIVRMAQPFSLRYMLVDGQGNFGSIDGDSAAAMRYTEIRLAKIAHELMADLEKETVDFVDNYDGTEKIPDVMPTKIPNLLVNGSSGIAVGMATNIPPHNLTEVINGCLAYIDDEDISIEGLMEHIPGPDFPTAAIINGRRGIEEAYRTGRGKVYIRARAEVEVDAKTGRETIIVHEIPYQVNKARLIEKIAELVKEKRVEGISALRDESDKDG"
   },
   {
     "id": "thrombin",
@@ -303,16 +542,33 @@
     "uniprot_id": "P00734",
     "pdb_id": "1PPB",
     "alphafold_available": true,
-    "binding_site_center": [15.0, 18.0, 5.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      15.0,
+      18.0,
+      5.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "OC(=O)CCCCCNC(=S)Nc1ccc(cc1)c2ccccc2",
     "known_drug": "Argatroban (anticoagulant)",
     "known_drug_smiles": "OC(=O)CCCCCNC(=S)Nc1ccc(cc1)c2ccccc2",
     "difficulty": "intermediate",
     "description": "Thrombin is a key enzyme in blood clotting. While clotting is important to stop bleeding, overactive thrombin can cause dangerous blood clots (thrombosis) that lead to stroke or heart attack.",
     "analogy": "Thrombin is like a foreman who calls workers to build a blood clot dam. In emergencies this is life-saving, but if the dam forms in the wrong place, it blocks blood flow.",
-    "key_residues": ["Ser195", "His57", "Asp189"],
-    "tags": ["cardiovascular", "anticoagulant", "serine-protease"]
+    "key_residues": [
+      "Ser195",
+      "His57",
+      "Asp189"
+    ],
+    "tags": [
+      "cardiovascular",
+      "anticoagulant",
+      "serine-protease"
+    ],
+    "amino_acid_seq": "MAHVRGLQLPGCLALAALCSLVHSQHVFLAPQQARSLLQRVRRANTFLEEVRKGNLERECVEETCSYEEAFEALESSTATDVFWAKYTACETARTPRDKLAACLEGNCAEGLGTNYRGHVNITRSGIECQLWRSRYPHKPEINSTTHPGADLQENFCRNPDSSTTGPWCYTTDPTVRRQECSIPVCGQDQVTVAMTPRSEGSSVNLSPPLEQCVPDRGQQYQGRLAVTTHGLPCLAWASAQAKALSKHQDFNSAVQLVENFCRNPDGDEEGVWCYVAGKPGDFGYCDLNYCEEAVEEETG"
   },
   {
     "id": "p53_mdm2",
@@ -324,16 +580,33 @@
     "uniprot_id": "P04637",
     "pdb_id": "1YCR",
     "alphafold_available": true,
-    "binding_site_center": [-11.0, 17.0, -7.0],
-    "binding_site_size": [20, 20, 20],
+    "binding_site_center": [
+      -11.0,
+      17.0,
+      -7.0
+    ],
+    "binding_site_size": [
+      20,
+      20,
+      20
+    ],
     "starter_smiles": "c1ccc(cc1)C2c3ccccc3NC(=O)N2c4ccccc4",
     "known_drug": "Nutlin-3 (MDM2 inhibitor)",
     "known_drug_smiles": "COc1ccc2c(c1)N(c1ccc(Cl)cc1Cl)C(=O)[C@@H]2c1ccc(Cl)cc1",
     "difficulty": "advanced",
-    "description": "p53 is the most important tumor-suppressor protein — it stops damaged cells from becoming cancer. MDM2 binds to p53 and inactivates it. Many cancers have too much MDM2. Disrupting this interaction re-activates p53.",
+    "description": "p53 is the most important tumor-suppressor protein \u2014 it stops damaged cells from becoming cancer. MDM2 binds to p53 and inactivates it. Many cancers have too much MDM2. Disrupting this interaction re-activates p53.",
     "analogy": "p53 is like a security guard that stops damaged cells. MDM2 is a corrupt supervisor who keeps sending the guard home. Nutlin-3 removes MDM2 so the security guard can do its job.",
-    "key_residues": ["Phe19", "Trp23", "Leu26"],
-    "tags": ["cancer", "protein-protein-interaction", "tumor-suppressor"]
+    "key_residues": [
+      "Phe19",
+      "Trp23",
+      "Leu26"
+    ],
+    "tags": [
+      "cancer",
+      "protein-protein-interaction",
+      "tumor-suppressor"
+    ],
+    "amino_acid_seq": "MEEPQSDPSVEPPLSQETFSDLWKLLPENNVLSPLPSQAMDDLMLSPDDIEQWFTEDPGPDEAPRMPEAAPPVAPAPAAPTPAAPAPAPSWPLSSSVPSQKTYQGSYGFRLGFLHSGTAKSVTCTYSPALNKMFCQLAKTCPVQLWVDSTPPPGTRVRAMAIYKQSQHMTEVVRRCPHHERCSDSDGLAPPQHLIRVEGNLRVEYLDDRNTFRHSVVVPYEPPEVGSDCTTIHYNYMCNSSCMGGMNRRPILTIITLEDSSGNLLGRNSFEVRVCACPGRDRRTEEENLRKKGEPHHELP"
   },
   {
     "id": "mtor",
@@ -345,16 +618,34 @@
     "uniprot_id": "P42345",
     "pdb_id": "4JSV",
     "alphafold_available": true,
-    "binding_site_center": [40.0, 20.0, 15.0],
-    "binding_site_size": [25, 25, 25],
+    "binding_site_center": [
+      40.0,
+      20.0,
+      15.0
+    ],
+    "binding_site_size": [
+      25,
+      25,
+      25
+    ],
     "starter_smiles": "CO[C@@H]1CC(=O)[C@H]2CC(=CC(=O)C3=CC=CC=C3)[C@@H](O2)C1",
     "known_drug": "Rapamycin (Sirolimus)",
     "known_drug_smiles": "CO[C@H]1CC(=O)[C@H](CC=CC=CC(=O)[C@@H](OC(=O)[C@@H]2CCCCN2C(=O)C=CC(CC(=O)[C@H](CC1)OC)O)C(C)CC3CCC(C(C3)OC)O)C",
     "difficulty": "advanced",
     "description": "mTOR is a master regulator of cell growth and metabolism. Over-activating mTOR drives cancer growth and accelerates aging. Rapamycin, which inhibits mTOR, extends lifespan in mice and is being studied for aging.",
-    "analogy": "mTOR is like the master throttle of a cell — it controls how fast the cell grows and consumes resources. Rapamycin dials back the throttle, telling cells to be more efficient.",
-    "key_residues": ["Asp2357", "Tyr2225", "Met2327"],
-    "tags": ["aging", "longevity", "cancer", "kinase"]
+    "analogy": "mTOR is like the master throttle of a cell \u2014 it controls how fast the cell grows and consumes resources. Rapamycin dials back the throttle, telling cells to be more efficient.",
+    "key_residues": [
+      "Asp2357",
+      "Tyr2225",
+      "Met2327"
+    ],
+    "tags": [
+      "aging",
+      "longevity",
+      "cancer",
+      "kinase"
+    ],
+    "amino_acid_seq": "MLGTGPAAATTAATTSSNVSVLQQFASGLKSRNEETRAKAAKELQHYVTMELREMSQEESTRFYDQLNHHIFELVSSSDANERKGGILAIASLIGVEGGNATRIGRFANYLRNLLPSNDPVVMEMASKAIGRLAMAGDTFTAEYVEFEVKRALEWLGADRNEGRRHAAVLVLRELAISVPTFFFQQVQPFFDNIFVAVWDPKQAIREGAVAALRACLILTTQREPKEMQKPQWYRHTFEEAEKGFDETLAKEKGMNRDDRIHGALLILNELVRISSMEGERLREEMEEITQQQLVHDKYC"
   },
   {
     "id": "vegfr2",
@@ -366,16 +657,33 @@
     "uniprot_id": "P35968",
     "pdb_id": "2OH4",
     "alphafold_available": true,
-    "binding_site_center": [12.0, 25.0, 48.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      12.0,
+      25.0,
+      48.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "CCCOC(=O)Nc1ccc(cc1)Oc2ccc(NC(=O)Nc3ccc(Cl)c(C(F)(F)F)c3)cc2",
     "known_drug": "Sorafenib (Nexavar)",
     "known_drug_smiles": "CCCOC(=O)Nc1ccc(cc1)Oc2ccc(NC(=O)Nc3ccc(Cl)c(C(F)(F)F)c3)cc2",
     "difficulty": "intermediate",
     "description": "VEGFR2 is a receptor that tells the body to grow new blood vessels (angiogenesis). Tumors hijack this signal to grow their own blood supply. Blocking VEGFR2 starves tumors of nutrients.",
     "analogy": "VEGFR2 is like a water line request form for tumors. By blocking the form processor, we prevent the tumor from getting its own water (blood) supply.",
-    "key_residues": ["Asp1046", "Cys919", "Lys868"],
-    "tags": ["cancer", "angiogenesis", "kinase"]
+    "key_residues": [
+      "Asp1046",
+      "Cys919",
+      "Lys868"
+    ],
+    "tags": [
+      "cancer",
+      "angiogenesis",
+      "kinase"
+    ],
+    "amino_acid_seq": "MQSKVLLAVALWLCVETRAASVGLPSVSLDLPRLSIQKDILTIKANTTLQITCRGQRDLDWLWPNNQSGSEQRVEVTECSDGLFCKTLTIPKVIGNDTGAYKCFYRETDLASVIYVYVQDYRSPFIASVSDQHGVVYITENKNKTVVIPCLGSISNLNVSLCARYPEKRFVPDGNRISWDSKKGFTIPSYMISYAGMVFCEAKINDESYQSIMYIVVVVGYRIYDVVLSPSHGIELSVGEKLVLNCTARTELNVGIDFNWEYPSSKHQHKKLVNRDLKTQSGSEMKKFLSTLTIDGVTRS"
   },
   {
     "id": "parp1",
@@ -387,16 +695,34 @@
     "uniprot_id": "P09874",
     "pdb_id": "7KK4",
     "alphafold_available": true,
-    "binding_site_center": [-5.0, 0.0, 12.0],
-    "binding_site_size": [20, 20, 20],
+    "binding_site_center": [
+      -5.0,
+      0.0,
+      12.0
+    ],
+    "binding_site_size": [
+      20,
+      20,
+      20
+    ],
     "starter_smiles": "O=C1NC2=CC=CC=C2N1CC3=CC=CC=C3",
     "known_drug": "Olaparib (Lynparza)",
     "known_drug_smiles": "O=C1CCc2cc3c(cc2N1)c(=O)[nH]n3-c1ccc(F)cc1",
     "difficulty": "advanced",
     "description": "PARP1 is an enzyme that repairs DNA breaks. Cancer cells with BRCA mutations depend on PARP1 to survive. Blocking PARP1 in BRCA-mutated cancer cells causes them to accumulate DNA damage and die.",
     "analogy": "PARP1 is like an emergency DNA repair crew. Cancer cells with BRCA mutations already have a broken primary repair crew. Blocking PARP1 removes the backup crew, leaving cancer cells unable to fix their DNA.",
-    "key_residues": ["Glu988", "Tyr907", "Asp766"],
-    "tags": ["cancer", "dna-repair", "brca", "synthetic-lethality"]
+    "key_residues": [
+      "Glu988",
+      "Tyr907",
+      "Asp766"
+    ],
+    "tags": [
+      "cancer",
+      "dna-repair",
+      "brca",
+      "synthetic-lethality"
+    ],
+    "amino_acid_seq": "MAESSDKLYRVEYAKSGRASCKKCSESIPKDSLRMAIMVQSPMFDGKVPHWYHFSCFWKVGHSIRHPDVEVDGFSELRWDDQQKVKKTAEAGGVTGKGQDGIGSKAEKTLGDFAAEYAKSNRSTCKGCMEKIEKGQVRLSKKMVDPEKPQLGMIDRWYHPGCFVKNREELGFRPEYSASQLKGFSLLATEDKEALKKQLPGVKSEGKRKGDEVDGVDEVAKKKSKKEKDKDSKLEKALKAQNDLIWNIKDELKKVCSTNDLKELLIFNKQQVPSGESAILDRVADGMVFGALLPCEECSG"
   },
   {
     "id": "jak2",
@@ -408,15 +734,33 @@
     "uniprot_id": "O60674",
     "pdb_id": "3KRR",
     "alphafold_available": true,
-    "binding_site_center": [18.0, 43.0, 11.0],
-    "binding_site_size": [22, 22, 22],
+    "binding_site_center": [
+      18.0,
+      43.0,
+      11.0
+    ],
+    "binding_site_size": [
+      22,
+      22,
+      22
+    ],
     "starter_smiles": "C[C@@H]1CCN(C[C@@H]1NC(=O)c2cnc(s2)Nc3nccs3)C(=O)CC#N",
     "known_drug": "Ruxolitinib (Jakafi)",
     "known_drug_smiles": "C[C@@H]1CCN(C[C@@H]1NC(=O)c2cnc(s2)Nc3nccs3)C(=O)CC#N",
     "difficulty": "advanced",
     "description": "JAK2 is a signaling protein that controls the production of blood cells. A common mutation (V617F) keeps JAK2 permanently active, causing uncontrolled blood cell production in blood cancers.",
     "analogy": "JAK2 is like a production counter stuck in overdrive. The V617F mutation breaks the 'off' switch, making the body produce too many blood cells.",
-    "key_residues": ["Gly935", "Val617", "Asp994"],
-    "tags": ["cancer", "blood-cancer", "kinase", "mutation-driven"]
+    "key_residues": [
+      "Gly935",
+      "Val617",
+      "Asp994"
+    ],
+    "tags": [
+      "cancer",
+      "blood-cancer",
+      "kinase",
+      "mutation-driven"
+    ],
+    "amino_acid_seq": "MGMACLTMTEMEGTSTSSIYQNGDISGNANSMKQIDPVLQVYLYHSLGKSEADYLTFPSGEYVAEEICIAASKACGITPVYHNMFALMSETERIWYPPNHVFHIDESTRHNVLYRIRFYFPRWYCSGSNRAYRHGISRGAEAPLLDDFVMSYLFAQWRHDFVHGWIKVPVTHETQEECLGMAVLDMMRIAKENDQTPLAIYNSISYKTFLPKCIRAKIQDYHILTRKRIRYRFRRFIQQFSQCKATARNLKLKYLINLETLQSAFYTEKFEVKEPGSGPSGEEIFATIIITGNGGIQWSR"
   }
 ]

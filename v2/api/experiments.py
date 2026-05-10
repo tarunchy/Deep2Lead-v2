@@ -7,6 +7,7 @@ import requests as http
 from models.db_models import db, Experiment, Candidate
 from api.schemas import GenerateSchema, ExperimentUpdateSchema
 from services import molecule_generator, property_calculator, dti_predictor
+from services.target_service import get_curated_target
 from services.molecule_validator import validate_and_canonicalize
 from utils.mol_utils import mol_to_svg
 from utils.protein_utils import is_valid_sequence, clean_sequence
@@ -49,7 +50,8 @@ def experiment_detail(experiment_id):
     exp = Experiment.query.get_or_404(experiment_id)
     if exp.status != "published" and str(exp.user_id) != str(current_user.id) and current_user.role != "admin":
         return jsonify({"error": "Not found"}), 404
-    return render_template("experiment.html", experiment=exp)
+    target_info = get_curated_target(exp.target_id) if exp.target_id else None
+    return render_template("experiment.html", experiment=exp, target_info=target_info)
 
 
 # ── API: molecule SVG ───────────────────────────────────────────────
@@ -123,7 +125,9 @@ def generate():
         gemma4_latency_ms=gen["latency_ms"],
         num_valid_generated=gen["total_generated"],
         target_id=data.get("target_id") or None,
+        target_name=data.get("target_name") or None,
         pdb_id=data.get("pdb_id") or None,
+        uniprot_id=data.get("uniprot_id") or None,
         mode=data.get("mode", "2d"),
     )
     db.session.add(exp)
