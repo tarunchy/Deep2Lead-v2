@@ -267,7 +267,12 @@ window.PAGE_GUIDE = {
   });
 
   let _stopRequested = false;
-  function requestStop() { _stopRequested = true; }
+  let _abortController = null;
+
+  function requestStop() {
+    _stopRequested = true;
+    if (_abortController) _abortController.abort();
+  }
 
   async function run3DExperiment() {
     const btn = document.getElementById("run3dBtn");
@@ -341,13 +346,24 @@ window.PAGE_GUIDE = {
           target_name: "{{ target.name if target else '' }}",
         };
 
+        _abortController = new AbortController();
         let res;
         try {
-          res = await apiFetch("/api/v2/generate", { method: "POST", body: JSON.stringify(payload) });
+          res = await apiFetch("/api/v2/generate", {
+            method: "POST",
+            body: JSON.stringify(payload),
+            signal: _abortController.signal,
+          });
         } catch(e) {
           clearInterval(stepTimer);
-          setProgress(0, "API error — " + e.message, "");
+          if (e.name === "AbortError" || _stopRequested) {
+            setProgress(bar.style.width.replace("%","") || 0, "Stopped.", "");
+          } else {
+            setProgress(0, "API error — " + e.message, "");
+          }
           break;
+        } finally {
+          _abortController = null;
         }
         clearInterval(stepTimer);
 
