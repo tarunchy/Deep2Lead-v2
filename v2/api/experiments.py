@@ -318,12 +318,16 @@ Respond in this exact JSON format (no markdown, no extra text):
 
     try:
         resp = http.post(
-            f"{DGX_BASE_URL}/v1/text",
-            json={"prompt": prompt, "max_new_tokens": 200, "temperature": 0.7},
+            f"{DGX_BASE_URL}/v1/chat/completions",
+            json={
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 200,
+                "temperature": 0.7,
+            },
             timeout=DGX_TIMEOUT,
         )
         resp.raise_for_status()
-        raw = resp.json().get("response", "")
+        raw = resp.json()["choices"][0]["message"]["content"]
     except Exception as e:
         return jsonify({"error": f"Gemma4 unavailable: {e}"}), 503
 

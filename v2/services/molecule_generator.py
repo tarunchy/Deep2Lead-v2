@@ -38,12 +38,16 @@ def _parse_smiles_from_text(text: str) -> list[str]:
 
 def _call_gemma4(prompt: str) -> str:
     resp = requests.post(
-        f"{DGX_BASE_URL}/v1/text",
-        json={"prompt": prompt, "max_new_tokens": 512, "temperature": 0.8},
+        f"{DGX_BASE_URL}/v1/chat/completions",
+        json={
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 512,
+            "temperature": 0.8,
+        },
         timeout=DGX_TIMEOUT,
     )
     resp.raise_for_status()
-    return resp.json().get("response", "")
+    return resp.json()["choices"][0]["message"]["content"]
 
 
 def generate(
@@ -87,6 +91,6 @@ def generate(
 def check_dgx_health() -> bool:
     try:
         resp = requests.get(f"{DGX_BASE_URL}/health", timeout=5)
-        return resp.status_code == 200 and resp.json().get("status") == "ready"
+        return resp.status_code == 200 and resp.json().get("status") == "healthy"
     except Exception:
         return False

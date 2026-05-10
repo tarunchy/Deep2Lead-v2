@@ -90,12 +90,16 @@ def chat():
 
     try:
         resp = http.post(
-            f"{DGX_BASE_URL}/v1/text",
-            json={"prompt": prompt, "max_tokens": 500, "temperature": 0.7},
+            f"{DGX_BASE_URL}/v1/chat/completions",
+            json={
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 500,
+                "temperature": 0.7,
+            },
             timeout=DGX_TIMEOUT,
         )
         resp.raise_for_status()
-        reply = resp.json().get("response", "").strip()
+        reply = resp.json()["choices"][0]["message"]["content"].strip()
         if not reply:
             return jsonify({"error": "Empty response from Gemma4"}), 502
         return jsonify({"reply": reply, "tools_used": tool_names_used})

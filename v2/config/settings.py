@@ -6,8 +6,13 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-prod")
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://deep2lead:password@localhost:5432/deep2lead_v2")
 
-DGX_HOST = os.getenv("DGX_HOST", "dgx1")
-DGX_PORT = int(os.getenv("DGX_PORT", "9001"))
+# DGX1 (offline — fine-tuning in progress)
+# DGX_HOST = os.getenv("DGX_HOST", "dgx1")
+# DGX_PORT = int(os.getenv("DGX_PORT", "9001"))
+
+# dlyog04 — Gemma 4 E2B running on port 9000
+DGX_HOST = os.getenv("DGX_HOST", "dlyog04")
+DGX_PORT = int(os.getenv("DGX_PORT", "9000"))
 DGX_BASE_URL = f"http://{DGX_HOST}:{DGX_PORT}"
 DGX_TIMEOUT = int(os.getenv("DGX_GEMMA4_TIMEOUT", "90"))
 
