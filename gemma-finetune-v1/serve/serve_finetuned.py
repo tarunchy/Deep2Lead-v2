@@ -41,19 +41,22 @@ READY     = False
 
 def load_model():
     global MODEL, PROCESSOR, READY
-    log.info(f"Loading fine-tuned model from: {args.model_path}")
     from unsloth import FastModel
 
+    # Unsloth auto-detects adapter_config.json and loads base model + LoRA internally.
+    # Do NOT use peft.PeftModel directly — Unsloth uses patched module types.
+    log.info(f"Loading fine-tuned model from: {args.model_path}")
     MODEL, PROCESSOR = FastModel.from_pretrained(
         model_name=args.model_path,
         max_seq_length=MAX_SEQ_LENGTH,
         load_in_4bit=True,
         dtype=None,
+        full_finetuning=False,
     )
     FastModel.for_inference(MODEL)
     READY = True
     free_gb = torch.cuda.mem_get_info()[0] / 1e9 if torch.cuda.is_available() else 0
-    log.info(f"Model ready. VRAM free: {free_gb:.1f} GB")
+    log.info(f"Fine-tuned model ready. VRAM free: {free_gb:.1f} GB")
 
 
 @asynccontextmanager
