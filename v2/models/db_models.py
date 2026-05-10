@@ -110,6 +110,7 @@ class Experiment(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "gemma4_latency_ms": self.gemma4_latency_ms,
+            "mode": self.mode,
             "num_valid_generated": self.num_valid_generated,
             "target_id": self.target_id,
             "pdb_id": self.pdb_id,
