@@ -21,8 +21,15 @@
       Choose a pathogen boss to battle. Levels unlock as you progress.
     </span>
   </div>
-  <a href="/api/v3/game/history" id="historyLink"
-     style="font-size:0.82rem;color:var(--accent);text-decoration:none;">View battle history →</a>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <a href="{{ url_for('game.game_tutorial') }}"
+       style="display:inline-flex;align-items:center;gap:6px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.35);border-radius:8px;padding:6px 14px;font-size:0.85rem;color:#a78bfa;text-decoration:none;font-weight:600;transition:opacity 0.2s;"
+       onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+      🎓 How to Play
+    </a>
+    <a href="/api/v3/game/history" id="historyLink"
+       style="font-size:0.82rem;color:var(--accent);text-decoration:none;">History →</a>
+  </div>
 </div>
 
 <!-- Boss grid -->

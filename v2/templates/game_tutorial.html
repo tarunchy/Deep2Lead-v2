@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}PathoHunt Tutorial — How to Play{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game_tutorial.css') }}">
+{% endblock %}
+
+{% block content %}
+<audio id="tutAudio" preload="auto" style="display:none;"></audio>
+
+<div class="tut-wrap">
+
+  <!-- Hero -->
+  <div class="tut-hero">
+    <h1>🎓 How to Play PathoHunt</h1>
+    <p>10-step interactive tutorial with audio narration · 3 minutes</p>
+  </div>
+
+  <!-- Breadcrumb -->
+  <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--muted);margin-bottom:18px;">
+    <a href="/game" style="color:var(--accent);">PathoHunt Lobby</a>
+    <span>›</span>
+    <span>Tutorial</span>
+  </div>
+
+  <!-- Progress -->
+  <div class="tut-progress-wrap">
+    <div class="tut-step-counter" id="tutCounter">Step 1 of 10</div>
+    <div class="tut-progress-bar">
+      <div class="tut-progress-fill" id="tutProgressFill" style="width:0%;"></div>
+    </div>
+    <div style="font-size:0.78rem;color:var(--muted);">
+      <kbd>Space</kbd> play · <kbd>←→</kbd> navigate · <kbd>M</kbd> mute
+    </div>
+  </div>
+
+  <!-- Main tutorial card -->
+  <div class="tut-card">
+
+    <!-- Visual area -->
+    <div class="tut-visual">
+      <div class="tut-visual-label" id="tutCategory">Introduction</div>
+      <div id="tutVisualContent" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
+    </div>
+
+    <!-- Content area -->
+    <div class="tut-content">
+
+      <!-- Step title -->
+      <div class="tut-step-title" id="tutTitle">Welcome to PathoHunt!</div>
+
+      <!-- Host + bubble -->
+      <div class="tut-speaker">
+        <div>
+          <div class="tut-host-avatar" id="tutHostAvatar" title="Professor AI">🔬</div>
+          <div class="tut-waves" id="tutWaves">
+            <div class="tut-wave-bar" style="height:6px;"></div>
+            <div class="tut-wave-bar" style="height:10px;"></div>
+            <div class="tut-wave-bar" style="height:14px;"></div>
+            <div class="tut-wave-bar" style="height:10px;"></div>
+            <div class="tut-wave-bar" style="height:6px;"></div>
+          </div>
+        </div>
+        <div class="tut-bubble" id="tutBubble">
+          Loading tutorial…
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Controls -->
+    <div class="tut-controls">
+      <button class="tut-btn" id="tutPrev" onclick="tutPrev()" disabled>← Prev</button>
+
+      <button class="tut-play-btn" id="tutPlayBtn" onclick="tutTogglePlay()">
+        ▶ Play
+      </button>
+
+      <div class="tut-loading" id="tutLoading">
+        <div class="tut-spinner"></div>
+        <span style="font-size:0.78rem;">Loading audio…</span>
+      </div>
+
+      <div class="tut-controls-spacer"></div>
+
+      <button class="tut-mute-btn" id="tutMuteBtn" onclick="tutToggleMute()">🔊 Mute</button>
+      <button class="tut-btn primary" id="tutNext" onclick="tutNext()">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step dots -->
+  <div class="tut-dots" id="tutDots"></div>
+
+  <div class="tut-keyboard-hint">
+    <kbd>Space</kbd> to play/pause &nbsp;·&nbsp;
+    <kbd>←</kbd> <kbd>→</kbd> to navigate &nbsp;·&nbsp;
+    <kbd>M</kbd> to mute/unmute
+  </div>
+
+  <!-- Quick jump to lobby -->
+  <div style="text-align:center;margin-top:32px;">
+    <a href="/game" class="tut-btn" style="display:inline-block;text-decoration:none;">
+      Skip tutorial — take me to the lobby →
+    </a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game_tutorial.js') }}"></script>
+{% endblock %}

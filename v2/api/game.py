@@ -1,8 +1,10 @@
 """PathoHunt game blueprint — routes and API endpoints."""
-from flask import Blueprint, request, jsonify, render_template
+import requests as _req
+from flask import Blueprint, request, jsonify, render_template, Response
 from flask_login import login_required, current_user
 
 import services.game_service as game_service
+from config.settings import KOKORO_URL
 
 bp = Blueprint("game", __name__)
 
@@ -96,3 +98,37 @@ def api_abandon_session(session_id):
 def api_game_history():
     history = game_service.get_history(current_user.id)
     return jsonify(history)
+
+
+# ─── Tutorial ─────────────────────────────────────────────────────────────────
+
+@bp.route("/game/tutorial")
+@login_required
+def game_tutorial():
+    return render_template("game_tutorial.html")
+
+
+@bp.route("/api/v3/game/tts", methods=["POST"])
+@login_required
+def tts_proxy():
+    """Proxy text to Kokoro TTS server and return WAV audio."""
+    data = request.get_json(silent=True) or {}
+    text = (data.get("text") or "").strip()[:800]
+    voice = data.get("voice", "am_michael")
+    if not text:
+        return jsonify({"error": "text is required"}), 400
+
+    try:
+        resp = _req.post(
+            f"{KOKORO_URL}/generate-audio-binary/",
+            json={"text": text, "voice_name": voice, "speed": 1.0},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        return Response(resp.content, mimetype="audio/wav")
+    except _req.exceptions.ConnectionError:
+        return jsonify({"error": "Kokoro TTS service unreachable"}), 503
+    except _req.exceptions.Timeout:
+        return jsonify({"error": "Kokoro TTS timed out"}), 504
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
