@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathoHunt 3D - Multi-Biome Survival</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; cursor: crosshair; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        
+        #hud {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px;
+            box-sizing: border-box;
+            color: #00f2ff;
+        }
+
+        .hud-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .bars-container { display: flex; flex-direction: column; gap: 12px; width: 400px; }
+        
+        .bar-wrapper { position: relative; }
+        .bar-label { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+        
+        .hp-bar-bg { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 242, 255, 0.3); height: 10px; border-radius: 2px; overflow: hidden; position: relative; }
+        
+        .enemy-label { color: #ff3e3e; }
+        .enemy-bar-bg { border-color: #ff3e3e; }
+        .enemy-bar-fill { background: #ff3e3e; width: 100%; height: 100%; transition: width 0.2s; box-shadow: 0 0 15px #ff3e3e; }
+
+        .player-label { color: #00f2ff; }
+        .player-bar-bg { border-color: #00f2ff; }
+        .player-bar-fill { background: #00f2ff; width: 100%; height: 100%; transition: width 0.3s; box-shadow: 0 0 15px #00f2ff; }
+
+        .weapon-config {
+            position: absolute;
+            right: 30px; top: 130px;
+            background: rgba(0, 10, 20, 0.85);
+            border: 1px solid #00f2ff;
+            padding: 15px;
+            pointer-events: all;
+            width: 220px;
+            font-size: 11px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+        }
+        .config-section-title { font-weight: bold; border-bottom: 1px solid rgba(0, 242, 255, 0.3); padding-bottom: 5px; margin-bottom: 10px; color: #00f2ff; text-transform: uppercase; }
+        .config-label { margin: 8px 0 3px; color: #888; text-transform: uppercase; font-size: 10px; }
+        select {
+            width: 100%; background: #001a33; color: #00f2ff; border: 1px solid rgba(0, 242, 255, 0.5); padding: 6px; outline: none;
+            margin-bottom: 5px; font-size: 11px;
+        }
+
+        .hud-bottom { display: flex; justify-content: center; width: 100%; }
+        .terminal {
+            width: 800px;
+            background: rgba(0, 10, 20, 0.9);
+            border: 1px solid #00f2ff;
+            padding: 15px;
+            pointer-events: all;
+            display: flex; gap: 20px; align-items: center;
+        }
+        .smiles-input {
+            flex: 1; background: #001a33; border: 1px solid #004466; color: #fff; padding: 10px; font-family: monospace;
+        }
+
+        #combat-log {
+            position: absolute; left: 30px; bottom: 150px; width: 350px; height: 120px;
+            overflow: hidden; font-family: monospace; font-size: 11px;
+        }
+        .log-entry { margin-bottom: 4px; border-left: 2px solid; padding-left: 8px; }
+
+        .crosshair {
+            position: absolute; top: 0; left: 0; width: 80px; height: 80px;
+            border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 50%; 
+            transform: translate(-50%, -50%); pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+            transition: width 0.1s, height 0.1s;
+        }
+        .crosshair.aiming { width: 120px; height: 120px; border-color: #ff3e3e; border-width: 2px; }
+        .ch-dot { width: 4px; height: 4px; background: #00f2ff; border-radius: 50%; box-shadow: 0 0 10px #00f2ff; }
+        .crosshair.aiming .ch-dot { background: #ff3e3e; box-shadow: 0 0 10px #ff3e3e; }
+
+        #flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 10; }
+        #damage-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: red; opacity: 0; pointer-events: none; z-index: 10; }
+
+        .damage-text { position: absolute; font-weight: 900; font-size: 40px; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 20; }
+        @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -150%) scale(1.5); opacity: 0; } }
+
+        #game-over {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+            color: #ff3e3e; text-align: center;
+        }
+        .restart-btn {
+            margin-top: 30px; background: #00f2ff; color: #000; border: none;
+            padding: 15px 40px; font-weight: bold; cursor: pointer; text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div id="flash"></div>
+    <div id="damage-flash"></div>
+    
+    <div id="game-over">
+        <h1 style="font-size: 4rem; letter-spacing: 10px;">MISSION FAILED</h1>
+        <p style="color: #fff; font-size: 1.2rem;">THE BIOME HAS BEEN OVERRUN BY PATHOGENS</p>
+        <button class="restart-btn" onclick="location.reload()">RE-MATERIALIZE</button>
+    </div>
+
+    <div id="canvas-container"></div>
+    <div id="hud">
+        <div class="hud-top">
+            <div class="bars-container">
+                <div class="bar-wrapper">
+                    <div class="bar-label enemy-label">
+                        <span>SARS-CoV-2 Mpro [TARGET]</span>
+                        <span id="enemy-hp-text">1000 / 1000</span>
+                    </div>
+                    <div class="hp-bar-bg enemy-bar-bg">
+                        <div class="enemy-bar-fill" id="enemy-hp-fill"></div>
+                    </div>
+                </div>
+                <div class="bar-wrapper">
+                    <div class="bar-label player-label">
+                        <span>HUNTER INTEGRITY [SHIELD]</span>
+                        <span id="player-hp-text">1000 / 1000</span>
+                    </div>
+                    <div class="hp-bar-bg player-bar-bg">
+                        <div class="player-bar-fill" id="player-hp-fill"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 14px; font-weight: bold;">LOC: <span id="loc-name" style="color:#fff">JUNGLE_SECTOR</span></div>
+                <div style="font-size: 11px; opacity: 0.6; margin-top:5px;">HACK_PRECISION: 100%</div>
+            </div>
+        </div>
+
+        <div class="crosshair" id="crosshair"><div class="ch-dot"></div></div>
+
+        <div class="weapon-config">
+            <div class="config-section-title">BIOME SELECTION</div>
+            <select id="biome-theme">
+                <option value="jungle">🌲 Bio-Jungle</option>
+                <option value="space">🌌 Deep Space</option>
+                <option value="sky">🌤️ Azure Sky</option>
+                <option value="ocean">🌊 Abyssal Ocean</option>
+                <option value="desert">🏜️ Crystal Desert</option>
+                <option value="city">🏙️ Neon Metropolis</option>
+                <option value="village">🏡 Rust Village</option>
+            </select>
+
+            <div class="config-section-title" style="margin-top:15px;">TACTICAL SETTINGS</div>
+            <div class="config-label">Difficulty</div>
+            <select id="game-difficulty">
+                <option value="easy">Easy (Relaxed)</option>
+                <option value="normal" selected>Normal (Tactical)</option>
+                <option value="hard">Hard (Extreme)</option>
+            </select>
+            
+            <div class="config-label">Missile System</div>
+            <select id="missile-type">
+                <option value="standard">Standard Lead</option>
+                <option value="hypersonic">Hypersonic Dart</option>
+                <option value="guided">Bio-Guided Missile</option>
+            </select>
+
+            <div class="config-label">Trajectory</div>
+            <select id="trajectory-type">
+                <option value="linear">Linear</option>
+                <option value="nonlinear" selected>Parabolic</option>
+            </select>
+        </div>
+
+        <div id="combat-log"></div>
+
+        <div class="hud-bottom">
+            <div class="terminal">
+                <input type="text" id="smiles-input" class="smiles-input" value="CC(=O)Oc1ccccc1C(=O)O" readonly>
+                <div style="font-size: 10px; color: #555;">// READY_FOR_MATERIALIZATION //</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, monster, monsterTargetPos, envGroup;
+        let projectiles = [], explosions = [], obstacles = [];
+        let bossHP = 1000, playerHP = 1000;
+        let mouse = new THREE.Vector2();
+        let raycaster = new THREE.Raycaster();
+        let isAiming = false;
+        let targetPoint = new THREE.Vector3();
+        let isGameOver = false;
+
+        const DIFFICULTY = {
+            easy: { speedMin: 0.015, speedMax: 0.05, smallDmg: 10, largeDmg: 20, largeHealth: 1, spawnRate: 5000 },
+            normal: { speedMin: 0.06, speedMax: 0.15, smallDmg: 30, largeDmg: 60, largeHealth: 2, spawnRate: 3500 },
+            hard: { speedMin: 0.3, speedMax: 0.6, smallDmg: 60, largeDmg: 120, largeHealth: 3, spawnRate: 2000 }
+        };
+
+        const THEMES = {
+            jungle: { bg: 0x000a1a, fog: 0x000a1a, floor: 0x002233, env: 0x00ff88, ambient: 0x40ffaa, name: "BIO_JUNGLE_7" },
+            space: { bg: 0x000000, fog: 0x050010, floor: 0x110022, env: 0xffffff, ambient: 0x8844ff, name: "ORBITAL_VOID" },
+            sky: { bg: 0x87ceeb, fog: 0xb0e2ff, floor: 0xffffff, env: 0xffffff, ambient: 0xffffff, name: "STRATOSPHERE" },
+            ocean: { bg: 0x001a2e, fog: 0x002b4d, floor: 0x004d80, env: 0x00f2ff, ambient: 0x00ffff, name: "ABYSS_TRENCH" },
+            desert: { bg: 0x2e1a00, fog: 0x4d2b00, floor: 0x804d00, env: 0xffcc00, ambient: 0xffaa00, name: "SILICA_DUNE" },
+            city: { bg: 0x050505, fog: 0x111111, floor: 0x222222, env: 0xff00ff, ambient: 0x00f2ff, name: "NEON_METRO" },
+            village: { bg: 0x1a0f00, fog: 0x2e1a00, floor: 0x4d2600, env: 0x8b4513, ambient: 0xffcc88, name: "RUST_OUTPOST" }
+        };
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 45);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            envGroup = new THREE.Group();
+            scene.add(envGroup);
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+            scene.add(ambient);
+            const mainLight = new THREE.PointLight(0x00f2ff, 1.5, 100);
+            mainLight.position.set(20, 20, 20);
+            scene.add(mainLight);
+
+            monster = new THREE.Mesh(
+                new THREE.TorusKnotGeometry(5, 1.5, 150, 20),
+                new THREE.MeshPhongMaterial({ color: 0xff3e3e, emissive: 0x330000, flatShading: true })
+            );
+            scene.add(monster);
+            monsterTargetPos = new THREE.Vector3(0, 5, 0);
+
+            applyTheme('jungle');
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mousedown', () => { 
+                if(isGameOver) return;
+                isAiming = true; 
+                document.getElementById('crosshair').classList.add('aiming'); 
+            });
+            window.addEventListener('mouseup', onMouseUp);
+
+            let spawnTimer = setInterval(spawnObstacle, DIFFICULTY.normal.spawnRate);
+            document.getElementById('game-difficulty').addEventListener('change', (e) => {
+                clearInterval(spawnTimer);
+                spawnTimer = setInterval(spawnObstacle, DIFFICULTY[e.target.value].spawnRate);
+                log(`DIFFICULTY: ${e.target.value.toUpperCase()}`, "#ffae00");
+            });
+
+            document.getElementById('biome-theme').addEventListener('change', (e) => {
+                applyTheme(e.target.value);
+            });
+
+            animate();
+        }
+
+        function applyTheme(themeKey) {
+            const theme = THEMES[themeKey];
+            renderer.setClearColor(theme.bg);
+            scene.fog = new THREE.FogExp2(theme.fog, 0.01);
+            document.getElementById('loc-name').innerText = theme.name;
+            log(`BIOME SYNCED: ${theme.name}`, theme.env);
+
+            while(envGroup.children.length > 0) envGroup.remove(envGroup.children[0]);
+
+            const grid = new THREE.GridHelper(300, 50, theme.floor, theme.bg);
+            grid.position.y = -5;
+            envGroup.add(grid);
+
+            for(let i=0; i<40; i++) {
+                let geo, mat;
+                const size = Math.random() * 2 + 1;
+                
+                if (themeKey === 'space') {
+                    geo = new THREE.SphereGeometry(0.1, 8, 8);
+                    mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                } else if (themeKey === 'city') {
+                    geo = new THREE.BoxGeometry(size, size * 10, size);
+                    mat = new THREE.MeshPhongMaterial({ color: 0x333333, emissive: theme.env, emissiveIntensity: 0.5 });
+                } else {
+                    geo = new THREE.ConeGeometry(0.5, size * 2, 4);
+                    mat = new THREE.MeshPhongMaterial({ color: theme.floor, emissive: theme.env, emissiveIntensity: 0.2 });
+                }
+                
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set((Math.random()-0.5)*150, -5 + (size), (Math.random()-0.5)*100);
+                if (themeKey === 'space') mesh.position.y = (Math.random()-0.5)*100;
+                envGroup.add(mesh);
+            }
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            document.getElementById('crosshair').style.left = event.clientX + 'px';
+            document.getElementById('crosshair').style.top = event.clientY + 'px';
+            raycaster.setFromCamera(mouse, camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+            raycaster.ray.intersectPlane(plane, targetPoint);
+        }
+
+        function onMouseUp() {
+            if (isAiming && !isGameOver) {
+                fireMissile();
+                isAiming = false;
+                document.getElementById('crosshair').classList.remove('aiming');
+            }
+        }
+
+        function spawnObstacle() {
+            if(isGameOver) return;
+            const diff = document.getElementById('game-difficulty').value;
+            const settings = DIFFICULTY[diff];
+            const isLarge = Math.random() > 0.8;
+            const size = isLarge ? 3 : 1.2;
+            const obs = new THREE.Mesh(
+                isLarge ? new THREE.IcosahedronGeometry(size, 1) : new THREE.OctahedronGeometry(size, 0),
+                new THREE.MeshPhongMaterial({ color: 0xff3e3e, wireframe: true })
+            );
+            obs.position.set((Math.random()-0.5)*80, Math.random()*30, -50);
+            const speed = settings.speedMin + Math.random()*(settings.speedMax-settings.speedMin);
+            obs.velocity = new THREE.Vector3((camera.position.x-obs.position.x)*0.003, (camera.position.y-obs.position.y)*0.003, speed);
+            obs.health = isLarge ? settings.largeHealth : 1;
+            obs.damage = isLarge ? settings.largeDmg : settings.smallDmg;
+            obs.isLarge = isLarge;
+            scene.add(obs);
+            obstacles.push(obs);
+        }
+
+        function fireMissile() {
+            const type = document.getElementById('missile-type').value;
+            const group = new THREE.Group();
+            const color = type === 'hypersonic' ? 0xff00ff : 0x00f2ff;
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.5), new THREE.MeshPhongMaterial({ color }));
+            body.rotation.x = Math.PI/2;
+            group.add(body);
+            group.position.set(0, -3, 35);
+            scene.add(group);
+            projectiles.push({ mesh: group, type, t: 0, startPos: group.position.clone(), targetPos: targetPoint.clone(), speed: type==='hypersonic'?3:1.5 });
+            log(`FIRE: ${type.toUpperCase()}`);
+        }
+
+        function log(msg, color="#00f2ff") {
+            const container = document.getElementById('combat-log');
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.style.color = color;
+            div.style.borderColor = color;
+            div.innerHTML = "> " + msg;
+            container.prepend(div);
+            if(container.children.length > 5) container.lastChild.remove();
+        }
+
+        function createExplosion(pos, color, size) {
+            const g = new THREE.Group(); g.position.copy(pos); scene.add(g);
+            for(let i=0; i<15*size; i++) {
+                const p = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.2), new THREE.MeshBasicMaterial({ color }));
+                p.velocity = new THREE.Vector3((Math.random()-0.5)*size, (Math.random()-0.5)*size, (Math.random()-0.5)*size);
+                g.add(p);
+            }
+            explosions.push({ group: g, life: 1.0 });
+        }
+
+        function takeDamage(val) {
+            playerHP = Math.max(0, playerHP - val);
+            document.getElementById('player-hp-fill').style.width = (playerHP/10)+"%";
+            document.getElementById('player-hp-text').innerText = `${playerHP} / 1000`;
+            document.getElementById('damage-flash').style.opacity = 0.5;
+            setTimeout(() => document.getElementById('damage-flash').style.opacity = 0, 100);
+            if(playerHP <= 0 && !isGameOver) { isGameOver = true; document.getElementById('game-over').style.display = 'flex'; }
+        }
+
+        function animate() {
+            if(isGameOver) return;
+            requestAnimationFrame(animate);
+
+            if(Math.random() < 0.02) monsterTargetPos.set((Math.random()-0.5)*50, Math.random()*20, (Math.random()-0.5)*15);
+            monster.position.lerp(monsterTargetPos, 0.02);
+            monster.rotation.y += 0.02;
+
+            projectiles.forEach((p, i) => {
+                p.t += 0.01 * p.speed;
+                const target = document.getElementById('missile-type').value === 'guided' ? monster.position : p.targetPos;
+                const nextPos = new THREE.Vector3().lerpVectors(p.startPos, target, Math.min(p.t, 1));
+                if (document.getElementById('trajectory-type').value === 'nonlinear') nextPos.y += Math.sin(Math.min(p.t, 1)*Math.PI)*12;
+                p.mesh.lookAt(nextPos); p.mesh.position.copy(nextPos);
+
+                // Hitbox Monster: 8.0
+                if (p.mesh.position.distanceTo(monster.position) < 8.0) {
+                    bossHP = Math.max(0, bossHP - 100);
+                    document.getElementById('enemy-hp-fill').style.width = (bossHP/10)+"%";
+                    document.getElementById('enemy-hp-text').innerText = `${bossHP} / 1000`;
+                    createExplosion(p.mesh.position, 0xff3e3e, 2);
+                    scene.remove(p.mesh); projectiles.splice(i, 1);
+                } else {
+                    // Hitbox Obstacles: Large 7.0, Small 5.0
+                    obstacles.forEach((obs, oi) => {
+                        if(p.mesh.position.distanceTo(obs.position) < (obs.isLarge?7:5)) {
+                            obs.health--;
+                            if(obs.health <= 0) { createExplosion(obs.position, 0x00f2ff, 1.5); scene.remove(obs); obstacles.splice(oi, 1); }
+                            scene.remove(p.mesh); projectiles.splice(i, 1);
+                        }
+                    });
+                }
+                if (p.t > 1.5) { scene.remove(p.mesh); projectiles.splice(i, 1); }
+            });
+
+            obstacles.forEach((obs, i) => {
+                obs.position.add(obs.velocity); obs.rotation.x += 0.03;
+                if(obs.position.z > camera.position.z - 5) { takeDamage(obs.damage); scene.remove(obs); obstacles.splice(oi, 1); }
+            });
+
+            explosions.forEach((ex, i) => {
+                ex.life -= 0.04; ex.group.children.forEach(p => p.position.add(p.velocity));
+                if(ex.life <= 0) { scene.remove(ex.group); explosions.splice(i, 1); }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>

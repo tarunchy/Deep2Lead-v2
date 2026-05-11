@@ -29,6 +29,23 @@ def game_battle(target_id):
     return render_template("game_battle.html", boss=boss)
 
 
+@bp.route("/game/pathohunt-3d/tutorial")
+@login_required
+def game_tutorial_3d():
+    return render_template("game_tutorial_3d.html")
+
+
+@bp.route("/game/pathohunt-3d/<target_id>")
+@login_required
+def game_battle_3d(target_id):
+    boss = game_service.get_boss(target_id)
+    if not boss:
+        return render_template("game_lobby.html",
+                               bosses=game_service.get_all_bosses(),
+                               error="Unknown boss"), 404
+    return render_template("game_battle_3d.html", boss=boss)
+
+
 # ─── JSON API ─────────────────────────────────────────────────────────────────
 
 @bp.route("/api/v3/game/bosses")

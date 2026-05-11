@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathoHunt 3D - Design & Plan</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --secondary: #3fb950;
+            --accent: #f6ad55;
+            --bg: #0d1117;
+            --surface: #161b22;
+            --text: #c9d1d9;
+            --text-muted: #8b949e;
+            --border: #30363d;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        h1, h2, h3 { color: #58a6ff; }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: var(--primary);
+            color: white;
+            margin-right: 8px;
+        }
+        .tech-stack {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            margin-bottom: 12px;
+            padding-left: 28px;
+            position: relative;
+        }
+        .feature-list li::before {
+            content: "🚀";
+            position: absolute;
+            left: 0;
+        }
+        pre {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+        }
+        .theme-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .theme-item {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 PathoHunt 3D: Design & Plan</h1>
+    <p>A next-generation immersive 3D drug discovery game for kids and teens.</p>
+
+    <div class="card">
+        <h2>1. Vision & Story</h2>
+        <p>In the year 2085, invisible monsters known as <strong>Pathogens</strong> have invaded the world's most vital biomes. Traditional medicines are failing. You are a <strong>Molecular Hunter</strong>, equipped with a Quantum Lab that can materialize "Lead Molecules" as energy projectiles to defeat these giants by finding their weak spots (Binding Pockets).</p>
+        
+        <div class="theme-grid">
+            <div class="theme-item">
+                <h3>🌲 The Bio-Jungle</h3>
+                <p>Fight Viral Proteases amidst glowing flora and giant ferns.</p>
+            </div>
+            <div class="theme-item">
+                <h3>🌋 Molten Peak</h3>
+                <p>Battle Heat-Resistant Bacteria near flowing magma rivers.</p>
+            </div>
+            <div class="theme-item">
+                <h3>🏙️ Neon City</h3>
+                <p>Defend the futuristic metropolis from Antibiotic-Resistant Superbugs.</p>
+            </div>
+            <div class="theme-item">
+                <h3>🏜️ Crystal Desert</h3>
+                <p>Engage ancient fungal pathogens in a landscape of silica and glass.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Technical Architecture</h2>
+        <div class="tech-stack">
+            <span class="tag">Three.js (WebGL)</span>
+            <span class="tag">Gemma4 AI</span>
+            <span class="tag">AutoDock Vina</span>
+            <span class="tag">GLSL Shaders</span>
+        </div>
+        <ul class="feature-list">
+            <li><strong>The Arena:</strong> A full 3D environment with terrain, skybox, and particle effects (fog, embers, digital rain).</li>
+            <li><strong>The Boss:</strong> Real 3D Protein Structures fetched from PDB/AlphaFold, rendered as "Crystal Monsters" using custom shaders.</li>
+            <li><strong>Weaponry:</strong> Molecules are rendered as glowing 3D spheres (Spacefill style) that the player "shoots" at the protein.</li>
+            <li><strong>Combat Logic:</strong>
+                <ul>
+                    <li><strong>Attack:</strong> AI generates 5-10 candidates based on player's "Seed Spell" (SMILES).</li>
+                    <li><strong>Damage:</strong> Calculated by Molecular Docking (Binding Energy) + Drug-Likeness (QED).</li>
+                    <li><strong>Visual Feedback:</strong> Floating damage numbers, screen shakes, and monster reactions.</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>3. Implementation Roadmap</h2>
+        <h3>Phase 1: The Arena (New Route)</h3>
+        <p>Create <code>/pathohunt-3d</code> route and <code>pathohunt_3d.html</code> template. Implement the Three.js scene with a "Jungle" theme as the first level.</p>
+        
+        <h3>Phase 2: Monster Materialization</h3>
+        <p>Integrate <code>NGL.js</code> or custom Three.js PDB loader to render the protein structure at the center of the battlefield. Apply a "Boss Aura" shader.</p>
+        
+        <h3>Phase 3: Tactical HUD</h3>
+        <p>Design a "Teen-focused" UI with Health Bars, Energy Gauges, and a SMILES Terminal that looks like a hacking console.</p>
+        
+        <h3>Phase 4: Battle Loop</h3>
+        <p>Connect the frontend to <code>/api/v2/generate</code> (docking-enabled). When the API returns, animate molecules flying from the player to the boss binding site.</p>
+    </div>
+
+    <div class="card">
+        <h2>4. Sample Integration Code</h2>
+        <p>Adding the Three.js boilerplate for the battlefield:</p>
+        <pre><code>// pathohunt_3d.js preview
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+// Environment: Jungle Ground
+const groundGeo = new THREE.PlaneGeometry(100, 100);
+const groundMat = new THREE.MeshPhongMaterial({ color: 0x1a2e1a });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+// The Boss (Protein) Placeholder
+const bossGroup = new THREE.Group();
+scene.add(bossGroup);
+
+function animate() {
+    requestAnimationFrame(animate);
+    bossGroup.rotation.y += 0.005; // Gentle rotation
+    renderer.render(scene, camera);
+}</code></pre>
+    </div>
+
+    <div class="card">
+        <h2>5. Menu & Navigation</h2>
+        <p>The sidebar will be updated to include <strong>PathoHunt 3D</strong> with a "NEW" badge.</p>
+        <pre><code>&lt;a href="/pathohunt-3d" class="nav-item"&gt;
+    &lt;span class="icon"&gt;⚔️&lt;/span&gt;
+    &lt;span class="label"&gt;PathoHunt 3D&lt;/span&gt;
+    &lt;span class="badge badge-new"&gt;NEW&lt;/span&gt;
+&lt;/a&gt;</code></pre>
+    </div>
+
+    <p style="text-align: center; color: var(--text-muted);">Ready to materialize the future of drug discovery.</p>
+</body>
+</html>

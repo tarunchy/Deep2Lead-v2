@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block title %}PathoHunt 3D — Deep2Lead{% endblock %}
+
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+    .game-container {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 120px);
+        background: #000;
+        overflow: hidden;
+        border-radius: 12px;
+        margin-top: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    #render-canvas {
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+    }
+    
+    /* Overlay HUD */
+    #game-hud {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 24px;
+        box-sizing: border-box;
+        color: #00f2ff;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .hud-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .bars-container { display: flex; flex-direction: column; gap: 10px; width: 380px; }
+    
+    .bar-wrapper { position: relative; }
+    .bar-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; display: flex; justify-content: space-between; }
+    
+    .hp-bar-bg { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 242, 255, 0.3); height: 10px; border-radius: 2px; overflow: hidden; position: relative; }
+    
+    .enemy-label { color: #ff3e3e; }
+    .enemy-bar-bg { border-color: #ff3e3e; }
+    .enemy-bar-fill { background: #ff3e3e; width: 100%; height: 100%; transition: width 0.2s; box-shadow: 0 0 15px #ff3e3e; }
+
+    .player-label { color: #00f2ff; }
+    .player-bar-bg { border-color: #00f2ff; }
+    .player-bar-fill { background: #00f2ff; width: 100%; height: 100%; transition: width 0.3s; box-shadow: 0 0 15px #00f2ff; }
+
+    .tactical-sidebar {
+        position: absolute;
+        right: 24px; top: 120px;
+        background: rgba(0, 10, 20, 0.8);
+        border: 1px solid #00f2ff;
+        padding: 15px;
+        pointer-events: all;
+        width: 200px;
+        font-size: 11px;
+        backdrop-filter: blur(8px);
+        border-radius: 8px;
+    }
+    .config-title { font-weight: bold; border-bottom: 1px solid rgba(0, 242, 255, 0.3); padding-bottom: 5px; margin-bottom: 10px; color: #00f2ff; text-transform: uppercase; }
+    .config-item { margin-bottom: 12px; }
+    .config-label { color: #888; text-transform: uppercase; font-size: 9px; margin-bottom: 4px; display: block; }
+    
+    select.game-select {
+        width: 100%; background: #001a33; color: #00f2ff; border: 1px solid rgba(0, 242, 255, 0.4); padding: 5px; outline: none;
+        font-size: 11px; border-radius: 4px;
+    }
+
+    .hud-bottom { display: flex; justify-content: center; width: 100%; }
+    .spell-console {
+        width: 700px;
+        background: rgba(0, 10, 20, 0.9);
+        border: 1px solid #00f2ff;
+        padding: 12px;
+        pointer-events: all;
+        display: flex; gap: 15px; align-items: center;
+        border-radius: 12px 12px 0 0;
+        backdrop-filter: blur(10px);
+    }
+    .spell-display {
+        flex: 1; background: #001a33; border: 1px solid #004466; color: #fff; padding: 10px; 
+        font-family: 'Courier New', Courier, monospace; font-size: 16px;
+        text-align: center; border-radius: 6px; position: relative;
+    }
+    .smiles-hidden { display: none; }
+
+    #combat-log {
+        position: absolute; left: 24px; bottom: 120px; width: 320px; height: 100px;
+        overflow: hidden; font-family: monospace; font-size: 11px; pointer-events: none;
+    }
+    .log-entry { margin-bottom: 4px; border-left: 2px solid; padding-left: 8px; opacity: 0.9; }
+
+    .crosshair-ui {
+        position: absolute; top: 0; left: 0; width: 80px; height: 80px;
+        border: 1px solid rgba(0, 242, 255, 0.4); border-radius: 50%; 
+        transform: translate(-50%, -50%); pointer-events: none;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .crosshair-ui.aiming { border-color: #ff3e3e; border-width: 2px; width: 110px; height: 110px; }
+    .ch-dot { width: 4px; height: 4px; background: #00f2ff; border-radius: 50%; }
+
+    #vfx-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 5; }
+    #vfx-damage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: red; opacity: 0; pointer-events: none; z-index: 5; }
+
+    #screen-game-over, #screen-victory {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9); display: none; flex-direction: column;
+        justify-content: center; align-items: center; z-index: 100;
+        text-align: center;
+        padding: 40px;
+    }
+    #screen-victory { color: #3fb950; background: rgba(0,20,10,0.95); }
+    
+    .victory-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid #3fb950;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 600px;
+        margin-top: 20px;
+    }
+    .novelty-badge {
+        display: inline-block; padding: 4px 12px; border-radius: 20px;
+        font-weight: bold; margin-bottom: 15px; text-transform: uppercase;
+    }
+    .badge-novel { background: #3fb950; color: #fff; }
+    .badge-existing { background: #f6ad55; color: #000; }
+
+    
+    /* Custom button styles to match mockup */
+    .game-btn {
+        background: #00f2ff; color: #000; border: none; padding: 8px 16px; 
+        font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 4px;
+    }
+    .game-btn:hover { background: #fff; box-shadow: 0 0 15px #00f2ff; }
+
+    .instruction-hint {
+        position: absolute; left: 24px; top: 120px; font-size: 10px; color: #555; pointer-events: none; line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="mb-0">PathoHunt 3D <small class="text-muted">Target: {{ boss.common_name or boss.id }}</small></h2>
+    <div>
+        <a href="/game/pathohunt-3d/tutorial" class="btn btn-sm btn-info me-2">❓ How to Play</a>
+        <a href="{{ url_for('game.game_lobby') }}" class="btn btn-sm btn-outline-secondary">Back to Lobby</a>
+    </div>
+</div>
+
+<div class="game-container" id="gameViewport">
+    <div id="vfx-flash"></div>
+    <div id="vfx-damage"></div>
+    
+    <div id="screen-game-over">
+        <h1 style="font-size: 3rem; letter-spacing: 5px;">MISSION FAILED</h1>
+        <p style="color: #fff; margin-bottom: 20px;">The pathogen biome has collapsed.</p>
+        <button class="game-btn" onclick="location.reload()">RE-MATERIALIZE</button>
+    </div>
+
+    <div id="render-canvas"></div>
+
+    <div id="screen-victory">
+        <h1 style="font-size: 3.5rem; letter-spacing: 5px; color: #3fb950;">🏆 MISSION ACCOMPLISHED</h1>
+        <div class="victory-card">
+            <p style="font-size: 1.2rem; color: #fff; margin-bottom: 20px;">
+                Great job! By defeating the pathogen, you have helped synthesize a novel drug candidate.
+            </p>
+            <div id="victory-molecule-info">
+                <div class="novelty-badge badge-novel" id="novelty-status">Analyzing Novelty...</div>
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 5px;">SYNTHESIZED SMILES:</p>
+                    <code id="win-smiles" style="word-break: break-all; color: #00f2ff; font-size: 1.1rem;">-</code>
+                </div>
+                <div class="d-flex justify-content-center gap-3">
+                    <button class="game-btn" style="background: #3fb950;" id="btn-cross-validate">🔬 Cross-Validate</button>
+                    <a href="{{ url_for('game.game_lobby') }}" class="game-btn">Return to Base</a>
+                </div>
+            </div>
+            <div id="enrich-results" style="margin-top: 20px; text-align: left; display: none; max-height: 200px; overflow-y: auto;">
+                <!-- Results from ChEMBL/PubChem -->
+            </div>
+        </div>
+    </div>
+
+    <div id="game-hud">
+        <div class="hud-top">
+            <div class="bars-container">
+                <!-- Boss HP -->
+                <div class="bar-wrapper">
+                    <div class="bar-label enemy-label">
+                        <span>{{ boss.common_name or boss.id }}</span>
+                        <span id="enemy-hp-text">100.0 HP</span>
+                    </div>
+                    <div class="hp-bar-bg enemy-bar-bg">
+                        <div class="enemy-bar-fill" id="enemy-hp-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <!-- Player HP -->
+                <div class="bar-wrapper">
+                    <div class="bar-label player-label">
+                        <span>QUANTUM SHIELD</span>
+                        <span id="player-hp-text">1000 / 1000</span>
+                    </div>
+                    <div class="hp-bar-bg player-bar-bg">
+                        <div class="player-bar-fill" id="player-hp-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 12px; font-weight: bold;">ARENA: <span id="loc-name" style="color:#fff">JUNGLE_SECTOR</span></div>
+                <div style="font-size: 10px; opacity: 0.6; margin-top:4px;">SYNC_STATUS: ACTIVE</div>
+            </div>
+        </div>
+
+        <div class="instruction-hint">
+            // TACTICAL GUIDANCE<br>
+            MOUSE: AIM<br>
+            HOLD CLICK: LOCK<br>
+            RELEASE: FIRE PROJECTILE<br>
+            <br>
+            // THREAT ALERT<br>
+            INTERCEPT INCOMING SPORES<br>
+            DO NOT LET THEM HIT THE SHIELD
+        </div>
+
+        <div class="crosshair-ui" id="crosshair-ui"><div class="ch-dot"></div></div>
+
+        <div class="tactical-sidebar">
+            <div class="config-title">ENVIRONMENT</div>
+            <div class="config-item">
+                <select id="biome-select" class="game-select">
+                    <option value="jungle">🌲 Bio-Jungle</option>
+                    <option value="space">🌌 Deep Space</option>
+                    <option value="sky">🌤️ Azure Sky</option>
+                    <option value="ocean">🌊 Abyssal Ocean</option>
+                    <option value="desert">🏜️ Crystal Desert</option>
+                    <option value="city">🏙️ Neon City</option>
+                </select>
+            </div>
+
+            <div class="config-title">COMBAT PARAMS</div>
+            <div class="config-item">
+                <span class="config-label">Difficulty</span>
+                <select id="diff-select" class="game-select">
+                    <option value="easy">Easy (Relaxed)</option>
+                    <option value="normal" selected>Normal (Tactical)</option>
+                    <option value="hard">Hard (Extreme)</option>
+                </select>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Missile System</span>
+                <select id="missile-select" class="game-select">
+                    <option value="standard">Standard Lead</option>
+                    <option value="hypersonic">Hypersonic Dart</option>
+                    <option value="guided">Bio-Guided</option>
+                </select>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Trajectory</span>
+                <select id="traj-select" class="game-select">
+                    <option value="linear">Direct</option>
+                    <option value="nonlinear" selected>Parabolic</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="combat-log"></div>
+
+        <div class="hud-bottom">
+            <div class="spell-console">
+                <button id="prev-spell" class="game-btn" style="padding: 10px;">◀</button>
+                <div class="spell-display">
+                    <span id="active-spell-name">Aura of Aspirin</span>
+                    <input type="hidden" id="active-smiles" value="{{ boss.starter_smiles }}">
+                </div>
+                <button id="next-spell" class="game-btn" style="padding: 10px;">▶</button>
+                <div style="font-size: 9px; color: #555; text-align: right; width: 80px;">// CLICK ARENA TO FIRE //</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Pass Flask variables to JS
+    window.GAME_BOSS_ID = "{{ boss.id }}";
+    window.GAME_INITIAL_HP = {{ boss.boss_initial_hp or 100 }};
+    window.GAME_STARTER_SMILES = "{{ boss.starter_smiles }}";
+</script>
+<script src="{{ url_for('static', filename='js/game_battle_3d.js') }}"></script>
+{% endblock %}
