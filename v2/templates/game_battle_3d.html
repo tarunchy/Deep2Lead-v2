@@ -3,7 +3,9 @@
 
 {% block head %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/smiles-drawer@2.1.7/dist/smiles-drawer.min.js"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/game_battle_3d.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/molecule_designer.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -32,7 +34,7 @@
             </div>
             <div class="story-controls-grid">
                 <div class="story-ctrl-item">
-                    <kbd>←</kbd><kbd>→</kbd>
+                    <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd>
                     <span>Move Ship</span>
                 </div>
                 <div class="story-ctrl-item">
@@ -123,14 +125,16 @@
 
         <div class="instruction-hint">
             // CONTROLS<br>
-            ← → MOVE SHIP<br>
+            ← ↑ ↓ → MOVE SHIP<br>
             SPACE: FIRE<br>
             1/2/3: SELECT MOL<br>
             CLICK: FIRE (MOUSE)<br>
             <br>
             // THREATS<br>
             🔴 RED = ENEMY SPORE<br>
-            🟢 GREEN = FRIENDLY!
+            🟢 GREEN = FRIENDLY!<br>
+            <br>
+            🧪 DESIGN DRUG: custom mol
         </div>
 
         <div class="crosshair-ui" id="crosshair-ui"><div class="ch-dot"></div></div>
@@ -213,21 +217,124 @@
             <div class="molecule-deck" id="moleculeDeck">
                 <div class="deck-header">
                     <span class="deck-label">⚗️ SELECT MOLECULE TO FIRE</span>
-                    <button class="deck-custom-btn" id="btnCustomSmiles" title="Custom SMILES">⌨️ Custom</button>
+                    <button class="deck-custom-btn" id="btnDesignMol" title="Design your own drug">🧪 Design Drug</button>
                 </div>
                 <div class="deck-cards" id="deckCards">
                     <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
                     <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
                     <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
                 </div>
-                <div class="deck-custom-row" id="deckCustomRow" style="display:none;">
-                    <input type="text" id="customSmilesInput" class="custom-smiles-input" placeholder="Enter SMILES...">
-                    <button class="game-btn" id="btnSetCustom">SET</button>
-                </div>
-                <div class="deck-fire-hint">// SPACE or CLICK ARENA TO FIRE · ← → MOVE SHIP //</div>
+                <div class="deck-fire-hint">// SPACE or CLICK ARENA TO FIRE · ← ↑ ↓ → MOVE SHIP //</div>
             </div>
         </div>
     </div>
+</div>
+
+<!-- ── Molecule Designer Modal ─────────────────────────────────── -->
+<div id="molDesignerOverlay" class="mdes-overlay" style="display:none;">
+  <div class="mdes-modal">
+    <div class="mdes-header">
+      <div class="mdes-title">🧪 Design Your Ammunition</div>
+      <div class="mdes-subtitle">Create a custom drug molecule to fire at the pathogen</div>
+      <button class="mdes-close" id="mdesClose">✕</button>
+    </div>
+
+    <div class="mdes-tabs">
+      <button class="mdes-tab active" data-tab="describe">💬 Describe It</button>
+      <button class="mdes-tab" data-tab="build">🧱 Build It</button>
+    </div>
+
+    <!-- Tab: Describe -->
+    <div class="mdes-panel" id="mdesTabDescribe">
+      <div class="mdes-tip">Describe your molecule in plain English. The AI will design it for you.</div>
+      <textarea id="mdesPrompt" class="mdes-textarea" rows="3"
+        placeholder="e.g. A molecule with a benzene ring and an amine group that can block COVID protease…"></textarea>
+      <div class="mdes-examples">
+        <span class="mdes-example-label">Try:</span>
+        <button class="mdes-example" onclick="mdesSetExample('A fluorinated benzene with a carboxylic acid group, drug-like and easy to synthesize')">Fluorinated benzene</button>
+        <button class="mdes-example" onclick="mdesSetExample('A piperidine ring connected to a pyrimidine, suitable for kinase inhibition')">Kinase inhibitor</button>
+        <button class="mdes-example" onclick="mdesSetExample('A small molecule with morpholine and an amide bond, low molecular weight under 400')">Amide linker</button>
+      </div>
+      <button class="mdes-gen-btn" id="mdesGenDescribe">✨ Generate Molecule</button>
+    </div>
+
+    <!-- Tab: Build -->
+    <div class="mdes-panel" id="mdesTabBuild" style="display:none;">
+      <div class="mdes-tip">Pick building blocks from the palette. The AI will assemble them into a valid molecule.</div>
+      <div class="mdes-palette">
+        <div class="mdes-palette-section">
+          <div class="mdes-palette-label">Ring Systems</div>
+          <div class="mdes-blocks" id="mdesPaletteRings">
+            <button class="mdes-block" data-block="benzene ring">🔵 Benzene</button>
+            <button class="mdes-block" data-block="pyridine ring">🟣 Pyridine</button>
+            <button class="mdes-block" data-block="piperidine ring">🟤 Piperidine</button>
+            <button class="mdes-block" data-block="morpholine ring">🟠 Morpholine</button>
+            <button class="mdes-block" data-block="imidazole ring">🟡 Imidazole</button>
+            <button class="mdes-block" data-block="pyrimidine ring">🔶 Pyrimidine</button>
+            <button class="mdes-block" data-block="indole bicyclic ring">🔷 Indole</button>
+          </div>
+        </div>
+        <div class="mdes-palette-section">
+          <div class="mdes-palette-label">Functional Groups</div>
+          <div class="mdes-blocks" id="mdesPaletteGroups">
+            <button class="mdes-block" data-block="amine group -NH2">💚 Amine</button>
+            <button class="mdes-block" data-block="hydroxyl group -OH">🩵 Hydroxyl</button>
+            <button class="mdes-block" data-block="carboxylic acid -COOH">❤️ Carboxyl</button>
+            <button class="mdes-block" data-block="fluorine atom -F">🤍 Fluorine</button>
+            <button class="mdes-block" data-block="chlorine atom -Cl">🖤 Chlorine</button>
+            <button class="mdes-block" data-block="trifluoromethyl -CF3">🩶 CF3</button>
+            <button class="mdes-block" data-block="methyl group -CH3">🟫 Methyl</button>
+            <button class="mdes-block" data-block="sulfonamide -SO2NH2">🟪 Sulfonamide</button>
+            <button class="mdes-block" data-block="amide bond -CONH2">💛 Amide</button>
+            <button class="mdes-block" data-block="nitrile group -CN">🔴 Nitrile</button>
+          </div>
+        </div>
+        <div class="mdes-palette-section">
+          <div class="mdes-palette-label">Linkers &amp; Spacers</div>
+          <div class="mdes-blocks">
+            <button class="mdes-block" data-block="methylene spacer -CH2-">⬜ CH2</button>
+            <button class="mdes-block" data-block="ether oxygen linker -O-">🔵 -O- Ether</button>
+            <button class="mdes-block" data-block="amine nitrogen linker -NH-">🟢 -NH- Linker</button>
+            <button class="mdes-block" data-block="carbonyl C=O">🟡 C=O</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected blocks tray -->
+      <div class="mdes-tray-label">Your Recipe <span id="mdesTrayCount">(0 blocks)</span></div>
+      <div class="mdes-tray" id="mdesTray">
+        <span class="mdes-tray-empty">Click blocks above to add them here…</span>
+      </div>
+      <button class="mdes-gen-btn" id="mdesGenBuild" disabled>✨ Assemble Molecule</button>
+    </div>
+
+    <!-- Preview area (shared) -->
+    <div class="mdes-preview" id="mdesPreview" style="display:none;">
+      <div class="mdes-preview-left">
+        <canvas id="mdesMolCanvas" width="280" height="200"></canvas>
+      </div>
+      <div class="mdes-preview-right">
+        <div class="mdes-result-name" id="mdesResultName">–</div>
+        <div class="mdes-result-smiles" id="mdesResultSmiles">–</div>
+        <div class="mdes-result-explanation" id="mdesResultExplanation">–</div>
+        <div class="mdes-props" id="mdesProps"></div>
+        <div class="mdes-name-row">
+          <input type="text" class="mdes-name-input" id="mdesDrugLabel" placeholder="Name your drug…">
+          <button class="mdes-ai-name-btn" id="mdesAiName">🤖 AI Name</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mdes-spinner" id="mdesSpinner" style="display:none;">
+      <div class="mdes-spin-ring"></div>
+      <div class="mdes-spin-text">AI is designing your molecule…</div>
+    </div>
+
+    <div class="mdes-footer">
+      <button class="mdes-cancel-btn" id="mdesCancel">Cancel</button>
+      <button class="mdes-launch-btn" id="mdesLaunch" disabled>🚀 Load into Weapon Bay</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -241,5 +348,6 @@ window.GAME_BOSS_FLAVOR = {{ (boss.boss_flavor or '') | tojson }};
 window.GAME_BOSS_NAME = {{ (boss.game_name or boss.id) | tojson }};
 window.GAME_BOSS_EMOJI = {{ (boss.game_emoji or '🦠') | tojson }};
 </script>
+<script src="{{ url_for('static', filename='js/molecule_designer.js') }}"></script>
 <script src="{{ url_for('static', filename='js/game_battle_3d.js') }}"></script>
 {% endblock %}

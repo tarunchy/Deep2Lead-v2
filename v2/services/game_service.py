@@ -225,6 +225,80 @@ def execute_attack(session_id, smiles: str, user_id) -> dict:
     }
 
 
+def design_molecule(prompt: str = "", blocks: list = None, target_id: str = "") -> dict:
+    """Use Gemma4 to design a SMILES from natural-language or building blocks."""
+    import json as _json
+    import re as _re
+    from services.molecule_generator import _call_gemma4
+    from utils.mol_utils import canonicalize
+    from services.property_calculator import compute_all
+
+    boss_context = ""
+    if target_id:
+        meta = _level_meta(target_id)
+        if meta:
+            boss_context = f" Target protein: {meta.get('name', target_id)}."
+
+    if blocks:
+        block_str = ", ".join(blocks)
+        user_content = (
+            f"Assemble a valid drug-like SMILES molecule using these chemical building blocks: {block_str}.{boss_context} "
+            f"Follow Lipinski's Rule of Five (MW<500, LogP<5, HBD<=5, HBA<=10). "
+            f"Return ONLY a JSON object on one line with exactly these fields: "
+            f'{{\"smiles\": \"<valid SMILES>\", \"name\": \"<2-3 word codename>\", \"explanation\": \"<one sentence>\"}}'
+        )
+    else:
+        user_content = (
+            f"Design a valid drug-like molecule: {prompt}.{boss_context} "
+            f"Follow Lipinski's Rule of Five. "
+            f"Return ONLY a JSON object on one line with exactly these fields: "
+            f'{{\"smiles\": \"<valid SMILES>\", \"name\": \"<2-3 word codename>\", \"explanation\": \"<one sentence>\"}}'
+        )
+
+    raw = _call_gemma4(user_content)
+
+    # Extract JSON from response
+    smiles, name, explanation = None, "CUSTOM-001", "AI-designed molecule"
+    json_match = _re.search(r'\{[^}]+\}', raw, _re.DOTALL)
+    if json_match:
+        try:
+            obj = _json.loads(json_match.group())
+            smiles = obj.get("smiles", "").strip()
+            name = obj.get("name", name).strip()
+            explanation = obj.get("explanation", explanation).strip()
+        except Exception:
+            pass
+
+    # Fallback: try first SMILES-like token on any line
+    if not smiles:
+        for line in raw.split("\n"):
+            line = line.strip().strip('"\'')
+            import re as _r
+            if _r.match(r'^[A-Za-z0-9@+\-\[\]()=#$/.\\%]{6,}$', line):
+                smiles = line
+                break
+
+    canonical = canonicalize(smiles) if smiles else None
+    if not canonical:
+        raise ValueError("Could not generate a valid SMILES. Try a different description.")
+
+    props = compute_all(canonical, canonical) or {}
+    composite = (
+        0.45 * props.get("qed", 0)
+        + 0.30 * max(0, 1.0 - (props.get("sas", 5) - 1) / 9)
+        + 0.15 * props.get("tanimoto", 0)
+        + (0.10 if props.get("lipinski_pass") else 0)
+    )
+    props["composite_score"] = round(min(1.0, max(0.0, composite)), 4)
+
+    return {
+        "smiles": canonical,
+        "name": name,
+        "explanation": explanation,
+        "props": props,
+    }
+
+
 def get_session_state(session_id, user_id) -> dict | None:
     session = GameSession.query.get(session_id)
     if not session or str(session.user_id) != str(user_id):

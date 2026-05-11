@@ -181,6 +181,7 @@ class PathoHunt3D {
         // Real-game state
         this.keys = {};
         this.playerShipX = 0;
+        this.playerShipY = -7;   // vertical position (up/down)
         this.playerShip = null;
         this.bossTargetX = 0;
         this.bossTargetY = 5;
@@ -535,6 +536,21 @@ class PathoHunt3D {
         this.selectedMolName = this.currentDeck[idx].name;
         document.querySelectorAll('.mol-card').forEach((c, i) => c.classList.toggle('selected', i === idx));
         this.log(`SELECTED: ${this.selectedMolName}`);
+    }
+
+    injectDesignedMolecule(smiles, label) {
+        // Prepend the custom-designed molecule to the deck and select it
+        const custom = { smiles, name: label, composite: 0, qed: 0, sas: 0, lipinski: true };
+        this.currentDeck = [custom, ...this.currentDeck.slice(0, 2)];
+        this.renderDeck(this.currentDeck);
+        // Select it immediately
+        this.selectedSmiles  = smiles;
+        this.selectedMolName = label;
+        document.querySelectorAll('.mol-card').forEach((c, i) => c.classList.toggle('selected', i === 0));
+        this.log(`🧪 CUSTOM DRUG LOADED: ${label}`, '#00f2ff');
+        // Audio confirmation
+        fetch('/api/v3/game/tts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: `Custom molecule ${label} loaded into weapon bay. Ready to fire!` }) })
+            .then(r => r.ok ? r.blob() : null).then(b => { if (b) audioMgr.play(b); }).catch(() => {});
     }
 
     setupEventListeners() {
@@ -1039,17 +1055,30 @@ class PathoHunt3D {
         this.lastFrameTime = now;
         const t = now / 1000;
 
-        // Arrow key ship movement
+        // Arrow key ship movement — full 2D (left/right + up/down)
         if (this.gameStarted && this.playerShip) {
             const shipSpeed = 22;
             if (this.keys['ArrowLeft'])  this.playerShipX = Math.max(-22, this.playerShipX - shipSpeed * dt);
             if (this.keys['ArrowRight']) this.playerShipX = Math.min(22,  this.playerShipX + shipSpeed * dt);
+            if (this.keys['ArrowUp'])    this.playerShipY = Math.min(-2,  this.playerShipY + shipSpeed * dt);
+            if (this.keys['ArrowDown'])  this.playerShipY = Math.max(-14, this.playerShipY - shipSpeed * dt);
             this.playerShip.position.x += (this.playerShipX - this.playerShip.position.x) * 0.18;
+            this.playerShip.position.y += (this.playerShipY - this.playerShip.position.y) * 0.18;
             this.playerShip.rotation.z = -(this.playerShipX - this.playerShip.position.x) * 0.12;
+            this.playerShip.rotation.x =  (this.playerShipY - this.playerShip.position.y) * 0.06;
             // Thruster pulse
             if (this.playerShip.userData.thruster) {
                 const intensity = 0.4 + Math.sin(t * 12) * 0.3;
                 this.playerShip.userData.thruster.material.emissiveIntensity = intensity;
+            }
+        }
+
+        // Boss slowly advances toward camera when HP drops below 50% — pressure mechanic
+        if (this.gameStarted && this.monster && this.bossInitialHP) {
+            const hpRatio = this.bossHP / this.bossInitialHP;
+            if (hpRatio < 0.5) {
+                const advanceTarget = 5 + (0.5 - hpRatio) * 40; // z: 5 → 25 as HP drains
+                this.monster.position.z += (advanceTarget - this.monster.position.z) * 0.005 * dt;
             }
         }
 
@@ -1201,4 +1230,4 @@ class PathoHunt3D {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => { new PathoHunt3D(); });
+document.addEventListener('DOMContentLoaded', () => { window.pathoHunt3D = new PathoHunt3D(); });

@@ -156,6 +156,22 @@ def api_get_candidates(session_id):
     return jsonify({"candidates": candidates})
 
 
+@bp.route("/api/v3/game/design-molecule", methods=["POST"])
+@login_required
+def api_design_molecule():
+    data = request.get_json(silent=True) or {}
+    prompt = (data.get("prompt") or "").strip()[:600]
+    blocks = data.get("blocks") or []
+    target_id = data.get("target_id", "")
+    if not prompt and not blocks:
+        return jsonify({"error": "prompt or blocks required"}), 400
+    try:
+        result = game_service.design_molecule(prompt=prompt, blocks=blocks, target_id=target_id)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @bp.route("/api/v3/game/validate", methods=["POST"])
 @login_required
 def api_validate_novelty():
