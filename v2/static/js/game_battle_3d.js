@@ -369,6 +369,19 @@ class PathoHunt3D {
         }
         // Refresh deck so player can try again quickly
         setTimeout(() => this.fetchDeck(), 300);
+
+        // Taunt voice line
+        const taunts = [
+            'Ooh, you missed! The pathogen dodged your molecule. Try again!',
+            'So close! It slipped away. Pick a better molecule and fire!',
+            'Ha! The target evaded. Don\'t give up — hit it harder next time!',
+            'Missed! The pathogen is fast. Adjust your aim and try again!',
+        ];
+        const line = taunts[Math.floor(Math.random() * taunts.length)];
+        fetch('/api/v3/game/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: line }) })
+            .then(r => r.ok ? r.blob() : null)
+            .then(blob => { if (blob) audioMgr.play(blob); })
+            .catch(() => {});
     }
 
     friendlyFire() {
@@ -1109,13 +1122,16 @@ class PathoHunt3D {
             }
             if (hitSomething) continue;
 
-            // Enemy spore hit
+            // Enemy spore hit — molecule blocked, unlock attack so player can fire again
             for (let oi = this.obstacles.length - 1; oi >= 0; oi--) {
                 const obs = this.obstacles[oi];
                 if (p.mesh.position.distanceTo(obs.position) < (obs.isLarge ? 7 : 5)) {
                     obs.health--;
                     if (obs.health <= 0) { this.createExplosion(obs.position, 0x00f2ff, 1.5); this.scene.remove(obs); this.obstacles.splice(oi, 1); }
                     this.scene.remove(p.mesh); this.projectiles.splice(i, 1);
+                    this.attackLocked = false;
+                    setTimeout(() => this.fetchDeck(), 300);
+                    this.log('BLOCKED by enemy spore! Fire again.', '#ff6600');
                     hitSomething = true; break;
                 }
             }
