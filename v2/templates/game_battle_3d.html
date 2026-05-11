@@ -19,6 +19,39 @@
     <div id="vfx-flash"></div>
     <div id="vfx-damage"></div>
 
+    <!-- Story/Mission Briefing Screen -->
+    <div id="storyScreen">
+        <div class="story-panel">
+            <div class="story-boss-emoji" id="storyBossEmoji">🦠</div>
+            <div class="story-mission-label">⚡ MISSION BRIEFING</div>
+            <div class="story-boss-name" id="storyBossName">TARGET</div>
+            <div class="story-lore" id="storyText">Loading mission data...</div>
+            <div class="story-objective">
+                <span class="story-obj-icon">🎯</span>
+                Achieve <strong id="storyWinPct">70%</strong> composite score to defeat the pathogen
+            </div>
+            <div class="story-controls-grid">
+                <div class="story-ctrl-item">
+                    <kbd>←</kbd><kbd>→</kbd>
+                    <span>Move Ship</span>
+                </div>
+                <div class="story-ctrl-item">
+                    <kbd>SPACE</kbd>
+                    <span>Fire Molecule</span>
+                </div>
+                <div class="story-ctrl-item">
+                    <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>
+                    <span>Select Molecule</span>
+                </div>
+                <div class="story-ctrl-item story-safe-warning">
+                    <span class="safe-cell-icon">🟢</span>
+                    <span><strong style="color:#00ff88">GREEN CELLS</strong> = Friendly!<br>Don't shoot them!</span>
+                </div>
+            </div>
+            <button class="story-start-btn" id="storyStartBtn">⚔️ START MISSION</button>
+        </div>
+    </div>
+
     <div id="screen-game-over">
         <h1 style="font-size:3rem;letter-spacing:5px;color:#ff3e3e;">MISSION FAILED</h1>
         <p style="color:#fff;margin-bottom:20px;">The pathogen biome has collapsed.</p>
@@ -44,6 +77,8 @@
             <div id="enrich-results" style="margin-top:20px;text-align:left;display:none;max-height:200px;overflow-y:auto;"></div>
         </div>
     </div>
+
+    <div id="comboBadge" class="combo-badge" style="display:none;"></div>
 
     <div id="game-hud">
         <div class="hud-top">
@@ -85,13 +120,15 @@
         </div>
 
         <div class="instruction-hint">
-            // TACTICAL GUIDANCE<br>
-            MOUSE: AIM<br>
-            HOLD CLICK: LOCK<br>
-            RELEASE: FIRE<br>
+            // CONTROLS<br>
+            ← → MOVE SHIP<br>
+            SPACE: FIRE<br>
+            1/2/3: SELECT MOL<br>
+            CLICK: FIRE (MOUSE)<br>
             <br>
-            // THREAT ALERT<br>
-            INTERCEPT SPORES
+            // THREATS<br>
+            🔴 RED = ENEMY SPORE<br>
+            🟢 GREEN = FRIENDLY!
         </div>
 
         <div class="crosshair-ui" id="crosshair-ui"><div class="ch-dot"></div></div>
@@ -185,7 +222,7 @@
                     <input type="text" id="customSmilesInput" class="custom-smiles-input" placeholder="Enter SMILES...">
                     <button class="game-btn" id="btnSetCustom">SET</button>
                 </div>
-                <div class="deck-fire-hint">// CLICK ARENA TO FIRE SELECTED //</div>
+                <div class="deck-fire-hint">// SPACE or CLICK ARENA TO FIRE · ← → MOVE SHIP //</div>
             </div>
         </div>
     </div>

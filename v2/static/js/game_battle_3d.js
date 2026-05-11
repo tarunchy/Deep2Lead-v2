@@ -153,6 +153,22 @@ class PathoHunt3D {
         this.spawnTimer = null;
         this.wonMolecule = null;
         this.bossProfile = BOSS_PROFILES[window.GAME_BOSS_ID] || BOSS_PROFILES.default;
+
+        // Real-game state
+        this.keys = {};
+        this.playerShipX = 0;
+        this.playerShip = null;
+        this.bossTargetX = 0;
+        this.bossTargetY = 5;
+        this.bossMoveTimer = 0;
+        this.safeObjects = [];
+        this.safeSpawnTimer = null;
+        this.comboCount = 0;
+        this.gameStarted = false;
+        this.lastFrameTime = Date.now();
+        this.fireReady = true;
+        this.fireCooldown = 800;
+
         this.init();
     }
 
@@ -173,14 +189,140 @@ class PathoHunt3D {
         this.monster.position.set(0, 5, 0);
         this.scene.add(this.monster);
         this.applyTheme('jungle');
+        this.buildPlayerShip();
         this.setupEventListeners();
         this.animate();
         await this.startSession();
+        this.showStoryScreen();
+    }
+
+    buildPlayerShip() {
+        const g = new THREE.Group();
+        const bodyMat = new THREE.MeshPhongMaterial({ color: 0x00f2ff, emissive: 0x003344 });
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.2, 4, 6), bodyMat);
+        body.rotation.x = Math.PI / 2;
+        g.add(body);
+
+        const wingMat = new THREE.MeshPhongMaterial({ color: 0x0088aa, emissive: 0x001122 });
+        const wingGeoL = new THREE.ConeGeometry(0.5, 3.5, 4);
+        const wL = new THREE.Mesh(wingGeoL, wingMat);
+        wL.rotation.z = Math.PI / 2;
+        wL.position.set(-2.8, 0, 0.5);
+        g.add(wL);
+
+        const wR = new THREE.Mesh(wingGeoL, wingMat);
+        wR.rotation.z = -Math.PI / 2;
+        wR.position.set(2.8, 0, 0.5);
+        g.add(wR);
+
+        const thrusterMat = new THREE.MeshPhongMaterial({ color: 0xff6600, emissive: 0xff3300 });
+        const thruster = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.2, 1, 6), thrusterMat);
+        thruster.rotation.x = Math.PI / 2;
+        thruster.position.set(0, 0, 2.5);
+        g.add(thruster);
+        g.userData.thruster = thruster;
+
+        g.position.set(0, -8, 32);
+        this.scene.add(g);
+        this.playerShip = g;
+    }
+
+    showStoryScreen() {
+        const overlay = document.getElementById('storyScreen');
+        if (!overlay) { this.startBattle(); return; }
+
+        const nameEl = document.getElementById('storyBossName');
+        const emojiEl = document.getElementById('storyBossEmoji');
+        const textEl = document.getElementById('storyText');
+        const winEl = document.getElementById('storyWinPct');
+        if (nameEl) nameEl.textContent = window.GAME_BOSS_NAME || window.GAME_BOSS_ID;
+        if (emojiEl) emojiEl.textContent = window.GAME_BOSS_EMOJI || '🦠';
+        if (textEl) textEl.textContent = window.GAME_PLAIN_ENGLISH || window.GAME_BOSS_FLAVOR || 'A dangerous pathogen is threatening the host. Your mission: design molecules that block its key proteins. Good luck, Scientist.';
+        if (winEl) winEl.textContent = Math.round((this.winThreshold || 0.70) * 100) + '%';
+
+        overlay.style.display = 'flex';
+
+        const startBtn = document.getElementById('storyStartBtn');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                overlay.style.display = 'none';
+                this.startBattle();
+            });
+        }
+        const introText = window.GAME_PLAIN_ENGLISH || window.GAME_BOSS_FLAVOR || '';
+        if (introText) this.playTTS(introText.substring(0, 300));
+    }
+
+    startBattle() {
+        this.gameStarted = true;
         this.updateSpawnRate();
+        this.startSafeSpawner();
         this.renderDeckLoading();
         this.fetchDeck();
         this.updateWinMarker();
-        this.log(`ARENA INITIALIZED — TARGET: ${window.GAME_BOSS_NAME || window.GAME_BOSS_ID}`);
+        this.log(`MISSION STARTED — TARGET: ${window.GAME_BOSS_NAME || window.GAME_BOSS_ID}`);
+    }
+
+    startSafeSpawner() {
+        if (this.safeSpawnTimer) clearInterval(this.safeSpawnTimer);
+        this.safeSpawnTimer = setInterval(() => this.spawnSafeObject(), 3500);
+        setTimeout(() => this.spawnSafeObject(), 800);
+    }
+
+    spawnSafeObject() {
+        if (this.isGameOver || !this.gameStarted) return;
+        const size = 0.8 + Math.random() * 1.2;
+        const mesh = new THREE.Mesh(
+            new THREE.OctahedronGeometry(size, 1),
+            new THREE.MeshPhongMaterial({ color: 0x00ff88, emissive: 0x004422, transparent: true, opacity: 0.85 })
+        );
+        mesh.position.set((Math.random() - 0.5) * 70, Math.random() * 22 - 4, -60);
+        const speed = 0.05 + Math.random() * 0.07;
+        mesh.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.04, Math.sin(Date.now() * 0.001 + Math.random() * 6) * 0.008, speed);
+        mesh.userData.pulseT = Math.random() * Math.PI * 2;
+        mesh.userData.isSafe = true;
+        this.scene.add(mesh);
+        this.safeObjects.push(mesh);
+    }
+
+    friendlyFire() {
+        this.comboCount = 0;
+        this.updateComboDisplay();
+        this.takeDamage(80);
+        this.attackLocked = false;
+        this.log('FRIENDLY FIRE! Healthy cell destroyed! -80 HP', '#ff6600');
+
+        const vf = document.getElementById('vfx-flash');
+        if (vf) {
+            vf.style.background = 'rgba(0,255,136,0.35)';
+            vf.style.opacity = '1';
+            setTimeout(() => { vf.style.opacity = '0'; setTimeout(() => { vf.style.background = ''; }, 200); }, 250);
+        }
+
+        const div = document.createElement('div');
+        div.className = 'float-dmg';
+        div.style.color = '#ff6600';
+        div.style.fontSize = '20px';
+        div.textContent = '⚠️ FRIENDLY FIRE -80 HP';
+        const rect = this.container.getBoundingClientRect();
+        div.style.left = (rect.width * 0.3 + (Math.random() - 0.5) * 40) + 'px';
+        div.style.top = (rect.height * 0.42) + 'px';
+        this.container.appendChild(div);
+        setTimeout(() => div.remove(), 2200);
+
+        setTimeout(() => this.fetchDeck(), 300);
+    }
+
+    updateComboDisplay() {
+        const badge = document.getElementById('comboBadge');
+        if (!badge) return;
+        if (this.comboCount >= 2) {
+            badge.textContent = this.comboCount >= 5 ? `🔥🔥 ${this.comboCount}x COMBO` : `🔥 ${this.comboCount}x COMBO`;
+            badge.style.display = 'block';
+            badge.className = 'combo-badge' + (this.comboCount >= 5 ? ' combo-hot' : '');
+        } else {
+            badge.style.display = 'none';
+        }
     }
 
     async startSession() {
@@ -244,6 +386,7 @@ class PathoHunt3D {
             div.className = `mol-card${i === 0 ? ' selected' : ''}`;
             div.id = `card-${i}`;
             div.innerHTML = `
+                <div class="mol-card-key">[${i + 1}]</div>
                 <div class="mol-card-name">${c.name}</div>
                 <div class="mol-card-smiles">${shortSmiles}</div>
                 <div class="mol-card-power">
@@ -273,11 +416,24 @@ class PathoHunt3D {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
         });
+
+        window.addEventListener('keydown', e => {
+            this.keys[e.code] = true;
+            if (e.code === 'Space' && !e.repeat) {
+                e.preventDefault();
+                this.onSpacebarFire();
+            }
+            if (e.code === 'Digit1') this.selectCard(0);
+            if (e.code === 'Digit2') this.selectCard(1);
+            if (e.code === 'Digit3') this.selectCard(2);
+        });
+        window.addEventListener('keyup', e => { this.keys[e.code] = false; });
+
         this.container.addEventListener('mousemove', e => this.onMouseMove(e));
         this.container.addEventListener('mousedown', () => {
             if (this.isGameOver || this.attackLocked) return;
             this.isAiming = true;
-            document.getElementById('crosshair-ui').classList.add('aiming');
+            document.getElementById('crosshair-ui')?.classList.add('aiming');
         });
         this.container.addEventListener('mouseup', () => this.onMouseUp());
         document.getElementById('biome-select')?.addEventListener('change', e => this.applyTheme(e.target.value));
@@ -299,6 +455,13 @@ class PathoHunt3D {
             }
         });
         document.getElementById('btn-cross-validate')?.addEventListener('click', () => this.crossValidate());
+    }
+
+    onSpacebarFire() {
+        if (this.isGameOver || this.attackLocked || !this.gameStarted || !this.fireReady) return;
+        this.fireReady = false;
+        setTimeout(() => { this.fireReady = true; }, this.fireCooldown);
+        this.launchAttack();
     }
 
     applyTheme(themeKey) {
@@ -337,7 +500,7 @@ class PathoHunt3D {
     }
 
     onMouseUp() {
-        if (this.isAiming && !this.isGameOver && !this.attackLocked) {
+        if (this.isAiming && !this.isGameOver && !this.attackLocked && this.gameStarted) {
             this.launchAttack();
         }
         this.isAiming = false;
@@ -356,18 +519,22 @@ class PathoHunt3D {
             new THREE.MeshPhongMaterial({ color, emissive: color }));
         body.rotation.x = Math.PI / 2;
         const group = new THREE.Group(); group.add(body);
-        group.position.set(0, -3, 35);
+
+        const shipX = this.playerShip ? this.playerShip.position.x : 0;
+        const shipY = this.playerShip ? this.playerShip.position.y + 1 : -7;
+        group.position.set(shipX, shipY, 32);
         this.scene.add(group);
 
         const smilesToSend = this.selectedSmiles;
         const molName = this.selectedMolName;
 
+        const bossPos = this.monster ? this.monster.position.clone() : new THREE.Vector3(0, 5, 0);
         const proj = {
             mesh: group, t: 0,
             speed: type === 'hypersonic' ? 2.5 : 1.5,
             isParabolic,
             startPos: group.position.clone(),
-            targetPos: this.targetPoint.clone(),
+            targetPos: bossPos,
             parked: false, hitTime: 0,
             apiResult: null, apiSettled: false,
             molName,
@@ -439,8 +606,16 @@ class PathoHunt3D {
         if (composite > this.bestScore) this.bestScore = composite;
         this.attackCount = data.session?.attacks_count || (this.attackCount + 1);
 
-        this.createExplosion(this.monster.position.clone(), this.bossProfile.color || 0xff3e3e, 2);
-        this.showFloatingDamage(damage, isNewBest);
+        if (composite >= 0.55) {
+            this.comboCount++;
+        } else {
+            this.comboCount = 0;
+        }
+        this.updateComboDisplay();
+
+        const comboDmgBonus = this.comboCount >= 3 ? 1.25 : 1;
+        this.createExplosion(this.monster.position.clone(), this.bossProfile.color || 0xff3e3e, 2 * comboDmgBonus);
+        this.showFloatingDamage(damage * comboDmgBonus, isNewBest);
         this.updateHUD();
         this.showScienceCard(data);
         this.setBossWounded();
@@ -489,7 +664,7 @@ class PathoHunt3D {
         if (card) card.classList.add('visible');
 
         if (this.scienceCardTimer) clearTimeout(this.scienceCardTimer);
-        this.scienceCardTimer = setTimeout(() => this.hideScienceCard(), 8000);
+        this.scienceCardTimer = setTimeout(() => this.hideScienceCard(), 7000);
 
         this.playTTS(getAttackMsg(composite, window.GAME_BOSS_NAME || 'the boss', isNewBest).replace(/🏆/g,''));
     }
@@ -549,7 +724,7 @@ class PathoHunt3D {
     }
 
     spawnObstacle() {
-        if (this.isGameOver) return;
+        if (this.isGameOver || !this.gameStarted) return;
         const diff = document.getElementById('diff-select')?.value || 'normal';
         const s = DIFFICULTY[diff];
         const isLarge = Math.random() > 0.8;
@@ -658,19 +833,32 @@ class PathoHunt3D {
         const p = this.bossProfile;
         this.monster.rotation.y += (p.rotY || 0.015) + (p._rotYBoost || 0);
         this.monster.rotation.x += (p.rotX || 0.005);
+
+        // Random wandering movement during battle
+        if (this.gameStarted) {
+            if (t * 1000 > this.bossMoveTimer) {
+                this.bossMoveTimer = t * 1000 + 1800 + Math.random() * 2500;
+                this.bossTargetX = (Math.random() - 0.5) * 28;
+                this.bossTargetY = 2 + Math.random() * 10;
+            }
+            this.monster.position.x += (this.bossTargetX - this.monster.position.x) * 0.018;
+            this.monster.position.y += (this.bossTargetY - this.monster.position.y) * 0.018;
+        }
+
         switch (p.idleAnim) {
-            case 'pulse':
+            case 'pulse': {
                 const sc = 1 + Math.sin(t * 2) * 0.04;
                 this.monster.scale.setScalar(sc);
                 break;
+            }
             case 'twitch':
                 if (Math.random() < 0.03) {
-                    this.monster.position.x = (Math.random()-.5) * 0.8;
-                    this.monster.position.y = 5 + (Math.random()-.5) * 0.5;
+                    this.monster.position.x += (Math.random()-.5) * 0.8;
+                    this.monster.position.y += (Math.random()-.5) * 0.5;
                 }
                 break;
             case 'float':
-                this.monster.position.y = 5 + Math.sin(t * 0.7) * 1.5;
+                this.monster.position.y += Math.sin(t * 0.7) * 0.015;
                 break;
             case 'timer':
                 if (this.monster.userData.orbs) {
@@ -689,9 +877,46 @@ class PathoHunt3D {
     animate() {
         if (this.isGameOver) { this.renderer.render(this.scene, this.camera); return; }
         requestAnimationFrame(() => this.animate());
-        const t = Date.now() / 1000;
+
+        const now = Date.now();
+        const dt = Math.min((now - this.lastFrameTime) / 1000, 0.05);
+        this.lastFrameTime = now;
+        const t = now / 1000;
+
+        // Arrow key ship movement
+        if (this.gameStarted && this.playerShip) {
+            const shipSpeed = 22;
+            if (this.keys['ArrowLeft'])  this.playerShipX = Math.max(-22, this.playerShipX - shipSpeed * dt);
+            if (this.keys['ArrowRight']) this.playerShipX = Math.min(22,  this.playerShipX + shipSpeed * dt);
+            this.playerShip.position.x += (this.playerShipX - this.playerShip.position.x) * 0.18;
+            this.playerShip.rotation.z = -(this.playerShipX - this.playerShip.position.x) * 0.12;
+            // Thruster pulse
+            if (this.playerShip.userData.thruster) {
+                const intensity = 0.4 + Math.sin(t * 12) * 0.3;
+                this.playerShip.userData.thruster.material.emissiveIntensity = intensity;
+            }
+        }
+
         this.animateBoss(t);
 
+        // Safe object movement and pulsing
+        for (let i = this.safeObjects.length - 1; i >= 0; i--) {
+            const safe = this.safeObjects[i];
+            safe.position.add(safe.userData.velocity);
+            safe.userData.pulseT += 0.06;
+            const pulse = 1 + Math.sin(safe.userData.pulseT) * 0.12;
+            safe.scale.setScalar(pulse);
+            safe.rotation.y += 0.025;
+            safe.rotation.x += 0.012;
+            // Gentle float side-to-side
+            safe.userData.velocity.y = Math.sin(t * 1.2 + i) * 0.015;
+            if (safe.position.z > this.camera.position.z + 5) {
+                this.scene.remove(safe);
+                this.safeObjects.splice(i, 1);
+            }
+        }
+
+        // Projectile loop
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             const p = this.projectiles[i];
             if (p.parked) {
@@ -704,10 +929,13 @@ class PathoHunt3D {
                 }
                 continue;
             }
+
+            // Update target to track moving boss
+            if (this.monster) p.targetPos.copy(this.monster.position);
+
             p.t += 0.01 * p.speed;
-            const tgt = p.targetPos;
-            const nextPos = new THREE.Vector3().lerpVectors(p.startPos, tgt, Math.min(p.t, 1));
-            if (p.isParabolic) nextPos.y += Math.sin(Math.min(p.t, 1) * Math.PI) * 15;
+            const nextPos = new THREE.Vector3().lerpVectors(p.startPos, p.targetPos, Math.min(p.t, 1));
+            if (p.isParabolic) nextPos.y += Math.sin(Math.min(p.t, 1) * Math.PI) * 12;
             p.mesh.lookAt(nextPos); p.mesh.position.copy(nextPos);
 
             if (p.mesh.position.distanceTo(this.monster.position) < 9) {
@@ -716,22 +944,43 @@ class PathoHunt3D {
                 continue;
             }
 
-            let hitObstacle = false;
+            let hitSomething = false;
+
+            // Check safe object collision (friendly fire)
+            for (let si = this.safeObjects.length - 1; si >= 0; si--) {
+                const safe = this.safeObjects[si];
+                if (p.mesh.position.distanceTo(safe.position) < 3.5) {
+                    this.createExplosion(safe.position.clone(), 0x00ff88, 1.2);
+                    this.scene.remove(safe);
+                    this.safeObjects.splice(si, 1);
+                    this.scene.remove(p.mesh);
+                    this.projectiles.splice(i, 1);
+                    this.friendlyFire();
+                    hitSomething = true;
+                    break;
+                }
+            }
+            if (hitSomething) continue;
+
+            // Check enemy obstacle collision
             for (let oi = this.obstacles.length - 1; oi >= 0; oi--) {
                 const obs = this.obstacles[oi];
                 if (p.mesh.position.distanceTo(obs.position) < (obs.isLarge ? 7 : 5)) {
                     obs.health--;
                     if (obs.health <= 0) { this.createExplosion(obs.position, 0x00f2ff, 1.5); this.scene.remove(obs); this.obstacles.splice(oi, 1); }
                     this.scene.remove(p.mesh); this.projectiles.splice(i, 1);
-                    hitObstacle = true; break;
+                    hitSomething = true; break;
                 }
             }
-            if (!hitObstacle && p.t > 1.8) { this.scene.remove(p.mesh); this.projectiles.splice(i, 1); }
+            if (!hitSomething && p.t > 1.8) { this.scene.remove(p.mesh); this.projectiles.splice(i, 1); }
         }
 
+        // Enemy spores move toward player
         for (let i = this.obstacles.length - 1; i >= 0; i--) {
             const obs = this.obstacles[i];
             obs.position.add(obs.velocity);
+            obs.rotation.x += 0.03;
+            obs.rotation.y += 0.02;
             if (obs.position.z > this.camera.position.z - 5) {
                 this.takeDamage(obs.damage); this.scene.remove(obs); this.obstacles.splice(i, 1);
             }
@@ -740,7 +989,7 @@ class PathoHunt3D {
         for (let i = this.explosions.length - 1; i >= 0; i--) {
             const ex = this.explosions[i];
             ex.life -= 0.03;
-            ex.group.children.forEach(p => p.position.add(p.velocity));
+            ex.group.children.forEach(pp => pp.position.add(pp.velocity));
             if (ex.life <= 0) { this.scene.remove(ex.group); this.explosions.splice(i, 1); }
         }
 
