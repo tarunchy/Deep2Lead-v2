@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PathoHunt 3D — Game Improvement Plan v2</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #c9d1d9; --muted: #8b949e; --accent: #e53e3e;
+    --green: #3fb950; --orange: #f6a935; --blue: #58a6ff;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; }
+
+  /* Layout */
+  .doc-wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  /* Hero */
+  .hero { border-bottom: 1px solid var(--border); padding-bottom: 36px; margin-bottom: 48px; }
+  .hero-tag { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 12px; }
+  .hero h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 12px; line-height: 1.15; }
+  .hero h1 span { color: var(--accent); }
+  .hero-meta { display: flex; gap: 24px; font-size: 0.85rem; color: var(--muted); flex-wrap: wrap; }
+  .hero-meta strong { color: var(--text); }
+
+  /* Section headers */
+  .section { margin-bottom: 52px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .section-number { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 900; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .section-title { font-size: 1.3rem; font-weight: 800; color: var(--text); }
+  .section-subtitle { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+
+  /* Idea cards */
+  .idea-grid { display: flex; flex-direction: column; gap: 16px; }
+
+  .idea-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .idea-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+    background: var(--card-accent, var(--blue));
+  }
+  .idea-card.priority-high   { --card-accent: var(--green); }
+  .idea-card.priority-medium { --card-accent: var(--orange); }
+  .idea-card.priority-low    { --card-accent: var(--purple); }
+
+  .idea-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+  .idea-emoji { font-size: 1.8rem; flex-shrink: 0; }
+  .idea-title { font-size: 1.05rem; font-weight: 800; color: var(--text); flex: 1; }
+  .idea-title small { display: block; font-size: 0.78rem; font-weight: 400; color: var(--muted); margin-top: 2px; }
+
+  .idea-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .badge {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 3px 9px; border-radius: 10px;
+  }
+  .badge-high   { background: #0f2b15; color: var(--green); border: 1px solid #1a4723; }
+  .badge-medium { background: #2b1d08; color: var(--orange); border: 1px solid #4a3010; }
+  .badge-low    { background: #1a1030; color: var(--purple); border: 1px solid #2d1f4a; }
+  .badge-effort-low  { background: #0f1f2b; color: var(--blue); border: 1px solid #1a3a5c; }
+  .badge-effort-med  { background: #1a1a0f; color: #d4c544; border: 1px solid #3a380a; }
+  .badge-effort-high { background: #2b0f0f; color: var(--accent); border: 1px solid #4a1a1a; }
+
+  .idea-body { font-size: 0.88rem; color: var(--muted); margin-bottom: 12px; }
+  .idea-body strong { color: var(--text); }
+
+  .idea-why {
+    background: #0d1117;
+    border-left: 3px solid var(--card-accent, var(--blue));
+    padding: 8px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.83rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .idea-why strong { color: var(--text); }
+
+  .idea-impl {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #4a5568;
+    background: #0a0d12;
+    border: 1px solid #1e2a35;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+  }
+  .idea-impl .impl-label { color: var(--blue); font-family: inherit; margin-bottom: 4px; display: block; }
+
+  /* Roadmap table */
+  .roadmap { margin-bottom: 52px; }
+  .roadmap table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+  .roadmap th {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 11px 14px; text-align: left; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;
+  }
+  .roadmap td { border: 1px solid var(--border); padding: 10px 14px; color: var(--text); vertical-align: top; }
+  .roadmap tr:nth-child(even) td { background: #0f1419; }
+  .rm-phase { font-weight: 700; }
+  .rm-phase.p1 { color: var(--green); }
+  .rm-phase.p2 { color: var(--orange); }
+  .rm-phase.p3 { color: var(--purple); }
+
+  /* Existing work */
+  .done-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .done-card { background: #0f2016; border: 1px solid #1a3a27; border-radius: 10px; padding: 14px 16px; }
+  .done-card h4 { color: var(--green); font-size: 0.88rem; margin-bottom: 4px; }
+  .done-card p  { color: var(--muted); font-size: 0.8rem; }
+
+  /* Nav */
+  .doc-nav { position: fixed; top: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; font-size: 0.78rem; z-index: 10; max-width: 200px; }
+  .doc-nav h4 { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .doc-nav a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0; transition: color 0.15s; }
+  .doc-nav a:hover { color: var(--text); }
+
+  @media (max-width: 780px) { .doc-nav { display: none; } }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+</style>
+</head>
+<body>
+
+<nav class="doc-nav">
+  <h4>Jump to</h4>
+  <a href="#whats-built">What's Built</a>
+  <a href="#quick-wins">Quick Wins</a>
+  <a href="#medium">Medium Effort</a>
+  <a href="#big-bets">Big Bets</a>
+  <a href="#roadmap">Roadmap</a>
+</nav>
+
+<div class="doc-wrap">
+
+  <div class="hero">
+    <div class="hero-tag">Design Document · PathoHunt 3D</div>
+    <h1>Game Improvement <span>Plan v2</span></h1>
+    <div class="hero-meta">
+      <span><strong>Date:</strong> 2026-05-11</span>
+      <span><strong>Platform:</strong> Deep2Lead v2</span>
+      <span><strong>Engine:</strong> Three.js r128 + Flask + Gemma4 LLM</span>
+      <span><strong>Research:</strong> Foldit, Hades, Dead Cells, FTL, DrugHunter</span>
+    </div>
+    <p style="margin-top:18px; color:var(--muted); max-width:700px;">
+      PathoHunt 3D is a browser-based arcade game where players fire AI-generated drug molecules at real pathogen boss proteins.
+      This document captures research-backed improvement ideas — from quick UI wins to deep gameplay overhauls —
+      grounded in what makes scientific games like Foldit sticky, and what makes roguelites like Hades endlessly replayable.
+    </p>
+  </div>
+
+  <!-- ── WHAT'S ALREADY BUILT ────────────────────────────────────── -->
+  <div class="section" id="whats-built">
+    <div class="section-header">
+      <div class="section-number">✓</div>
+      <div>
+        <div class="section-title">What's Already Built</div>
+        <div class="section-subtitle">The current feature set as of May 2026</div>
+      </div>
+    </div>
+
+    <div class="done-grid">
+      <div class="done-card"><h4>⚔️ 3D Boss Fights</h4><p>7 real protein targets (COVID Mpro, EGFR, HIV Protease…) with Three.js meshes, HP bars, 300 HP per boss.</p></div>
+      <div class="done-card"><h4>🧬 AI Molecule Deck</h4><p>Gemma4 LLM generates 5 molecules per attack round. Composite score (QED + SAS + Tanimoto) drives damage.</p></div>
+      <div class="done-card"><h4>🎮 Ship Controls</h4><p>Arrow-key ship movement, spacebar fire, missile type + trajectory selectors, parabolic arc support.</p></div>
+      <div class="done-card"><h4>💀 Boss Dodge System</h4><p>20/35/55% dodge chance by difficulty, evasion mode, +15% wounded. TTS voice taunt on miss.</p></div>
+      <div class="done-card"><h4>🟢 Friendly Fire</h4><p>Green safe-cell obstacles; hitting them drains player HP + voice alert + centred popup.</p></div>
+      <div class="done-card"><h4>🔊 Kokoro TTS</h4><p>Professor AI narrates attacks, evades, friendly-fire, low-HP warnings, tutorial steps.</p></div>
+      <div class="done-card"><h4>🔥 Combo System</h4><p>3+ consecutive hits ≥55% trigger Hot Combo badge + 1.25x damage multiplier.</p></div>
+      <div class="done-card"><h4>📖 Story Screen</h4><p>Mission briefing overlay with boss lore before each battle starts.</p></div>
+      <div class="done-card"><h4>🎓 Tutorial</h4><p>8-step narrated tutorial with Kokoro TTS, animated visuals, progress dots.</p></div>
+      <div class="done-card"><h4>🎯 Game History</h4><p>Full session log — battles, molecules, boss HP drained — with save-to-experiments.</p></div>
+      <div class="done-card"><h4>📂 Save to Experiments</h4><p>Any game session's best molecules can be saved as a draft Experiment for further analysis.</p></div>
+      <div class="done-card"><h4>🏅 XP &amp; Badges</h4><p>XP events for game start, first attack, boss damaged, boss defeated. Boss-specific badges.</p></div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── QUICK WINS ─────────────────────────────────────────────── -->
+  <div class="section" id="quick-wins">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <div>
+        <div class="section-title">Quick Wins — High Impact, Low Effort</div>
+        <div class="section-subtitle">Can be shipped in 1–3 days each. Strong ROI on engagement.</div>
+      </div>
+    </div>
+
+    <div class="idea-grid">
+
+      <div class="idea-card priority-high">
+        <div class="idea-top">
+          <span class="idea-emoji">🧑‍⚕️</span>
+          <div class="idea-title">Patient Story Narrative Cards
+            <small>Emotional stakes that make QED scores feel real</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-high">High Priority</span>
+          <span class="badge badge-effort-low">Low Effort</span>
+        </div>
+        <div class="idea-body">
+          Before each boss encounter, display a 3-panel narrative: a <strong>patient vignette</strong>
+          (e.g., "Maria, 42, diagnosed with EGFR+ lung cancer — her tumor has developed resistance to erlotinib"),
+          the <strong>biological villain</strong> (the target protein), and a <strong>cliffhanger</strong>.
+          After victory, close the loop with an outcome card. Pipe through existing Kokoro TTS.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> Foldit's most successful campaigns (HIV protease, flu) were framed around real patients.
+          Emotional stakes convert casual players into committed ones. QED stops being an abstract number — it becomes the drug's chance of helping Maria.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          Add `patient_story` and `victory_outcome` fields to game_levels.json per boss.
+          Extend the existing story screen in game_battle_3d.html with a 3-step card carousel.
+          TTS narration already wired.
+        </div>
+      </div>
+
+      <div class="idea-card priority-high">
+        <div class="idea-top">
+          <span class="idea-emoji">🔬</span>
+          <div class="idea-title">Contextual Science Flash Cards on Hit
+            <small>Turn every score into a micro-learning moment</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-high">High Priority</span>
+          <span class="badge badge-effort-low">Low Effort</span>
+        </div>
+        <div class="idea-body">
+          After each attack, the existing Science Card fires generically. Make it <strong>score-aware</strong>:
+          if QED is high → explain drug-likeness with a real example; if SAS is bad → show a failed drug with poor synthesizability;
+          if Tanimoto is high against a known drug → name that drug and its clinical status.
+          2–3 sentence overlays, dismissible.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> Kerbal Space Program retains players because every failure teaches real physics.
+          PathoHunt's equivalent is cheminformatics — every score tells a real story. Contextual &gt; generic.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          Add score-branch logic to showScienceCard() in game_battle_3d.js.
+          Create a scoreContextMap object with thresholds → explanations for QED, SAS, tanimoto.
+          No backend changes needed.
+        </div>
+      </div>
+
+      <div class="idea-card priority-high">
+        <div class="idea-top">
+          <span class="idea-emoji">🛡️</span>
+          <div class="idea-title">Safety Net — Guaranteed Strong Card After 3 Bad Attacks
+            <small>Frustration prevention without removing skill ceiling</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-high">High Priority</span>
+          <span class="badge badge-effort-low">Low Effort</span>
+        </div>
+        <div class="idea-body">
+          After 3 consecutive attacks with composite &lt; 0.40, the server guarantees the next deck includes
+          at least one molecule with composite ≥ 0.60. Tracked via a <strong>bad_streak counter</strong>
+          on the session. Resets on any hit ≥ 0.40.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> The most common cause of early abandonment is a string of weak LLM outputs.
+          Dead Cells uses a "pity timer" system for item drops — same principle. Players feel unlucky, not incompetent.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          Add bad_streak to GameSession model (or track in execute_attack locally).
+          In execute_attack(), if bad_streak >= 3: reseed generator with known_drug_smiles from game_levels.json.
+          Reset streak counter after a decent hit.
+        </div>
+      </div>
+
+      <div class="idea-card priority-high">
+        <div class="idea-top">
+          <span class="idea-emoji">📊</span>
+          <div class="idea-title">Post-Run Researcher's Notebook
+            <small>Make players feel like scientists, not just gamers</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-high">High Priority</span>
+          <span class="badge badge-effort-low">Low Effort</span>
+        </div>
+        <div class="idea-body">
+          After every run (win or loss), show a summary screen with a <strong>scatter plot</strong>:
+          QED on X-axis, composite score on Y-axis, all molecules fired color-coded by result.
+          A <strong>"Download CSV"</strong> button exports SMILES + scores. An <strong>"Add to Experiments"</strong>
+          button (already built) is prominently featured.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> Foldit made players feel like scientists because their data was real.
+          PathoHunt generates genuinely novel AI-designed molecules — players should feel the weight of that.
+          The CSV export also makes it a lightweight real drug discovery tool.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          Add a post-run overlay to game_battle_3d.html (after onVictory and game-over screens).
+          Use Chart.js (already a viable CDN add) for the scatter plot.
+          Data is already available via session.attacks. CSV download is a client-side Blob export.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── MEDIUM EFFORT ──────────────────────────────────────────── -->
+  <div class="section" id="medium">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <div>
+        <div class="section-title">Medium Effort — 1–2 Weeks Each</div>
+        <div class="section-subtitle">Strong engagement multipliers. Worth the investment.</div>
+      </div>
+    </div>
+
+    <div class="idea-grid">
+
+      <div class="idea-card priority-medium">
+        <div class="idea-top">
+          <span class="idea-emoji">💀</span>
+          <div class="idea-title">Phased Boss Fight with Mechanic Shifts
+            <small>Stop the "hit spacebar until dead" loop</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-medium">Medium Priority</span>
+          <span class="badge badge-effort-med">Medium Effort</span>
+        </div>
+        <div class="idea-body">
+          Divide each boss's HP bar into 3 phases (100–60%, 60–30%, &lt;30%). Each phase shift triggers:
+          a <strong>visual Three.js mesh transformation</strong>, a new mechanic (phase 2 = mutant safe cells spawn faster;
+          phase 3 = boss fires back with spores), and a TTS voice line from the boss
+          (<em>"You only know one binding mode? I've mutated!"</em>).
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> FTL's multi-phase boss encounters prevent the repetitive loop that currently exists.
+          Boss phase variance is already scaffolded in the code via <code>idleAnim</code> types — phased behavior extends that naturally.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          Add phase tracking to PathoHunt3D class. On HP crossing 60% and 30%, call enterPhase(n).
+          enterPhase() changes bossProfile.idleAnim, increases spore spawn rate, triggers TTS.
+          Phase transitions logged to GameSession for history display.
+        </div>
+      </div>
+
+      <div class="idea-card priority-medium">
+        <div class="idea-top">
+          <span class="idea-emoji">🏆</span>
+          <div class="idea-title">Global Per-Boss Leaderboard
+            <small>Competitive pressure drives better molecular designs</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-medium">Medium Priority</span>
+          <span class="badge badge-effort-med">Medium Effort</span>
+        </div>
+        <div class="idea-body">
+          After each victory, the winning SMILES and composite score are posted to a <strong>global per-boss leaderboard</strong>.
+          Entries display the player's handle, molecule codename (already generated: CX-4231), composite score,
+          and a "novelty badge" (ChEMBL validation already exists). Top 3 get a "World Record Breaker" badge.
+          Leaderboard shows SMILES so others can learn from top entries.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> Foldit's leaderboards produced a Nature paper (2011) because competition drove better designs.
+          The SMILES leaderboard turns it into a crowdsourced SAR table — players learn from each other's chemistry.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          New DB table: GameLeaderboardEntry (target_id, user_id, smiles, composite_score, attack_count, won_at).
+          New route: GET /api/v3/game/leaderboard/{target_id}.
+          Update execute_attack() to insert entry on win.
+          New leaderboard panel on game selector page.
+        </div>
+      </div>
+
+      <div class="idea-card priority-medium">
+        <div class="idea-top">
+          <span class="idea-emoji">📌</span>
+          <div class="idea-title">Scaffold Pinning — Player Steers the LLM
+            <small>Give players creative agency over chemistry</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-medium">Medium Priority</span>
+          <span class="badge badge-effort-med">Medium Effort</span>
+        </div>
+        <div class="idea-body">
+          Allow players to <strong>pin a scaffold fragment</strong> from any card in the deck with one click.
+          The next LLM generation is seeded with that pinned fragment, steering exploration.
+          Display the pinned fragment as a small structural token above the deck with a ✕ to clear.
+          Teaches Structure-Activity Relationships (SAR) through play.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> Currently the deck is entirely LLM-driven with no player creative agency between shots.
+          Foldit's core loop is iterative manual optimization — pinning gives PathoHunt an equivalent.
+          Players make a real med-chem decision (scaffold retention) with a single click.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          Add "📌 Pin" button to each mol-card. Store this.pinnedSmiles in PathoHunt3D state.
+          Pass pinnedSmiles as seed_bias to /candidates API.
+          In generate() in molecule_generator.py: if seed_bias provided, prepend it to the LLM prompt
+          as "retain this scaffold: {smiles}".
+        </div>
+      </div>
+
+      <div class="idea-card priority-medium">
+        <div class="idea-top">
+          <span class="idea-emoji">⏱️</span>
+          <div class="idea-title">Outbreak Mode — Timed Urgency Run
+            <small>Time pressure makes the science feel urgent</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-medium">Medium Priority</span>
+          <span class="badge badge-effort-med">Medium Effort</span>
+        </div>
+        <div class="idea-body">
+          A special run mode with an <strong>8-minute countdown</strong> replacing the HP-based loss condition.
+          Narrative: a pathogen is spreading through a city — each minute represents one hospital overwhelmed.
+          Background darkens progressively, spore spawn rate escalates automatically,
+          a city silhouette "fills with red" in the HUD corner.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> Time pressure is the oldest engagement lever in arcade design (Space Invaders, 1978).
+          Outbreak framing — used effectively in Foldit's HIV campaign — makes urgency visceral and the science personally relevant.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          Add outbreak_mode boolean to GameSession. Client tracks countdown timer in animate().
+          Gradually increase DIFFICULTY.normal.spawnRate as time passes (every 2 min: spawnRate -= 500).
+          Add HUD countdown and city health bar elements.
+          Payout: 2x Research Points (future meta-progression).
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── BIG BETS ────────────────────────────────────────────────── -->
+  <div class="section" id="big-bets">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <div>
+        <div class="section-title">Big Bets — 2–4 Weeks Each</div>
+        <div class="section-subtitle">High complexity. Transformative if shipped. Plan carefully.</div>
+      </div>
+    </div>
+
+    <div class="idea-grid">
+
+      <div class="idea-card priority-low">
+        <div class="idea-top">
+          <span class="idea-emoji">🔓</span>
+          <div class="idea-title">Meta-Progression — Lab Upgrade System
+            <small>Make losing feel productive</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-low">Future</span>
+          <span class="badge badge-effort-high">High Effort</span>
+        </div>
+        <div class="idea-body">
+          Add a persistent <strong>"Research Points" currency</strong> earned from every run (win or lose).
+          Research Points unlock permanent account-level upgrades: faster LLM deck generation,
+          a "Scaffold Library" that biases LLM toward known chemotypes, +1 molecule card slot,
+          a "Boost" that doubles QED weight for one attack.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> Hades proved that losing should feel productive. Currently losing PathoHunt is a dead end.
+          Meta-progression transforms failed runs into stepping stones. Unlocked scaffolds also give players
+          a stronger starting hand on weak LLM days.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          New DB table: UserResearchPoints, LabUpgrade (slug, name, cost, effect_type, effect_value), UserLabUpgrade.
+          New /lab-upgrades page. Integrate with existing XP/badge system in gamification.py.
+          Client-side: apply active upgrades when rendering deck and computing damage.
+        </div>
+      </div>
+
+      <div class="idea-card priority-low">
+        <div class="idea-top">
+          <span class="idea-emoji">🦠</span>
+          <div class="idea-title">Boss Mutation Events — Real Resistance Biology
+            <small>Players encounter real drug resistance through play</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-low">Future</span>
+          <span class="badge badge-effort-high">High Effort</span>
+        </div>
+        <div class="idea-body">
+          At each phase transition, the boss gains a random <strong>biologically real resistance mechanism</strong>:
+          "Efflux Pump Activated" (reduces damage from molecules below MW 400 by 50%),
+          "Binding Site Mutation" (Tanimoto penalized instead of rewarded),
+          or "Protein Overexpression" (HP regenerates 2 pts/sec).
+          Each mutation shows a brief real-world explanation.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> Hades' Olympian Boons require strategic adaptation. Critically, each mutation corresponds to
+          a real clinical phenomenon — players learn genuine drug-resistance biology through play, not lectures.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          Define MUTATION_POOL in game_levels.json per boss (biologically accurate resistance types).
+          Apply mutation effects in _calculate_damage() server-side using session.active_mutation.
+          Client shows mutation alert overlay at phase transition.
+        </div>
+      </div>
+
+      <div class="idea-card priority-low">
+        <div class="idea-top">
+          <span class="idea-emoji">👥</span>
+          <div class="idea-title">Co-op Research Team Mode
+            <small>Two-player async: Attacker + Lab Analyst</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-low">Future</span>
+          <span class="badge badge-effort-high">High Effort</span>
+        </div>
+        <div class="idea-body">
+          Two logged-in users join the same boss session. <strong>Player 1</strong> fires offensive molecules (existing mechanic).
+          <strong>Player 2</strong> plays "Lab Analyst": manually annotates molecules in the log (thumbs up/down),
+          which biases the next LLM deck for Player 1. Shared HP bar, shared Research Points, joint victory screen.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> Phylo (McGill RNA-folding game) found co-op sessions produced 3× higher quality solutions.
+          The analyst role maps to a real med-chem workflow (chemists annotate SAR for computational colleagues).
+          Async-friendly — no real-time sync required.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          Add co_player_id and analyst_annotations (JSON) to GameSession.
+          New route: POST /api/v3/game/session/{id}/annotate.
+          In execute_attack(): weight annotated molecules higher in LLM seed selection.
+          Invite flow via shared session link.
+        </div>
+      </div>
+
+      <div class="idea-card priority-low">
+        <div class="idea-top">
+          <span class="idea-emoji">🧠</span>
+          <div class="idea-title">Molecular Memory — Boss Learns from All Players
+            <small>Community discovery drives genuine structural novelty</small>
+          </div>
+        </div>
+        <div class="idea-badges">
+          <span class="badge badge-low">Future</span>
+          <span class="badge badge-effort-high">High Effort</span>
+        </div>
+        <div class="idea-body">
+          Maintain a per-boss history of top 20 SMILES across all players. When the boss generates a dodge event,
+          preferentially dodge molecules structurally similar (Tanimoto &gt; 0.6) to previously submitted ones.
+          New players face a boss that has already "seen" prior attacks —
+          encouraging genuine structural novelty. Makes ChEMBL novelty validation mechanically consequential.
+        </div>
+        <div class="idea-why">
+          <strong>Why it works:</strong> The community collectively discovers what works, forcing everyone to evolve.
+          A truly novel molecule bypasses the boss's memory and hits harder — scientifically modelling acquired drug resistance.
+        </div>
+        <div class="idea-impl">
+          <span class="impl-label">// Implementation</span>
+          New table: BossMemory (target_id, smiles, tanimoto_fingerprint, frequency).
+          On dodge check: compute Tanimoto vs memory pool. If Tanimoto > 0.6 to any memory entry: dodge_chance += 0.20.
+          Update memory pool on each won session (top 3 molecules).
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── ROADMAP ─────────────────────────────────────────────────── -->
+  <div class="roadmap" id="roadmap">
+    <div class="section-header">
+      <div class="section-number">📅</div>
+      <div>
+        <div class="section-title">Suggested Roadmap</div>
+        <div class="section-subtitle">Sequenced by impact-to-effort ratio</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Feature</th>
+          <th>Est. Effort</th>
+          <th>Primary Benefit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="rm-phase p1">Phase 1</td><td>Patient Story Narrative Cards</td><td>1 day</td><td>Emotional engagement, retention</td></tr>
+        <tr><td class="rm-phase p1">Phase 1</td><td>Contextual Science Flash Cards</td><td>1 day</td><td>Education quality, session depth</td></tr>
+        <tr><td class="rm-phase p1">Phase 1</td><td>Safety Net (bad-streak guarantee)</td><td>2 hrs</td><td>Reduce early abandonment</td></tr>
+        <tr><td class="rm-phase p1">Phase 1</td><td>Post-Run Researcher's Notebook</td><td>2 days</td><td>Scientist identity, CSV export</td></tr>
+        <tr><td class="rm-phase p2">Phase 2</td><td>Phased Boss Fight (3 phases)</td><td>3 days</td><td>Replayability, session variety</td></tr>
+        <tr><td class="rm-phase p2">Phase 2</td><td>Global Per-Boss Leaderboard</td><td>3 days</td><td>Competition, social stickiness</td></tr>
+        <tr><td class="rm-phase p2">Phase 2</td><td>Scaffold Pinning</td><td>2 days</td><td>Player agency, SAR learning</td></tr>
+        <tr><td class="rm-phase p2">Phase 2</td><td>Outbreak Timed Mode</td><td>2 days</td><td>Urgency, replayability</td></tr>
+        <tr><td class="rm-phase p3">Phase 3</td><td>Meta-Progression / Lab Upgrades</td><td>2 weeks</td><td>Long-term retention loop</td></tr>
+        <tr><td class="rm-phase p3">Phase 3</td><td>Boss Mutation Events</td><td>1 week</td><td>Biology depth, strategic variety</td></tr>
+        <tr><td class="rm-phase p3">Phase 3</td><td>Co-op Research Team Mode</td><td>2 weeks</td><td>Social, data quality</td></tr>
+        <tr><td class="rm-phase p3">Phase 3</td><td>Molecular Memory (boss learns)</td><td>2 weeks</td><td>Novelty incentive, community SAR</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="text-align:center; margin-top:48px; padding-top:32px; border-top:1px solid var(--border); color:var(--muted); font-size:0.82rem;">
+    PathoHunt 3D · Deep2Lead v2 · Game Improvement Plan v2 · 2026-05-11
+    <br>Research sources: Foldit (Cooper et al., 2010), Hades (Supergiant, 2020), Dead Cells (Motion Twin, 2018), FTL (Subset Games, 2012), DrugHunter, Wellcome Synaptic
+  </div>
+</div>
+
+</body>
+</html>

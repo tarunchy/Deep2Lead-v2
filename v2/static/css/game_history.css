@@ -1,0 +1,323 @@
+/* ── Game History page ──────────────────────────────────────────────── */
+
+.gh-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 16px 64px;
+}
+
+.gh-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+
+.gh-title {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #e2e8f0;
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+}
+
+.gh-subtitle {
+    color: #718096;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.gh-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.gh-btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.gh-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.gh-btn-primary  { background: linear-gradient(135deg, #e53e3e, #9b2c2c); color: #fff; }
+.gh-btn-secondary { background: #2d3748; color: #a0aec0; border: 1px solid #4a5568; }
+
+/* Stats */
+.gh-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.gh-stat-card {
+    background: #1a202c;
+    border: 1px solid #2d3748;
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-align: center;
+}
+.gh-stat-card.won  { border-color: #276749; background: #0f2016; }
+.gh-stat-card.best { border-color: #744210; background: #1a1200; }
+
+.gh-stat-value {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #e2e8f0;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+.gh-stat-card.won  .gh-stat-value { color: #48bb78; }
+.gh-stat-card.best .gh-stat-value { color: #f6ad55; }
+
+.gh-stat-label {
+    font-size: 0.78rem;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Filter bar */
+.gh-filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+}
+
+.gh-filter-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid #2d3748;
+    background: #1a202c;
+    color: #718096;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.gh-filter-btn:hover,
+.gh-filter-btn.active {
+    background: #2d3748;
+    color: #e2e8f0;
+    border-color: #4a5568;
+}
+
+/* Session list */
+.gh-session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.gh-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #4a5568;
+    font-size: 0.95rem;
+}
+
+.gh-spinner {
+    width: 24px; height: 24px;
+    border: 3px solid #2d3748;
+    border-top-color: #e53e3e;
+    border-radius: 50%;
+    animation: ghSpin 0.8s linear infinite;
+}
+@keyframes ghSpin { to { transform: rotate(360deg); } }
+
+.gh-empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: #4a5568;
+}
+.gh-empty h3 { color: #718096; margin-bottom: 8px; }
+
+/* Session card */
+.gh-session-card {
+    background: #1a202c;
+    border: 1px solid #2d3748;
+    border-radius: 14px;
+    padding: 20px 22px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 18px;
+    align-items: center;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+    overflow: hidden;
+}
+.gh-session-card:hover {
+    border-color: #4a5568;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.gh-session-card.status-won      { border-left: 4px solid #48bb78; }
+.gh-session-card.status-lost     { border-left: 4px solid #fc8181; }
+.gh-session-card.status-abandoned { border-left: 4px solid #718096; }
+.gh-session-card.status-active   { border-left: 4px solid #63b3ed; }
+
+/* Boss emoji col */
+.gh-boss-icon {
+    font-size: 2.8rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* Middle col */
+.gh-session-info { min-width: 0; }
+
+.gh-session-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.gh-boss-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gh-status-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+.gh-status-badge.won      { background: #1a3a27; color: #48bb78; }
+.gh-status-badge.lost     { background: #2d1515; color: #fc8181; }
+.gh-status-badge.abandoned { background: #1a202c; color: #718096; border: 1px solid #2d3748; }
+.gh-status-badge.active   { background: #1a2a3d; color: #63b3ed; }
+
+.gh-session-meta {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 0.82rem;
+    color: #718096;
+}
+
+.gh-meta-item { display: flex; align-items: center; gap: 4px; }
+.gh-meta-item strong { color: #a0aec0; }
+
+/* Best molecule chip */
+.gh-best-mol {
+    margin-top: 10px;
+    background: #0f1a2e;
+    border: 1px solid #1e3a5f;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.gh-mol-label { color: #4a90d9; font-weight: 700; flex-shrink: 0; }
+.gh-mol-smiles {
+    color: #a0aec0;
+    font-family: monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 260px;
+    flex: 1;
+    min-width: 0;
+}
+.gh-mol-score {
+    font-weight: 800;
+    flex-shrink: 0;
+}
+.gh-mol-score.good  { color: #48bb78; }
+.gh-mol-score.ok    { color: #f6ad55; }
+.gh-mol-score.bad   { color: #fc8181; }
+
+/* Right col: actions */
+.gh-session-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.gh-date {
+    font-size: 0.78rem;
+    color: #4a5568;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.gh-action-btn {
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    transition: opacity 0.15s, transform 0.1s;
+}
+.gh-action-btn:hover { opacity: 0.82; transform: translateY(-1px); }
+.gh-action-btn.replay   { background: #2d3748; color: #a0aec0; }
+.gh-action-btn.save     { background: linear-gradient(135deg, #2b6cb0, #1a365d); color: #90cdf4; }
+.gh-action-btn.saved    { background: #1a2a1a; color: #48bb78; cursor: default; }
+.gh-action-btn.saving   { background: #1a202c; color: #4a5568; cursor: default; }
+
+/* Toast */
+.gh-toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #276749;
+    color: #c6f6d5;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    z-index: 9999;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    animation: ghToastIn 0.3s ease;
+}
+@keyframes ghToastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 680px) {
+    .gh-session-card {
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+    }
+    .gh-session-actions {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+}

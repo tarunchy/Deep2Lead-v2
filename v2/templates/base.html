@@ -53,6 +53,9 @@
       <a href="{{ url_for('experiments.dashboard') }}" class="{% if request.endpoint == 'experiments.dashboard' %}active{% endif %}" title="My Experiments">
         <span class="nav-icon">📂</span><span class="nav-label">My Experiments</span>
       </a>
+      <a href="{{ url_for('game.game_history') }}" class="{% if request.endpoint == 'game.game_history' %}active{% endif %}" title="Game History">
+        <span class="nav-icon">🎯</span><span class="nav-label">Game History</span>
+      </a>
       <a href="{{ url_for('gamification.mission_board') }}" class="{% if request.endpoint == 'gamification.mission_board' %}active{% endif %}" title="Missions">
         <span class="nav-icon">🏅</span><span class="nav-label">Missions</span>
       </a>

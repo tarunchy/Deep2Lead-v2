@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Game History — Deep2Lead{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game_history.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="gh-wrap">
+    <div class="gh-header">
+        <div>
+            <h1 class="gh-title">🎯 Game History</h1>
+            <p class="gh-subtitle">All your PathoHunt battle sessions — molecules discovered, bosses defeated.</p>
+        </div>
+        <div class="gh-header-actions">
+            <a href="/game/pathohunt-3d" class="gh-btn gh-btn-primary">⚔️ New Battle</a>
+            <a href="{{ url_for('experiments.dashboard') }}" class="gh-btn gh-btn-secondary">📂 My Experiments</a>
+        </div>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="gh-stats" id="ghStats">
+        <div class="gh-stat-card">
+            <div class="gh-stat-value" id="statTotal">—</div>
+            <div class="gh-stat-label">Total Runs</div>
+        </div>
+        <div class="gh-stat-card won">
+            <div class="gh-stat-value" id="statWon">—</div>
+            <div class="gh-stat-label">Bosses Defeated</div>
+        </div>
+        <div class="gh-stat-card">
+            <div class="gh-stat-value" id="statAttacks">—</div>
+            <div class="gh-stat-label">Molecules Fired</div>
+        </div>
+        <div class="gh-stat-card best">
+            <div class="gh-stat-value" id="statBestScore">—</div>
+            <div class="gh-stat-label">Best Composite Score</div>
+        </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="gh-filter-bar">
+        <button class="gh-filter-btn active" data-filter="all">All</button>
+        <button class="gh-filter-btn" data-filter="won">⚡ Won</button>
+        <button class="gh-filter-btn" data-filter="lost">💀 Lost</button>
+        <button class="gh-filter-btn" data-filter="abandoned">🚪 Abandoned</button>
+    </div>
+
+    <!-- Session list -->
+    <div id="ghSessionList" class="gh-session-list">
+        <div class="gh-loading">
+            <div class="gh-spinner"></div>
+            <span>Loading battle history…</span>
+        </div>
+    </div>
+</div>
+
+<!-- Save-to-experiment toast -->
+<div id="ghToast" class="gh-toast" style="display:none;"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game_history.js') }}"></script>
+{% endblock %}

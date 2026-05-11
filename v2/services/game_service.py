@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime, timezone
 
-from models.db_models import db
+from models.db_models import db, Experiment, Candidate
 from models.game_models import GameSession, GameAttack
 import services.target_service as target_service
 import services.molecule_generator as molecule_generator
@@ -245,14 +245,109 @@ def abandon_session(session_id, user_id) -> bool:
     return True
 
 
-def get_history(user_id, limit: int = 20) -> list:
+def get_history(user_id, limit: int = 50) -> list:
     sessions = (
         GameSession.query.filter_by(user_id=user_id)
         .order_by(GameSession.time_started.desc())
         .limit(limit)
         .all()
     )
-    return [s.to_dict() for s in sessions]
+    results = []
+    for s in sessions:
+        d = s.to_dict()
+        # Attach best-attack molecule info for display
+        best_attack = (
+            GameAttack.query.filter_by(session_id=s.id, is_best=True)
+            .order_by(GameAttack.composite_score.desc())
+            .first()
+        )
+        d["best_attack"] = best_attack.to_dict() if best_attack else None
+        # Boss display name
+        boss = get_boss(s.target_id)
+        d["boss_name"] = boss.get("name", s.target_id) if boss else s.target_id
+        d["boss_emoji"] = boss.get("boss_emoji", "🦠") if boss else "🦠"
+        # Duration in seconds
+        if s.time_started and s.time_ended:
+            d["duration_s"] = int((s.time_ended - s.time_started).total_seconds())
+        else:
+            d["duration_s"] = None
+        results.append(d)
+    return results
+
+
+def save_session_to_experiment(session_id, user_id) -> dict:
+    """Save the best molecules from a game session as a draft Experiment."""
+    session = GameSession.query.get(session_id)
+    if not session:
+        raise ValueError("Session not found")
+    if str(session.user_id) != str(user_id):
+        raise ValueError("Unauthorised")
+
+    target = target_service.get_curated_target(session.target_id)
+    if not target:
+        raise ValueError("Target data missing")
+
+    # Best attack becomes the seed molecule
+    best_attack = (
+        GameAttack.query.filter_by(session_id=session.id, is_best=True)
+        .order_by(GameAttack.composite_score.desc())
+        .first()
+    )
+    if not best_attack:
+        best_attack = (
+            GameAttack.query.filter_by(session_id=session.id)
+            .order_by(GameAttack.composite_score.desc())
+            .first()
+        )
+    if not best_attack:
+        raise ValueError("No attacks in this session to save")
+
+    timestamp = session.time_started.strftime("%Y-%m-%d %H:%M") if session.time_started else "Unknown"
+    boss_name = target.get("name", session.target_id)
+
+    exp = Experiment(
+        user_id=user_id,
+        title=f"PathoHunt Discovery: {boss_name} ({timestamp})",
+        hypothesis=(
+            f"Game-discovered molecule against {boss_name}. "
+            f"Session: {session.attacks_count} attacks, best score {session.best_score:.2%}. "
+            f"Status: {session.status.upper()}."
+        ),
+        amino_acid_seq=target.get("amino_acid_seq", ""),
+        seed_smile=best_attack.smiles,
+        noise_level=0.3,
+        num_requested=session.attacks_count,
+        mode="3d",
+        target_id=session.target_id,
+        target_name=boss_name,
+        status="draft",
+        num_valid_generated=session.attacks_count,
+    )
+    db.session.add(exp)
+    db.session.flush()  # get exp.id before adding candidates
+
+    # Save all attacks as candidates, ranked by composite_score
+    all_attacks = (
+        GameAttack.query.filter_by(session_id=session.id)
+        .order_by(GameAttack.composite_score.desc())
+        .all()
+    )
+    for rank, attack in enumerate(all_attacks, 1):
+        cand = Candidate(
+            experiment_id=exp.id,
+            smiles=attack.smiles,
+            qed=attack.qed,
+            sas=attack.sas,
+            logp=attack.logp,
+            mw=attack.mw,
+            composite_score=attack.composite_score,
+            lipinski_pass=attack.lipinski_pass,
+            rank=rank,
+        )
+        db.session.add(cand)
+
+    db.session.commit()
+    return {"experiment_id": str(exp.id)}
 
 
 # ─── scoring helpers ──────────────────────────────────────────────────────────

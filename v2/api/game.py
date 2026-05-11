@@ -124,6 +124,31 @@ def game_selector_3d():
     return render_template("game_selector_3d.html", bosses=bosses)
 
 
+@bp.route("/game/history")
+@login_required
+def game_history():
+    return render_template("game_history.html")
+
+
+@bp.route("/api/v3/game/history/full")
+@login_required
+def api_game_history_full():
+    history = game_service.get_history(current_user.id)
+    return jsonify(history)
+
+
+@bp.route("/api/v3/game/session/<session_id>/save", methods=["POST"])
+@login_required
+def api_save_session_to_experiment(session_id):
+    try:
+        result = game_service.save_session_to_experiment(session_id, current_user.id)
+        return jsonify(result), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": f"Save failed: {e}"}), 500
+
+
 @bp.route("/api/v3/game/session/<session_id>/candidates")
 @login_required
 def api_get_candidates(session_id):
