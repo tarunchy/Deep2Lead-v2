@@ -1,0 +1,133 @@
+.lab-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.lab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.lab-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.lab-rp-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card-bg, #1e2230);
+  border: 1px solid var(--border, #2d3450);
+  border-radius: 10px;
+  padding: 10px 20px;
+}
+
+.rp-label {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.rp-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f5c518;
+}
+
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.upgrade-card {
+  background: var(--card-bg, #1e2230);
+  border: 1px solid var(--border, #2d3450);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+
+.upgrade-card:hover {
+  border-color: #5a7ef5;
+}
+
+.upgrade-card.owned {
+  border-color: #2ecc71;
+  opacity: 0.8;
+}
+
+.upgrade-icon {
+  font-size: 2rem;
+}
+
+.upgrade-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.upgrade-desc {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  flex: 1;
+}
+
+.upgrade-cost {
+  font-size: 0.9rem;
+  color: #f5c518;
+  font-weight: 600;
+}
+
+.upgrade-btn {
+  margin-top: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: #5a7ef5;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.upgrade-btn:hover:not(:disabled) {
+  background: #4060d0;
+}
+
+.upgrade-btn:disabled {
+  background: #3a3f5c;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.upgrade-btn.owned-badge {
+  background: #2ecc71;
+  cursor: default;
+}
+
+.lab-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  opacity: 0.6;
+  padding: 40px;
+}
+
+.analyst-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.analyst-session-id {
+  opacity: 0.6;
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+}

@@ -1,9 +1,13 @@
 """PathoHunt game blueprint — routes and API endpoints."""
 import requests as _req
+from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, render_template, Response
 from flask_login import login_required, current_user
 
 import services.game_service as game_service
+import services.lab_service as lab_service
+from models.game_progression import CoopSession, LabUpgrade
+from models.db_models import db
 from config.settings import KOKORO_URL
 
 bp = Blueprint("game", __name__)
@@ -44,6 +48,12 @@ def game_battle_3d(target_id):
                                bosses=game_service.get_all_bosses(),
                                error="Unknown boss"), 404
     return render_template("game_battle_3d.html", boss=boss)
+
+
+@bp.route("/game/lab")
+@login_required
+def game_lab():
+    return render_template("game_lab.html")
 
 
 # ─── JSON API ─────────────────────────────────────────────────────────────────
@@ -152,7 +162,8 @@ def api_save_session_to_experiment(session_id):
 @bp.route("/api/v3/game/session/<session_id>/candidates")
 @login_required
 def api_get_candidates(session_id):
-    candidates = game_service.get_candidates(session_id, current_user.id)
+    pinned_seed = request.args.get("pinned_seed", "").strip() or None
+    candidates = game_service.get_candidates(session_id, current_user.id, pinned_seed=pinned_seed)
     return jsonify({"candidates": candidates})
 
 
@@ -182,6 +193,100 @@ def api_validate_novelty():
     return jsonify(game_service.validate_novelty(smiles))
 
 
+# ─── Leaderboard ─────────────────────────────────────────────────────────────
+
+@bp.route("/api/v3/game/leaderboard/<target_id>")
+@login_required
+def api_get_leaderboard(target_id):
+    entries = game_service.get_leaderboard(target_id)
+    return jsonify(entries)
+
+
+# ─── Research Points ──────────────────────────────────────────────────────────
+
+@bp.route("/api/v3/game/rp")
+@login_required
+def api_get_rp():
+    rp = game_service.get_user_rp(current_user.id)
+    return jsonify({"rp": rp})
+
+
+# ─── Lab Upgrades ─────────────────────────────────────────────────────────────
+
+@bp.route("/api/v3/game/upgrades")
+@login_required
+def api_get_upgrades():
+    all_upgrades = LabUpgrade.query.all()
+    owned_slugs = {u["upgrade_slug"] for u in lab_service.get_user_upgrades(current_user.id)}
+    result = []
+    for up in all_upgrades:
+        d = up.to_dict()
+        d["owned"] = up.slug in owned_slugs
+        result.append(d)
+    return jsonify(result)
+
+
+@bp.route("/api/v3/game/upgrade/purchase", methods=["POST"])
+@login_required
+def api_purchase_upgrade():
+    data = request.get_json(silent=True) or {}
+    slug = (data.get("slug") or "").strip()
+    if not slug:
+        return jsonify({"error": "slug is required"}), 400
+    try:
+        result = lab_service.purchase_upgrade(current_user.id, slug)
+        return jsonify(result), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": f"Purchase failed: {e}"}), 500
+
+
+# ─── Co-op Analyst ────────────────────────────────────────────────────────────
+
+@bp.route("/api/v3/game/session/<session_id>/analyst")
+@login_required
+def api_analyst_view(session_id):
+    return render_template("game_analyst.html", session_id=session_id)
+
+
+@bp.route("/api/v3/game/session/<session_id>/join-analyst", methods=["POST"])
+@login_required
+def api_join_analyst(session_id):
+    existing = CoopSession.query.filter_by(session_id=session_id).first()
+    if existing:
+        existing.analyst_user_id = current_user.id
+        existing.joined_at = datetime.now(timezone.utc)
+        db.session.commit()
+        return jsonify(existing.to_dict())
+
+    coop = CoopSession(
+        session_id=session_id,
+        analyst_user_id=current_user.id,
+        joined_at=datetime.now(timezone.utc),
+        analyst_annotations={},
+    )
+    db.session.add(coop)
+    db.session.commit()
+    return jsonify(coop.to_dict()), 201
+
+
+@bp.route("/api/v3/game/session/<session_id>/annotate", methods=["POST"])
+@login_required
+def api_annotate_session(session_id):
+    data = request.get_json(silent=True) or {}
+    coop = CoopSession.query.filter_by(session_id=session_id).first()
+    if not coop:
+        return jsonify({"error": "No co-op session found"}), 404
+    if str(coop.analyst_user_id) != str(current_user.id):
+        return jsonify({"error": "Not the analyst for this session"}), 403
+    annotations = coop.analyst_annotations or {}
+    annotations.update(data)
+    coop.analyst_annotations = annotations
+    db.session.commit()
+    return jsonify(coop.to_dict())
+
+
 # ─── Tutorial ─────────────────────────────────────────────────────────────────
 
 @bp.route("/game/tutorial")
@@ -193,7 +298,6 @@ def game_tutorial():
 @bp.route("/api/v3/game/tts", methods=["POST"])
 @login_required
 def tts_proxy():
-    """Proxy text to Kokoro TTS server and return WAV audio."""
     data = request.get_json(silent=True) or {}
     text = (data.get("text") or "").strip()[:800]
     voice = data.get("voice", "am_michael")

@@ -11,7 +11,34 @@
     "win_threshold_easy": 0.72,
     "win_threshold_docking": -9.0,
     "plain_english": "The flu virus uses this enzyme to copy itself and spread to new cells. Your molecule needs to block it better than Tamiflu.",
-    "seed_hint": "full"
+    "seed_hint": "full",
+    "starter_smiles": "CC(=O)OC1=CC=C(C=C1)NC(=O)C",
+    "patient_story": {
+      "name": "Maya",
+      "age": 7,
+      "condition": "Influenza A H3N2 with respiratory distress",
+      "urgency": "Admitted to ICU — Tamiflu resistance detected, oxygen saturation dropping",
+      "outcome_win": "Maya's fever broke overnight. Her parents cried when she asked for breakfast. She goes home in two days.",
+      "outcome_loss": "Viral load continued rising despite Tamiflu. Maya required mechanical ventilation. The lab needs more time."
+    },
+    "mutation_pool": [
+      {
+        "id": "na_efflux",
+        "name": "Efflux Activator",
+        "description": "NA activates membrane efflux pumps, expelling small molecules before they can bind.",
+        "effect_type": "efflux_pump",
+        "icon": "💨"
+      },
+      {
+        "id": "na_r292k",
+        "name": "R292K Resistance",
+        "description": "A single point mutation reshapes the active site, reducing oseltamivir-like binding by 1000×.",
+        "effect_type": "binding_mutation",
+        "icon": "🔀"
+      }
+    ],
+    "phase2_taunt": "My R292K variant laughs at your Tamiflu analogues. Evolve or fail.",
+    "phase3_taunt": "Pandemic mode engaged. Every cell in this body is a factory now."
   },
   {
     "target_id": "covid19_mpro",
@@ -25,7 +52,34 @@
     "win_threshold_easy": 0.70,
     "win_threshold_docking": -9.0,
     "plain_english": "The COVID-19 virus uses this molecular scissors to build itself. Your job is to design a molecule that jams those scissors better than Paxlovid.",
-    "seed_hint": "full"
+    "seed_hint": "full",
+    "starter_smiles": "CC1(C2C1C(N(C2)C(=O)C(CC3CCNC3=O)NC(=O)C(F)(F)F)C(=O)NC(CC#N)C4=CC=CC=N4)C",
+    "patient_story": {
+      "name": "Harold",
+      "age": 71,
+      "condition": "Severe COVID-19 pneumonia, immunocompromised post-kidney transplant",
+      "urgency": "Rebound infection after first Paxlovid course — viral replication persisting in lung tissue",
+      "outcome_win": "Harold's CT scan cleared within a week. He called his daughter from the ward. Discharge in four days.",
+      "outcome_loss": "Secondary bacterial pneumonia set in as COVID-19 suppressed his immune response. Harold transferred to high-dependency care."
+    },
+    "mutation_pool": [
+      {
+        "id": "mpro_overexp",
+        "name": "Overexpression Surge",
+        "description": "Viral replication drives Mpro concentration 8× above baseline, overwhelming inhibitor coverage.",
+        "effect_type": "overexpression",
+        "icon": "📈"
+      },
+      {
+        "id": "mpro_shield",
+        "name": "Membrane Micro-Shield",
+        "description": "Viral remodelling of endosomal membranes reduces inhibitor diffusion to the cleavage site.",
+        "effect_type": "membrane_shield",
+        "icon": "🛡️"
+      }
+    ],
+    "phase2_taunt": "Paxlovid rebound is real. Your molecules are just speed bumps.",
+    "phase3_taunt": "I replicate faster than you can design. This patient is mine."
   },
   {
     "target_id": "hiv_protease",
@@ -39,7 +93,34 @@
     "win_threshold_easy": 0.72,
     "win_threshold_docking": -9.0,
     "plain_english": "HIV needs this enzyme to mature into an infectious virus. Block it and the virus produces harmless, immature particles that cannot infect new cells.",
-    "seed_hint": "fragment"
+    "seed_hint": "fragment",
+    "starter_smiles": "CC(C)CC(NC(=O)C(Cc1ccccc1)NC(=O)c1ccc(N)cc1)C(=O)NC(Cc1ccccc1)C(O)C(Cc1ccccc1)NC(=O)OCC1c2ccccc2-c2ccccc21",
+    "patient_story": {
+      "name": "Amara",
+      "age": 34,
+      "condition": "HIV-1 with multi-drug resistant protease (D30N + M46I + I84V)",
+      "urgency": "Third-line ART failing — viral load 180,000 copies/mL, CD4 count 42",
+      "outcome_win": "Viral load dropped below 50 copies/mL within 12 weeks. Amara resumed her teaching career. Her daughter was born HIV-negative.",
+      "outcome_loss": "Resistance panel showed no remaining approved options. Amara was enrolled in a compassionate use programme. The fight continues."
+    },
+    "mutation_pool": [
+      {
+        "id": "hiv_d30n",
+        "name": "D30N Flap Mutation",
+        "description": "Mutations in the flap region reduce inhibitor binding affinity by blocking the catalytic dyad.",
+        "effect_type": "binding_mutation",
+        "icon": "🧬"
+      },
+      {
+        "id": "hiv_efflux",
+        "name": "P-gp Efflux Upregulation",
+        "description": "HIV-infected cells upregulate P-glycoprotein, actively pumping protease inhibitors out.",
+        "effect_type": "efflux_pump",
+        "icon": "💨"
+      }
+    ],
+    "phase2_taunt": "D30N, M46I, I84V — every mutation is a door slamming in your face.",
+    "phase3_taunt": "I have survived every drug class. I am evolution itself."
   },
   {
     "target_id": "egfr_kinase",
@@ -53,7 +134,34 @@
     "win_threshold_easy": 0.73,
     "win_threshold_docking": -9.5,
     "plain_english": "EGFR acts as the gas pedal for cancer cell growth. Your molecule needs to remove the foot from the pedal to stop cancer from spreading.",
-    "seed_hint": "fragment"
+    "seed_hint": "fragment",
+    "starter_smiles": "COc1cc2ncnc(Nc3ccc(F)c(Cl)c3)c2cc1OCCCN1CCOCC1",
+    "patient_story": {
+      "name": "David",
+      "age": 58,
+      "condition": "Stage IIIB non-small cell lung adenocarcinoma, EGFR exon 19 deletion",
+      "urgency": "Gefitinib resistance emerged after 14 months — T790M mutation confirmed on liquid biopsy",
+      "outcome_win": "PET scan showed 70% tumour regression. David watched his son graduate. Maintenance therapy ongoing with good tolerance.",
+      "outcome_loss": "Progressive disease on second-line agents. David enrolled in a clinical trial. His oncologist remains cautiously hopeful."
+    },
+    "mutation_pool": [
+      {
+        "id": "egfr_t790m",
+        "name": "T790M Gatekeeper",
+        "description": "The gatekeeper T790M mutation sterically blocks gefitinib-class inhibitors from accessing the ATP pocket.",
+        "effect_type": "binding_mutation",
+        "icon": "🔒"
+      },
+      {
+        "id": "egfr_overexp",
+        "name": "EGFR Amplification",
+        "description": "Gene amplification drives 40× overexpression, overwhelming stoichiometric inhibition.",
+        "effect_type": "overexpression",
+        "icon": "📈"
+      }
+    ],
+    "phase2_taunt": "T790M makes first-generation inhibitors obsolete. What's your next move?",
+    "phase3_taunt": "Forty copies of my gene. You cannot saturate all of them."
   },
   {
     "target_id": "braf_v600e",
@@ -67,7 +175,34 @@
     "win_threshold_easy": 0.75,
     "win_threshold_docking": -10.0,
     "plain_english": "A mutation in BRAF locks the cancer accelerator permanently 'on'. You need a molecule that fits the mutated shape specifically, not the normal shape.",
-    "seed_hint": "none"
+    "seed_hint": "none",
+    "starter_smiles": "CNC(=O)c1cc(Oc2ccc(NC(=O)Nc3ccc(Cl)c(CF3)c3)cc2)ccn1",
+    "patient_story": {
+      "name": "Priya",
+      "age": 41,
+      "condition": "Metastatic BRAF V600E melanoma with brain lesions, Vemurafenib-resistant",
+      "urgency": "Paradoxical MAPK reactivation under MEK inhibitor combination — lesions growing at 2mm/week",
+      "outcome_win": "Stereotactic radiation plus your compound achieved intracranial response. Priya returned to her architecture practice six months later.",
+      "outcome_loss": "Resistance through BRAF splice variants rendered the inhibitor ineffective. Priya began immunotherapy, searching for another path."
+    },
+    "mutation_pool": [
+      {
+        "id": "braf_membrane",
+        "name": "RAS-Independent Dimerisation",
+        "description": "V600E BRAF forms RAS-independent dimers that are inherently resistant to ATP-competitive inhibitors.",
+        "effect_type": "membrane_shield",
+        "icon": "🔗"
+      },
+      {
+        "id": "braf_efflux",
+        "name": "MDR1 Induction",
+        "description": "BRAF activation induces MDR1 expression, increasing drug efflux from tumour cells.",
+        "effect_type": "efflux_pump",
+        "icon": "💨"
+      }
+    ],
+    "phase2_taunt": "Paradoxical MAPK reactivation. Your inhibitor just made me stronger.",
+    "phase3_taunt": "Splice variants. Copy number gain. I am not a single target — I am a family."
   },
   {
     "target_id": "sirt1",
@@ -81,7 +216,34 @@
     "win_threshold_easy": 0.75,
     "win_threshold_docking": -9.5,
     "plain_english": "This protein regulates how we age. Designing molecules that interact with it could one day help us live healthier, longer lives — but the science is still being discovered.",
-    "seed_hint": "none"
+    "seed_hint": "none",
+    "starter_smiles": "Cc1ccc(-c2cc(C(F)(F)F)nn2-c2ccc(S(N)(=O)=O)cc2)cc1",
+    "patient_story": {
+      "name": "Kenji",
+      "age": 79,
+      "condition": "Accelerated cellular senescence with type 2 diabetes and early Alzheimer's pathology",
+      "urgency": "Enrolled in phase-0 longevity trial — SIRT1 activity 40% below age-matched controls on biopsy",
+      "outcome_win": "Cognitive assessments stabilised at 12 weeks. Kenji's family said he seemed 'sharper'. He finished writing his memoir.",
+      "outcome_loss": "Senescent cell burden continued rising without effective SIRT1 modulation. Kenji's condition progressed as expected. The longevity trial continues."
+    },
+    "mutation_pool": [
+      {
+        "id": "sirt1_overexp",
+        "name": "DBC1 Sequestration",
+        "description": "Elevated DBC1 sequesters SIRT1's allosteric activating domain, reducing apparent binding affinity.",
+        "effect_type": "overexpression",
+        "icon": "📎"
+      },
+      {
+        "id": "sirt1_membrane",
+        "name": "Nuclear Export Shield",
+        "description": "Stress-induced nuclear export traps SIRT1 in cytoplasmic complexes inaccessible to most activators.",
+        "effect_type": "membrane_shield",
+        "icon": "🛡️"
+      }
+    ],
+    "phase2_taunt": "DBC1 has me locked in an inhibited state. Modulate the allosteric site if you dare.",
+    "phase3_taunt": "I have been regulating lifespan for a billion years of evolution. You have been a scientist for what — twenty?"
   },
   {
     "target_id": "cdk2",
@@ -95,6 +257,33 @@
     "win_threshold_easy": 0.78,
     "win_threshold_docking": -10.0,
     "plain_english": "CDK2 is the countdown timer that tells cells when to divide. Cancer removes the countdown, so cells divide forever. Stopping CDK2 restores the timer.",
-    "seed_hint": "none"
+    "seed_hint": "none",
+    "starter_smiles": "O=C1Nc2cccc3cccc1c23",
+    "patient_story": {
+      "name": "Sofia",
+      "age": 29,
+      "condition": "Triple-negative breast cancer with CDK2 amplification, relapsed after two lines of chemotherapy",
+      "urgency": "Liver metastases growing rapidly — ECOG performance status declining, limited time before organ failure",
+      "outcome_win": "Complete metabolic response on PET at 8 weeks. Sofia married her partner in the hospital garden. Two years later, she is in clinical remission.",
+      "outcome_loss": "Tumour heterogeneity with CDK2 and CDK4 co-amplification evaded single-target inhibition. Sofia entered palliative care. Her case changed how we design trials."
+    },
+    "mutation_pool": [
+      {
+        "id": "cdk2_efflux",
+        "name": "ABCG2 Efflux Overload",
+        "description": "Cancer stem cells upregulate ABCG2, a high-affinity efflux transporter that rapidly clears CDK2 inhibitors.",
+        "effect_type": "efflux_pump",
+        "icon": "💨"
+      },
+      {
+        "id": "cdk2_binding",
+        "name": "Cyclin E1 Overcrowding",
+        "description": "Cyclin E1 overexpression shifts CDK2 into a conformation that excludes most known inhibitor scaffolds.",
+        "effect_type": "binding_mutation",
+        "icon": "🔀"
+      }
+    ],
+    "phase2_taunt": "Cyclin E1 overexpression. Your scaffold cannot reach my active site now.",
+    "phase3_taunt": "I am the last checkpoint between this patient's cells and immortality. Defeat me if you can, scientist."
   }
 ]

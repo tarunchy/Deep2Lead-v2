@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Lab Upgrades — Deep2Lead{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game_lab.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="lab-wrap">
+  <div class="lab-header">
+    <h1>🔬 Research Lab</h1>
+    <div class="lab-rp-display">
+      <span class="rp-label">Research Points</span>
+      <span class="rp-value" id="rpBalance">…</span>
+    </div>
+  </div>
+
+  <div class="lab-grid" id="upgradeGrid">
+    <div class="lab-loading">Loading upgrades…</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game_lab.js') }}"></script>
+{% endblock %}

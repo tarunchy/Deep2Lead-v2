@@ -20,6 +20,12 @@ class GameSession(db.Model):
     win_threshold = db.Column(db.Float, nullable=False, default=0.70)
     time_started = db.Column(db.DateTime(timezone=True), server_default=func.now())
     time_ended = db.Column(db.DateTime(timezone=True), nullable=True)
+    phase = db.Column(db.Integer, default=0, nullable=False)
+    active_mutations = db.Column(db.JSON, default=list)
+    outbreak_mode = db.Column(db.Boolean, default=False, nullable=False)
+    outbreak_started_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    bad_streak = db.Column(db.Integer, default=0, nullable=False)
+    pinned_smiles = db.Column(db.Text, nullable=True)
 
     attacks = db.relationship("GameAttack", back_populates="session", lazy="dynamic",
                               order_by="GameAttack.attack_number")
@@ -38,6 +44,12 @@ class GameSession(db.Model):
             "win_threshold": self.win_threshold,
             "time_started": self.time_started.isoformat() if self.time_started else None,
             "time_ended": self.time_ended.isoformat() if self.time_ended else None,
+            "phase": self.phase,
+            "active_mutations": self.active_mutations or [],
+            "outbreak_mode": self.outbreak_mode,
+            "outbreak_started_at": self.outbreak_started_at.isoformat() if self.outbreak_started_at else None,
+            "bad_streak": self.bad_streak,
+            "pinned_smiles": self.pinned_smiles,
         }
 
 

@@ -34,6 +34,7 @@ def create_app() -> Flask:
     import models.gamification           # noqa: F401
     import models.auto_experiment_models # noqa: F401
     import models.game_models            # noqa: F401
+    import models.game_progression       # noqa: F401
 
     # v2 blueprints
     from api.auth import bp as auth_bp

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Analyst View — Deep2Lead{% endblock %}
+
+{% block content %}
+<div class="analyst-wrap">
+  <h1>🔍 Co-op Analyst View</h1>
+  <p class="analyst-session-id">Session: <code>{{ session_id }}</code></p>
+  <div id="analystPanel">
+    <button id="joinBtn" class="btn btn-primary">Join as Analyst</button>
+    <div id="annotationArea" style="display:none;">
+      <h3>Annotations</h3>
+      <textarea id="annotationInput" rows="6" placeholder="Add notes, observations…" style="width:100%;"></textarea>
+      <button id="saveAnnotationBtn" class="btn btn-primary" style="margin-top:8px;">Save Annotation</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game_analyst.js') }}"></script>
+<script>
+const SESSION_ID = "{{ session_id }}";
+</script>
+{% endblock %}
