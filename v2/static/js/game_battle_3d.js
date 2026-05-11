@@ -1058,39 +1058,19 @@ class PathoHunt3D {
                 const diff = document.getElementById('diff-select')?.value || 'normal';
                 const dodgeChance = diff === 'hard' ? 0.55 : diff === 'easy' ? 0.20 : 0.35;
                 const hpRatio = this.bossHP / (this.bossInitialHP || 300);
-                const finalChance = dodgeChance + (hpRatio < 0.5 ? 0.15 : 0); // desperate boss dodges more
+                const finalChance = dodgeChance + (hpRatio < 0.5 ? 0.15 : 0);
                 if (!this.dodgeCooldown && Math.random() < finalChance) {
                     this.triggerDodge();
                 }
             }
 
-            // Hit detection: projectile reached its locked target zone
-            if (p.t >= 1.0) {
-                const distToBoss = p.mesh.position.distanceTo(this.monster.position);
-                if (distToBoss < 9) {
-                    // HIT — boss was still there
-                    p.parked = true; p.hitTime = Date.now();
-                    this.showAnalyzing(p.molName);
-                } else {
-                    // MISS — boss dodged out of the target zone
-                    this.onProjectileMiss(p, i);
-                }
-                continue;
-            }
+            // ── Collision checks run BEFORE t>=1.0 so they are never skipped ──
 
-            // Also park if projectile drifts close mid-flight (parabolic arc edge case)
-            if (p.t < 0.95 && p.mesh.position.distanceTo(this.monster.position) < 6) {
-                p.parked = true; p.hitTime = Date.now();
-                this.showAnalyzing(p.molName);
-                continue;
-            }
-
+            // Friendly fire: safe green cell hit
             let hitSomething = false;
-
-            // Check safe object collision (friendly fire)
             for (let si = this.safeObjects.length - 1; si >= 0; si--) {
                 const safe = this.safeObjects[si];
-                if (p.mesh.position.distanceTo(safe.position) < 3.5) {
+                if (p.mesh.position.distanceTo(safe.position) < 5) {
                     this.createExplosion(safe.position.clone(), 0x00ff88, 1.2);
                     this.scene.remove(safe);
                     this.safeObjects.splice(si, 1);
@@ -1103,7 +1083,7 @@ class PathoHunt3D {
             }
             if (hitSomething) continue;
 
-            // Check enemy obstacle collision
+            // Enemy spore hit
             for (let oi = this.obstacles.length - 1; oi >= 0; oi--) {
                 const obs = this.obstacles[oi];
                 if (p.mesh.position.distanceTo(obs.position) < (obs.isLarge ? 7 : 5)) {
@@ -1113,7 +1093,28 @@ class PathoHunt3D {
                     hitSomething = true; break;
                 }
             }
-            if (!hitSomething && p.t > 1.8) { this.onProjectileMiss(p, i); }
+            if (hitSomething) continue;
+
+            // Hit detection: projectile reached its locked target zone
+            if (p.t >= 1.0) {
+                const distToBoss = p.mesh.position.distanceTo(this.monster.position);
+                if (distToBoss < 9) {
+                    p.parked = true; p.hitTime = Date.now();
+                    this.showAnalyzing(p.molName);
+                } else {
+                    this.onProjectileMiss(p, i);
+                }
+                continue;
+            }
+
+            // Park early if projectile drifts very close to boss mid-flight
+            if (p.t < 0.95 && p.mesh.position.distanceTo(this.monster.position) < 6) {
+                p.parked = true; p.hitTime = Date.now();
+                this.showAnalyzing(p.molName);
+                continue;
+            }
+
+            if (p.t > 1.8) { this.onProjectileMiss(p, i); }
         }
 
         // Enemy spores move toward player
