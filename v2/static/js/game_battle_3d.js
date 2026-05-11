@@ -193,6 +193,11 @@ class PathoHunt3D {
         this.fireReady = true;
         this.fireCooldown = 800;
 
+        // Dodge system
+        this.bossEvasionMode = false;
+        this.bossEvadeTimer = 0;
+        this.dodgeCooldown = false;
+
         this.init();
     }
 
@@ -307,6 +312,63 @@ class PathoHunt3D {
         mesh.userData.isSafe = true;
         this.scene.add(mesh);
         this.safeObjects.push(mesh);
+    }
+
+    triggerDodge() {
+        if (!this.gameStarted || !this.monster) return;
+        this.dodgeCooldown = true;
+        this.bossEvasionMode = true;
+        // Snap to an evasion target far from current position
+        const side = Math.random() > 0.5 ? 1 : -1;
+        this.bossTargetX = side * (12 + Math.random() * 16);
+        this.bossTargetY = 3 + Math.random() * 10;
+        this.bossMoveTimer = Date.now() + 1500; // hold evasion target for 1.5s
+        // Quick rotation flash
+        this.monster.traverse(m => {
+            if (m.isMesh && m.material) {
+                const orig = m.material.emissive?.getHex?.() || 0;
+                m.material.emissive?.setHex(0xffaa00);
+                setTimeout(() => m.material.emissive?.setHex(orig), 300);
+            }
+        });
+        setTimeout(() => {
+            this.bossEvasionMode = false;
+            this.dodgeCooldown = false;
+        }, 2200);
+    }
+
+    onProjectileMiss(proj, idx) {
+        this.scene.remove(proj.mesh);
+        if (idx !== undefined) this.projectiles.splice(idx, 1);
+        else {
+            const i = this.projectiles.indexOf(proj);
+            if (i > -1) this.projectiles.splice(i, 1);
+        }
+        this.attackLocked = false;
+        this.comboCount = 0;
+        this.updateComboDisplay();
+        this.log('EVADED! The pathogen dodged your molecule!', '#ff6600');
+
+        // Floating EVADED text
+        const div = document.createElement('div');
+        div.className = 'float-dmg';
+        div.style.cssText = 'color:#ff6600;font-size:22px;font-weight:900;';
+        div.textContent = '💨 EVADED!';
+        const rect = this.container.getBoundingClientRect();
+        div.style.left = (rect.width * 0.42 + (Math.random() - 0.5) * 50) + 'px';
+        div.style.top = (rect.height * 0.32) + 'px';
+        this.container.appendChild(div);
+        setTimeout(() => div.remove(), 1800);
+
+        // Flash orange instead of red
+        const vd = document.getElementById('vfx-flash');
+        if (vd) {
+            vd.style.background = 'rgba(255,120,0,0.18)';
+            vd.style.opacity = '1';
+            setTimeout(() => { vd.style.opacity = '0'; setTimeout(() => { vd.style.background = ''; }, 200); }, 220);
+        }
+        // Refresh deck so player can try again quickly
+        setTimeout(() => this.fetchDeck(), 300);
     }
 
     friendlyFire() {
@@ -867,15 +929,17 @@ class PathoHunt3D {
         this.monster.rotation.y += (p.rotY || 0.015) + (p._rotYBoost || 0);
         this.monster.rotation.x += (p.rotX || 0.005);
 
-        // Random wandering movement during battle
+        // Random wandering + evasion movement
         if (this.gameStarted) {
-            if (t * 1000 > this.bossMoveTimer) {
-                this.bossMoveTimer = t * 1000 + 1800 + Math.random() * 2500;
-                this.bossTargetX = (Math.random() - 0.5) * 28;
+            if (t * 1000 > this.bossMoveTimer && !this.bossEvasionMode) {
+                this.bossMoveTimer = t * 1000 + 1500 + Math.random() * 2000;
+                this.bossTargetX = (Math.random() - 0.5) * 30;
                 this.bossTargetY = 2 + Math.random() * 10;
             }
-            this.monster.position.x += (this.bossTargetX - this.monster.position.x) * 0.018;
-            this.monster.position.y += (this.bossTargetY - this.monster.position.y) * 0.018;
+            // Evasion uses much faster lerp; normal wandering is also snappier
+            const lerpSpeed = this.bossEvasionMode ? 0.10 : 0.032;
+            this.monster.position.x += (this.bossTargetX - this.monster.position.x) * lerpSpeed;
+            this.monster.position.y += (this.bossTargetY - this.monster.position.y) * lerpSpeed;
         }
 
         switch (p.idleAnim) {
@@ -957,27 +1021,22 @@ class PathoHunt3D {
                 p.mesh.position.x = this.monster.position.x + Math.cos(t * 4 + i) * 2;
                 p.mesh.position.y = this.monster.position.y + Math.sin(t * 4 + i) * 2;
 
-                // Phase 1 — outer membrane scan (fake low score)
                 if (!p.phase1 && elapsed > 700) {
                     p.phase1 = true;
                     const fake = Math.round(10 + Math.random() * 22);
                     this.log(`OUTER MEMBRANE: ${fake}% — probing surface...`, '#445566');
                     this.setAnalyzingPhase(`OUTER MEMBRANE SCAN: ${fake}%`, p.molName);
                 }
-                // Phase 2 — active site analysis (fake mid score)
                 if (!p.phase2 && elapsed > 2000) {
                     p.phase2 = true;
                     const fake = Math.round(28 + Math.random() * 28);
                     this.log(`ACTIVE SITE: ${fake}% — binding analysis...`, '#f6ad55');
                     this.setAnalyzingPhase(`BINDING SITE ANALYSIS: ${fake}%`, p.molName);
                 }
-                // Phase 3 — quantum calculation (fake pre-final)
                 if (!p.phase3 && elapsed > 3400) {
                     p.phase3 = true;
                     this.setAnalyzingPhase('QUANTUM DOCKING... CALCULATING FINAL SCORE', p.molName);
                 }
-
-                // Apply real result only after phase 3 AND API settled
                 if (p.phase3 && p.apiSettled) {
                     this.applyAttackResult(p.apiResult, p);
                 } else if (elapsed > 14000) {
@@ -986,15 +1045,41 @@ class PathoHunt3D {
                 continue;
             }
 
-            // Update target to track moving boss
-            if (this.monster) p.targetPos.copy(this.monster.position);
-
+            // Target is LOCKED at fire time — no homing
             p.t += 0.01 * p.speed;
-            const nextPos = new THREE.Vector3().lerpVectors(p.startPos, p.targetPos, Math.min(p.t, 1));
-            if (p.isParabolic) nextPos.y += Math.sin(Math.min(p.t, 1) * Math.PI) * 12;
+            const tClamped = Math.min(p.t, 1);
+            const nextPos = new THREE.Vector3().lerpVectors(p.startPos, p.targetPos, tClamped);
+            if (p.isParabolic) nextPos.y += Math.sin(tClamped * Math.PI) * 12;
             p.mesh.lookAt(nextPos); p.mesh.position.copy(nextPos);
 
-            if (p.mesh.position.distanceTo(this.monster.position) < 9) {
+            // Trigger boss dodge when projectile gets close enough (one check per projectile)
+            if (!p.dodgeChecked && p.mesh.position.distanceTo(this.monster.position) < 22) {
+                p.dodgeChecked = true;
+                const diff = document.getElementById('diff-select')?.value || 'normal';
+                const dodgeChance = diff === 'hard' ? 0.55 : diff === 'easy' ? 0.20 : 0.35;
+                const hpRatio = this.bossHP / (this.bossInitialHP || 300);
+                const finalChance = dodgeChance + (hpRatio < 0.5 ? 0.15 : 0); // desperate boss dodges more
+                if (!this.dodgeCooldown && Math.random() < finalChance) {
+                    this.triggerDodge();
+                }
+            }
+
+            // Hit detection: projectile reached its locked target zone
+            if (p.t >= 1.0) {
+                const distToBoss = p.mesh.position.distanceTo(this.monster.position);
+                if (distToBoss < 9) {
+                    // HIT — boss was still there
+                    p.parked = true; p.hitTime = Date.now();
+                    this.showAnalyzing(p.molName);
+                } else {
+                    // MISS — boss dodged out of the target zone
+                    this.onProjectileMiss(p, i);
+                }
+                continue;
+            }
+
+            // Also park if projectile drifts close mid-flight (parabolic arc edge case)
+            if (p.t < 0.95 && p.mesh.position.distanceTo(this.monster.position) < 6) {
                 p.parked = true; p.hitTime = Date.now();
                 this.showAnalyzing(p.molName);
                 continue;
@@ -1028,7 +1113,7 @@ class PathoHunt3D {
                     hitSomething = true; break;
                 }
             }
-            if (!hitSomething && p.t > 1.8) { this.scene.remove(p.mesh); this.projectiles.splice(i, 1); }
+            if (!hitSomething && p.t > 1.8) { this.onProjectileMiss(p, i); }
         }
 
         // Enemy spores move toward player
