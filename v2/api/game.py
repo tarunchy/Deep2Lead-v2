@@ -117,6 +117,30 @@ def api_game_history():
     return jsonify(history)
 
 
+@bp.route("/game/pathohunt-3d")
+@login_required
+def game_selector_3d():
+    bosses = game_service.get_all_bosses()
+    return render_template("game_selector_3d.html", bosses=bosses)
+
+
+@bp.route("/api/v3/game/session/<session_id>/candidates")
+@login_required
+def api_get_candidates(session_id):
+    candidates = game_service.get_candidates(session_id, current_user.id)
+    return jsonify({"candidates": candidates})
+
+
+@bp.route("/api/v3/game/validate", methods=["POST"])
+@login_required
+def api_validate_novelty():
+    data = request.get_json(silent=True) or {}
+    smiles = (data.get("smiles") or "").strip()
+    if not smiles:
+        return jsonify({"error": "smiles required"}), 400
+    return jsonify(game_service.validate_novelty(smiles))
+
+
 # ─── Tutorial ─────────────────────────────────────────────────────────────────
 
 @bp.route("/game/tutorial")

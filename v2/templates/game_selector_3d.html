@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}PathoHunt 3D — Choose Your Target{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game_selector_3d.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="selector-hero">
+    <h1>⚔️ PATHOHUNT 3D — SELECT YOUR TARGET</h1>
+    <p>Each target is a real pathogenic protein. Choose wisely — your molecules must surpass known drugs.</p>
+</div>
+
+<div class="selector-top-bar">
+    <a href="/game/pathohunt-3d/tutorial"
+       style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,242,255,0.08);border:1px solid rgba(0,242,255,0.3);border-radius:8px;padding:6px 14px;font-size:0.85rem;color:#00f2ff;text-decoration:none;font-weight:600;">
+        🎓 How to Play
+    </a>
+</div>
+
+<div class="boss-selector-grid" id="bossSelectorGrid"></div>
+
+<div class="boss-intro-overlay" id="bossIntroOverlay" style="display:none;">
+    <div class="boss-intro-panel" id="bossIntroPanel"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.BOSSES_JSON = {{ bosses | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/game_selector_3d.js') }}"></script>
+{% endblock %}

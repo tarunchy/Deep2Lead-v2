@@ -289,3 +289,74 @@ def _calculate_damage(composite: float, previous_best: float) -> float:
     if delta <= 0:
         return 0.0
     return round(min(60.0, delta * 100.0), 2)
+
+
+def get_candidates(session_id, user_id) -> list:
+    session = GameSession.query.get(session_id)
+    if not session or str(session.user_id) != str(user_id):
+        return []
+    target = target_service.get_curated_target(session.target_id)
+    if not target:
+        return []
+    seed = target.get("starter_smiles", "")
+    if not seed:
+        return []
+    candidates = []
+    try:
+        gen = molecule_generator.generate(seed_smile=seed, amino_acid_seq=target.get("amino_acid_seq",""), noise=0.25, n=3)
+        candidates = gen.get("smiles", [])[:3]
+    except Exception:
+        pass
+    if not candidates:
+        candidates = [seed]
+    result = []
+    for smi in candidates[:3]:
+        props = property_calculator.compute_all(smi, seed)
+        composite = _compute_composite(props) if props else 0.30
+        result.append({
+            "smiles": smi,
+            "name": _mol_codename(smi),
+            "composite": round(composite, 3),
+            "qed": round(props.get("qed", 0.0) if props else 0.0, 3),
+            "sas": round(props.get("sas", 5.0) if props else 5.0, 2),
+            "lipinski": bool(props.get("lipinski_pass", False) if props else False),
+        })
+    return result
+
+
+def _mol_codename(smiles: str) -> str:
+    import hashlib
+    h = int(hashlib.md5(smiles.encode()).hexdigest(), 16)
+    prefixes = ["CX", "DL", "VK", "MX", "BT", "ZR", "PH", "QL"]
+    return f"{prefixes[h % len(prefixes)]}-{(h % 9000) + 1000}"
+
+
+def validate_novelty(smiles: str) -> dict:
+    import requests as _req
+    from urllib.parse import quote
+    from config.settings import CHEMBL_URL
+    try:
+        encoded = quote(smiles, safe='')
+        url = f"{CHEMBL_URL}/similarity/{encoded}/70.json?limit=3"
+        resp = _req.get(url, timeout=15)
+        if resp.status_code != 200:
+            return {"novel": True, "max_similarity": 0, "hits": [], "reason": "No match found in ChEMBL"}
+        data = resp.json()
+        molecules = data.get("molecules", [])
+        hits = []
+        for mol in molecules[:3]:
+            hits.append({
+                "chembl_id": mol.get("molecule_chembl_id", ""),
+                "name": mol.get("pref_name") or mol.get("molecule_chembl_id", "Unknown"),
+                "similarity": round(float(mol.get("similarity", 0)), 1),
+                "smiles": mol.get("molecule_structures", {}).get("canonical_smiles", "")[:60],
+            })
+        max_sim = max((h["similarity"] for h in hits), default=0)
+        return {
+            "novel": max_sim < 80,
+            "max_similarity": max_sim,
+            "hits": hits,
+            "reason": f"{'Potentially novel' if max_sim < 80 else 'Similar to known drug'}: {max_sim}% max similarity"
+        }
+    except Exception as e:
+        return {"novel": True, "max_similarity": 0, "hits": [], "reason": "ChEMBL query failed", "error": str(e)}

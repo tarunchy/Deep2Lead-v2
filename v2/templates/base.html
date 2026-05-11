@@ -41,7 +41,7 @@
       <a href="{{ url_for('game.game_lobby') }}" class="{% if 'game' in request.endpoint %}active{% endif %}" title="PathoHunt Game">
         <span class="nav-icon">🎮</span><span class="nav-label">PathoHunt</span>
       </a>
-      <a href="/game/pathohunt-3d/covid19_mpro" class="{% if 'game_battle_3d' in request.endpoint %}active{% endif %}" title="PathoHunt 3D">
+      <a href="/game/pathohunt-3d" class="{% if 'game_battle_3d' in request.endpoint or 'game_selector_3d' in request.endpoint %}active{% endif %}" title="PathoHunt 3D">
         <span class="nav-icon">⚔️</span><span class="nav-label">PathoHunt 3D</span>
         <span class="badge badge-new" style="background:#ff3e3e; font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin-left: 4px;">NEW</span>
       </a>
