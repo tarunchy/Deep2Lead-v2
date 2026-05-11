@@ -396,6 +396,32 @@ class PathoHunt3D {
         this.container.appendChild(div);
         setTimeout(() => div.remove(), 2200);
 
+        // Big centred horror message
+        const msgs = [
+            'Oh no! You destroyed a healthy cell! 😱',
+            'That was a friendly cell! Watch your aim! 💔',
+            'Oof! You just nuked a healthy cell! 😬',
+            'Friendly fire! The patient is suffering! 🩸',
+        ];
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'ff-alert';
+        msgDiv.textContent = msgs[Math.floor(Math.random() * msgs.length)];
+        this.container.appendChild(msgDiv);
+        setTimeout(() => msgDiv.remove(), 2800);
+
+        // Voice line via TTS
+        const lines = [
+            'Oh no, you destroyed a healthy cell! The patient loses 80 hit points!',
+            'That was a friendly cell! Watch your targeting — minus 80 hit points!',
+            'Oof, friendly fire! You just nuked a healthy cell. Minus 80 hit points!',
+            'Careful! You hit a friendly cell. The patient is taking damage — minus 80 hit points!',
+        ];
+        const line = lines[Math.floor(Math.random() * lines.length)];
+        fetch('/api/v3/game/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: line }) })
+            .then(r => r.ok ? r.blob() : null)
+            .then(blob => { if (blob) audioMgr.play(blob); })
+            .catch(() => {});
+
         setTimeout(() => this.fetchDeck(), 300);
     }
 

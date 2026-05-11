@@ -333,6 +333,26 @@ select.game-select {
 .float-dmg-miss { color: #555; font-size: 13px; }
 .float-dmg-best { color: #f6ad55; font-size: 22px; }
 
+.ff-alert {
+    position: absolute; pointer-events: none; z-index: 50;
+    top: 38%; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.82);
+    border: 2px solid #00ff88;
+    color: #00ff88;
+    font-size: 22px; font-weight: 900; letter-spacing: 1px;
+    padding: 14px 28px; border-radius: 12px;
+    text-align: center; white-space: nowrap;
+    animation: ffAlertAnim 2.8s ease-out forwards;
+    text-shadow: 0 0 12px #00ff88;
+}
+@keyframes ffAlertAnim {
+    0%   { opacity: 0; transform: translateX(-50%) scale(0.7); }
+    12%  { opacity: 1; transform: translateX(-50%) scale(1.08); }
+    20%  { transform: translateX(-50%) scale(1); }
+    75%  { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) scale(0.95); }
+}
+
 @keyframes floatUp {
     0%   { opacity: 1; transform: translateY(0) scale(1); }
     50%  { opacity: 1; transform: translateY(-40px) scale(1.1); }
