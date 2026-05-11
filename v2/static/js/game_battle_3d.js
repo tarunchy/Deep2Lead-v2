@@ -118,9 +118,9 @@ const THEMES = {
 };
 
 const DIFFICULTY = {
-    easy:   { speedMin: 0.015, speedMax: 0.04,  smallDmg: 15,  largeDmg: 30,  largeHealth: 1, spawnRate: 5000 },
-    normal: { speedMin: 0.06,  speedMax: 0.15,  smallDmg: 30,  largeDmg: 60,  largeHealth: 2, spawnRate: 3500 },
-    hard:   { speedMin: 0.25,  speedMax: 0.5,   smallDmg: 60,  largeDmg: 120, largeHealth: 3, spawnRate: 2000 },
+    easy:   { speedMin: 0.015, speedMax: 0.04,  smallDmg: 5,   largeDmg: 10,  largeHealth: 1, spawnRate: 6000 },
+    normal: { speedMin: 0.06,  speedMax: 0.15,  smallDmg: 10,  largeDmg: 20,  largeHealth: 2, spawnRate: 4000 },
+    hard:   { speedMin: 0.25,  speedMax: 0.5,   smallDmg: 25,  largeDmg: 50,  largeHealth: 3, spawnRate: 2500 },
 };
 
 function molCodename(smiles) {
@@ -192,6 +192,8 @@ class PathoHunt3D {
         this.lastFrameTime = Date.now();
         this.fireReady = true;
         this.fireCooldown = 800;
+        this._warned300 = false;
+        this._warned150 = false;
 
         // Dodge system
         this.bossEvasionMode = false;
@@ -750,6 +752,8 @@ class PathoHunt3D {
         if (data.won) { this.onVictory(data); return; }
         if (data.lost) {
             this.isGameOver = true;
+            const r = document.getElementById('game-over-reason');
+            if (r) r.textContent = 'You exhausted all attack attempts without defeating the pathogen. Try easier difficulty or a different molecule strategy.';
             document.getElementById('screen-game-over').style.display = 'flex';
             return;
         }
@@ -890,10 +894,26 @@ class PathoHunt3D {
     }
 
     takeDamage(val) {
+        const prevHP = this.playerHP;
         this.playerHP = Math.max(0, this.playerHP - val);
         const vd = document.getElementById('vfx-damage');
         if (vd) { vd.style.opacity = 0.5; setTimeout(() => vd.style.opacity = 0, 150); }
         this.updateHUD();
+
+        // Low HP warnings at thresholds (spoken once per threshold)
+        if (!this._warned300 && prevHP > 300 && this.playerHP <= 300) {
+            this._warned300 = true;
+            this.log('⚠️ WARNING: Host defences critical! Destroy the pathogen fast!', '#ff3e3e');
+            fetch('/api/v3/game/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'Warning! Host defences are critical. Destroy the pathogen now or the mission fails!' }) })
+                .then(r => r.ok ? r.blob() : null).then(b => { if (b) audioMgr.play(b); }).catch(() => {});
+        }
+        if (!this._warned150 && prevHP > 150 && this.playerHP <= 150) {
+            this._warned150 = true;
+            this.log('🚨 CRITICAL: Immune collapse imminent!', '#ff0000');
+            fetch('/api/v3/game/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'Critical alert! Immune system collapse imminent. Fire your best molecule immediately!' }) })
+                .then(r => r.ok ? r.blob() : null).then(b => { if (b) audioMgr.play(b); }).catch(() => {});
+        }
+
         if (this.playerHP <= 0 && !this.isGameOver) {
             this.isGameOver = true;
             document.getElementById('screen-game-over').style.display = 'flex';
