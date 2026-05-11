@@ -1,3 +1,26 @@
+// Global audio manager — ensures only one TTS clip plays at a time
+const audioMgr = {
+    current: null,
+    muted: false,
+    play(blob) {
+        this.stop();
+        if (this.muted) return;
+        this.current = new Audio(URL.createObjectURL(blob));
+        this.current.play().catch(() => {});
+        this.current.onended = () => { this.current = null; };
+    },
+    stop() {
+        if (this.current) { this.current.pause(); this.current = null; }
+    },
+    toggle() {
+        this.muted = !this.muted;
+        if (this.muted) this.stop();
+        const btn = document.getElementById('btnMute');
+        if (btn) btn.textContent = this.muted ? '🔇' : '🔊';
+        return this.muted;
+    }
+};
+
 const BOSS_PROFILES = {
     influenza_na: {
         color: 0x4488ff, emissive: 0x001133, secondaryColor: 0x88aaff,
@@ -133,7 +156,8 @@ class PathoHunt3D {
         this.scene = null; this.camera = null; this.renderer = null;
         this.monster = null; this.envGroup = null;
         this.projectiles = []; this.explosions = []; this.obstacles = [];
-        this.bossHP = window.GAME_INITIAL_HP || 100;
+        this.bossHP = window.GAME_INITIAL_HP || 300;
+        this.bossInitialHP = window.GAME_INITIAL_HP || 300;
         this.playerHP = 1000;
         this.sessionId = null;
         this.isGameOver = false;
@@ -335,6 +359,7 @@ class PathoHunt3D {
             if (data.session) {
                 this.sessionId = data.session.id;
                 this.bossHP = data.session.boss_current_hp;
+                this.bossInitialHP = data.session.boss_initial_hp || 300;
                 this.updateHUD();
             }
         } catch (e) {
@@ -455,6 +480,7 @@ class PathoHunt3D {
             }
         });
         document.getElementById('btn-cross-validate')?.addEventListener('click', () => this.crossValidate());
+        document.getElementById('btnMute')?.addEventListener('click', () => audioMgr.toggle());
     }
 
     onSpacebarFire() {
@@ -676,7 +702,7 @@ class PathoHunt3D {
     }
 
     setBossWounded() {
-        const hpPct = this.bossHP / (window.GAME_INITIAL_HP || 100);
+        const hpPct = this.bossHP / (this.bossInitialHP || 300);
         if (hpPct < 0.5 && this.bossProfile.rotY) {
             this.bossProfile._rotYBoost = this.bossProfile.rotY * 0.5;
         }
@@ -688,7 +714,7 @@ class PathoHunt3D {
     }
 
     updateHUD() {
-        const initHP = window.GAME_INITIAL_HP || 100;
+        const initHP = this.bossInitialHP || 300;
         document.getElementById('enemy-hp-fill').style.width = `${Math.max(0, this.bossHP / initHP * 100)}%`;
         document.getElementById('enemy-hp-text').innerText = `${this.bossHP.toFixed(1)} HP`;
         document.getElementById('player-hp-fill').style.width = `${this.playerHP / 10}%`;
@@ -719,8 +745,15 @@ class PathoHunt3D {
                 body: JSON.stringify({ text: text.substring(0, 200) })
             });
             const blob = await r.blob();
-            new Audio(URL.createObjectURL(blob)).play().catch(() => {});
+            audioMgr.play(blob);
         } catch (e) {}
+    }
+
+    setAnalyzingPhase(line1, line2) {
+        const el = document.getElementById('analyzingText');
+        const el2 = document.getElementById('analyzingMolName');
+        if (el) el.textContent = line1 || 'ANALYZING MOLECULAR IMPACT';
+        if (el2) el2.textContent = line2 || '';
     }
 
     spawnObstacle() {
@@ -870,7 +903,7 @@ class PathoHunt3D {
                 }
                 break;
         }
-        const hpPct = this.bossHP / (window.GAME_INITIAL_HP || 100);
+        const hpPct = this.bossHP / (this.bossInitialHP || 300);
         if (hpPct < 0.25) this.monster.visible = Math.random() > 0.08;
     }
 
@@ -920,11 +953,34 @@ class PathoHunt3D {
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             const p = this.projectiles[i];
             if (p.parked) {
+                const elapsed = Date.now() - p.hitTime;
                 p.mesh.position.x = this.monster.position.x + Math.cos(t * 4 + i) * 2;
                 p.mesh.position.y = this.monster.position.y + Math.sin(t * 4 + i) * 2;
-                if (p.apiSettled) {
+
+                // Phase 1 — outer membrane scan (fake low score)
+                if (!p.phase1 && elapsed > 700) {
+                    p.phase1 = true;
+                    const fake = Math.round(10 + Math.random() * 22);
+                    this.log(`OUTER MEMBRANE: ${fake}% — probing surface...`, '#445566');
+                    this.setAnalyzingPhase(`OUTER MEMBRANE SCAN: ${fake}%`, p.molName);
+                }
+                // Phase 2 — active site analysis (fake mid score)
+                if (!p.phase2 && elapsed > 2000) {
+                    p.phase2 = true;
+                    const fake = Math.round(28 + Math.random() * 28);
+                    this.log(`ACTIVE SITE: ${fake}% — binding analysis...`, '#f6ad55');
+                    this.setAnalyzingPhase(`BINDING SITE ANALYSIS: ${fake}%`, p.molName);
+                }
+                // Phase 3 — quantum calculation (fake pre-final)
+                if (!p.phase3 && elapsed > 3400) {
+                    p.phase3 = true;
+                    this.setAnalyzingPhase('QUANTUM DOCKING... CALCULATING FINAL SCORE', p.molName);
+                }
+
+                // Apply real result only after phase 3 AND API settled
+                if (p.phase3 && p.apiSettled) {
                     this.applyAttackResult(p.apiResult, p);
-                } else if (Date.now() - p.hitTime > 12000) {
+                } else if (elapsed > 14000) {
                     this.applyAttackResult(null, p);
                 }
                 continue;

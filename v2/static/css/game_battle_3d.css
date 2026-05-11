@@ -522,6 +522,21 @@ kbd {
     100% { transform: translate(-50%, -50%) scale(1); }
 }
 
+/* Mute button */
+.mute-btn {
+    margin-top: 8px;
+    background: rgba(0,242,255,0.08);
+    border: 1px solid rgba(0,242,255,0.3);
+    color: #00f2ff;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    pointer-events: all;
+    transition: background 0.15s;
+}
+.mute-btn:hover { background: rgba(0,242,255,0.2); }
+
 /* Card key indicator */
 .mol-card-key {
     font-size: 9px;

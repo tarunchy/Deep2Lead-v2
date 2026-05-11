@@ -97,8 +97,8 @@ def start_session(user_id, target_id: str, mode: str = "quick_battle", difficult
     if not meta:
         raise ValueError(f"Target '{target_id}' is not a game boss")
 
-    known_score = meta.get("known_drug_score", 0.60)
-    boss_initial_hp = round(100.0 - known_score * 100.0, 1)
+    # Fixed 300 HP so the boss requires 15-25 attacks to defeat
+    boss_initial_hp = 300.0
     win_threshold = meta.get("win_threshold_easy", 0.72)
 
     session = GameSession(
@@ -168,10 +168,10 @@ def execute_attack(session_id, smiles: str, user_id) -> dict:
     session.boss_current_hp = new_hp
     session.attacks_count += 1
 
-    # Check win/lose
+    # Win only by depleting HP, with a minimum of 8 attacks required
     meta = _level_meta(session.target_id)
-    win_threshold = meta.get("win_threshold_easy", 0.72) if meta else 0.72
-    won = new_hp <= 0.0 or session.best_score >= win_threshold
+    min_attacks_to_win = 8
+    won = new_hp <= 0.0 and session.attacks_count >= min_attacks_to_win
     max_attempts = config["max_attempts"]
     lost = not won and session.attacks_count >= max_attempts
 
@@ -285,10 +285,16 @@ def _compute_composite(props: dict | None) -> float:
 
 
 def _calculate_damage(composite: float, previous_best: float) -> float:
-    delta = composite - previous_best
-    if delta <= 0:
+    if composite < 0.30:
         return 0.0
-    return round(min(60.0, delta * 100.0), 2)
+    # Base damage from molecule quality: 0-18 HP range
+    quality = (composite - 0.30) / 0.70
+    base = quality * 18.0
+    # Discovery bonus when beating previous best: 0-12 HP
+    discovery_bonus = 0.0
+    if composite > previous_best:
+        discovery_bonus = min(12.0, (composite - previous_best) * 60.0)
+    return round(min(28.0, max(0.0, base + discovery_bonus)), 2)
 
 
 def get_candidates(session_id, user_id) -> list:
