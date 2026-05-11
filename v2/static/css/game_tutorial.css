@@ -502,6 +502,189 @@
   flex-shrink: 0;
 }
 
+/* ── Tutorial Visual Panels ─────────────────────────────────────────────── */
+
+/* Shared layout */
+.tvis-center {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px; gap: 14px; width: 100%;
+}
+
+/* Step 1: Overview — boss + HP */
+.tvis-boss-emoji {
+  font-size: 4rem;
+}
+@keyframes tvBossPulse {
+  0%, 100% { transform: scale(1); filter: hue-rotate(0deg); }
+  50%       { transform: scale(1.1); filter: hue-rotate(40deg); }
+}
+.tvis-hp-wrap { width: 80%; max-width: 400px; }
+.tvis-hp-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+.tvis-hp-track { background: rgba(255,255,255,0.06); border: 1px solid #ff3e3e; border-radius: 4px; height: 28px; overflow: hidden; }
+.tvis-hp-bar {
+  height: 100%; background: linear-gradient(90deg,#ff3e3e,#ff6666);
+  transition: width 0.1s; display: flex; align-items: center;
+  padding-left: 10px; font-size: 0.82rem; font-weight: 700; color: #fff;
+  box-shadow: 0 0 12px rgba(255,62,62,0.5);
+}
+.tvis-tag-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tvis-tag {
+  font-size: 0.72rem; padding: 3px 10px; border-radius: 12px;
+  border: 1px solid rgba(0,242,255,0.4); color: #00f2ff;
+  background: rgba(0,242,255,0.06);
+}
+
+/* Step 2: Mission Briefing mock */
+.tvis-briefing-mock {
+  background: linear-gradient(135deg, rgba(0,10,30,0.97), rgba(0,20,10,0.97));
+  border: 1px solid #00f2ff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  width: 88%; max-width: 420px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0,242,255,0.10);
+}
+.tvis-brief-emoji { font-size: 2.2rem; margin-bottom: 6px; }
+.tvis-brief-mission { font-size: 0.68rem; letter-spacing: 3px; color: #00f2ff; text-transform: uppercase; margin-bottom: 4px; }
+.tvis-brief-name { font-size: 1.2rem; font-weight: 900; color: #fff; margin-bottom: 10px; }
+.tvis-brief-lore {
+  font-size: 0.78rem; color: #888; line-height: 1.5; margin-bottom: 12px;
+  text-align: left; border-left: 2px solid #00f2ff; padding-left: 10px;
+}
+.tvis-brief-obj { font-size: 0.8rem; color: #f6ad55; background: rgba(246,173,85,0.08); border: 1px solid rgba(246,173,85,0.25); border-radius: 6px; padding: 6px 10px; margin-bottom: 8px; }
+.tvis-brief-ctrl { font-size: 0.7rem; color: #666; margin-bottom: 12px; letter-spacing: 1px; }
+.tvis-brief-startbtn {
+  display: inline-block; background: linear-gradient(135deg,#00f2ff,#0088bb);
+  color: #000; font-weight: 900; font-size: 0.85rem; padding: 8px 20px;
+  border-radius: 8px; letter-spacing: 1px;
+}
+
+/* Step 3: Controls diagram */
+.tvis-ctrl-layout { display: flex; flex-direction: column; gap: 12px; padding: 20px; width: 100%; max-width: 380px; margin: 0 auto; }
+.tvis-ctrl-row { display: flex; align-items: center; gap: 12px; }
+.tvis-ctrl-keys { display: flex; gap: 6px; }
+.tvis-key {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(0,242,255,0.12); border: 1px solid rgba(0,242,255,0.5);
+  border-bottom: 3px solid rgba(0,242,255,0.5);
+  border-radius: 6px; padding: 4px 10px; font-size: 0.85rem;
+  font-weight: 700; color: #00f2ff; font-family: monospace;
+  min-width: 32px;
+}
+.tvis-key-wide { min-width: 90px; font-size: 0.78rem; padding: 6px 16px; }
+.tvis-key-arrow { min-width: 36px; }
+.tvis-ctrl-desc { font-size: 0.82rem; color: var(--muted); }
+.tvis-ctrl-mouse { font-size: 0.82rem; color: #a78bfa; }
+.tvis-ship-row { display: flex; flex-direction: column; align-items: center; margin-top: 6px; gap: 4px; }
+.tvis-ship { font-size: 2rem; transition: transform 0.03s linear; }
+.tvis-ship-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 2px; }
+
+/* Step 4: Molecule deck */
+.tvis-deck { display: flex; gap: 10px; padding: 16px; width: 100%; justify-content: center; }
+.tvis-mol-card {
+  flex: 1; max-width: 160px; background: rgba(0,20,40,0.8);
+  border: 1px solid rgba(0,242,255,0.2); border-radius: 8px; padding: 10px;
+  text-align: center; transition: border-color 0.2s;
+}
+.tvis-selected { border-color: #00f2ff; background: rgba(0,40,70,0.9); box-shadow: 0 0 10px rgba(0,242,255,0.2); }
+.tvis-mol-key { font-size: 0.65rem; color: rgba(0,242,255,0.4); font-family: monospace; }
+.tvis-mol-name { font-size: 0.8rem; font-weight: 700; color: #00f2ff; margin: 4px 0; }
+.tvis-mol-smiles { font-size: 0.65rem; color: #555; font-family: monospace; margin-bottom: 6px; }
+.tvis-mol-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+.tvis-mol-bar div { height: 100%; border-radius: 2px; }
+.tvis-mol-pct { font-size: 0.78rem; font-weight: 700; }
+
+/* Step 5: Attack phases */
+.tvis-phases { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 20px; flex-wrap: wrap; }
+.tvis-phase {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 12px 14px; text-align: center; width: 110px;
+}
+.tvis-phase-real { border-color: rgba(63,185,80,0.5); background: rgba(63,185,80,0.06); }
+.tvis-phase-num { font-size: 1.2rem; font-weight: 900; color: #00f2ff; margin-bottom: 4px; }
+.tvis-phase-name { font-size: 0.72rem; color: #888; margin-bottom: 6px; line-height: 1.3; }
+.tvis-phase-score { font-size: 0.82rem; font-weight: 700; }
+.tvis-fake-tag {
+  display: inline-block; font-size: 0.6rem; background: rgba(255,255,255,0.08);
+  padding: 1px 5px; border-radius: 4px; color: #555; margin-left: 2px;
+}
+.tvis-real-tag {
+  display: inline-block; font-size: 0.6rem; background: rgba(63,185,80,0.2);
+  padding: 1px 5px; border-radius: 4px; color: #3fb950; margin-left: 2px;
+}
+.tvis-phase-arrow { font-size: 1.2rem; color: #444; }
+
+/* Step 6: Dodge demo */
+.tvis-dodge-arena { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px; width: 100%; }
+.tvis-dodge-stage {
+  position: relative; width: 260px; height: 130px;
+  background: rgba(0,10,20,0.8); border: 1px solid rgba(0,242,255,0.15); border-radius: 10px;
+  overflow: hidden;
+}
+.tvis-dodge-boss {
+  position: absolute; top: 20%; left: 50%;
+  transform: translate(-50%, -50%); font-size: 2.2rem;
+  transition: left 0.4s ease;
+}
+.tvis-dodge-proj {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: -20px; font-size: 1.4rem; opacity: 0;
+  transition: bottom 1.2s linear, opacity 0.1s;
+}
+.tvis-dodge-evaded {
+  position: absolute; top: 30%; left: 50%; transform: translateX(-50%);
+  font-size: 0.9rem; font-weight: 900; color: #ff6600;
+  text-shadow: 0 0 10px #ff6600; opacity: 0; white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.tvis-dodge-chances { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.tvis-diff-pill {
+  font-size: 0.72rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 12px;
+}
+.diff-easy   { background: rgba(63,185,80,0.15); color: #4ade80; }
+.diff-normal { background: rgba(88,166,255,0.15); color: #58a6ff; }
+.diff-hard   { background: rgba(239,68,68,0.15); color: #ef4444; }
+.diff-wound  { background: rgba(246,173,85,0.15); color: #f6ad55; }
+
+/* Step 7: Threats */
+.tvis-threats-row {
+  display: flex; align-items: stretch; justify-content: center; gap: 16px; padding: 20px;
+}
+.tvis-threat-card {
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 20px; text-align: center; flex: 1; max-width: 160px;
+  display: flex; flex-direction: column; gap: 6px; align-items: center;
+}
+.tvis-threat-danger { border-color: rgba(255,62,62,0.4); background: rgba(255,62,62,0.05); }
+.tvis-threat-safe   { border-color: rgba(0,255,136,0.4); background: rgba(0,255,136,0.05); }
+.tvis-threat-emoji { font-size: 2.2rem; }
+.tvis-threat-name { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.tvis-threat-action { font-size: 0.78rem; font-weight: 700; }
+.tvis-threat-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+.tvis-threat-vs { font-size: 1rem; font-weight: 900; color: var(--muted); align-self: center; }
+.tvis-ff-warning {
+  text-align: center; font-size: 0.78rem; color: #f6ad55;
+  background: rgba(246,173,85,0.08); border: 1px solid rgba(246,173,85,0.25);
+  border-radius: 6px; padding: 6px 12px; margin: 0 20px 12px;
+}
+
+/* Step 8: End game */
+.tvis-endgame { display: flex; flex-direction: column; gap: 14px; padding: 20px; width: 100%; }
+.tvis-endgame-hp { }
+.tvis-hp-label-row { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+.tvis-hp-track-lg { background: rgba(255,255,255,0.06); border: 1px solid #ff3e3e; border-radius: 4px; height: 24px; overflow: hidden; }
+.tvis-hp-bar-lg {
+  height: 100%; background: linear-gradient(90deg,#ff3e3e,#ff6666);
+  transition: width 0.06s, background 0.5s; display: flex; align-items: center;
+  padding-left: 10px; font-size: 0.78rem; font-weight: 700; color: #fff;
+}
+.tvis-win-conditions { display: flex; flex-direction: column; gap: 7px; }
+.tvis-win-row { display: flex; align-items: flex-start; gap: 8px; font-size: 0.82rem; color: var(--muted); }
+.tvis-win-icon { font-size: 1rem; flex-shrink: 0; }
+.tvis-win-goal  { color: #3fb950; font-weight: 600; }
+.tvis-win-bonus { color: #58a6ff; }
+
 /* AI molecule flow visual */
 .vis-ai-flow {
   display: flex;
