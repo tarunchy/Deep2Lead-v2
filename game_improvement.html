@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PathoHunt 3D — Game Improvement Proposal</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: rgba(0,242,255,0.15);
+    --accent: #00f2ff;
+    --accent2: #3fb950;
+    --warn: #f6ad55;
+    --danger: #ff3e3e;
+    --purple: #a78bfa;
+    --text: #e8ecf0;
+    --muted: #6b7280;
+    --muted2: #9ca3af;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  /* ─── Layout ─────────────────────────────────── */
+  .page-wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ─── Hero ───────────────────────────────────── */
+  .hero {
+    text-align: center;
+    padding: 52px 0 44px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(0,242,255,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .hero h1 { font-size: 2.6rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--muted2); max-width: 620px; margin: 0 auto; font-size: 1.05rem; }
+
+  /* ─── Section headers ────────────────────────── */
+  .section { margin-bottom: 48px; }
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .section-title { font-size: 1.55rem; font-weight: 700; margin-bottom: 8px; }
+  .section-subtitle { color: var(--muted2); margin-bottom: 24px; max-width: 680px; }
+
+  /* ─── Cards ──────────────────────────────────── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media(max-width:700px) { .card-row, .card-row-3 { grid-template-columns: 1fr; } }
+
+  /* ─── Issue cards ────────────────────────────── */
+  .issue-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .issue-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .issue-icon.bug { background: rgba(255,62,62,0.15); }
+  .issue-icon.ux  { background: rgba(167,139,250,0.15); }
+  .issue-icon.missing { background: rgba(246,173,85,0.15); }
+  .issue-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+  .issue-desc { color: var(--muted2); font-size: 0.85rem; }
+  .issue-badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    padding: 2px 8px; border-radius: 4px;
+    text-transform: uppercase; margin-left: 8px;
+  }
+  .badge-critical { background: rgba(255,62,62,0.2); color: var(--danger); border: 1px solid rgba(255,62,62,0.3); }
+  .badge-ux { background: rgba(167,139,250,0.2); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+  .badge-missing { background: rgba(246,173,85,0.2); color: var(--warn); border: 1px solid rgba(246,173,85,0.3); }
+
+  /* ─── Phase cards ────────────────────────────── */
+  .phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .phase-header {
+    padding: 18px 24px;
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-num {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .phase-1 .phase-num { background: rgba(0,242,255,0.15); color: var(--accent); }
+  .phase-2 .phase-num { background: rgba(63,185,80,0.15); color: var(--accent2); }
+  .phase-3 .phase-num { background: rgba(167,139,250,0.15); color: var(--purple); }
+  .phase-4 .phase-num { background: rgba(246,173,85,0.15); color: var(--warn); }
+  .phase-5 .phase-num { background: rgba(255,62,62,0.15); color: var(--danger); }
+  .phase-title { font-size: 1.15rem; font-weight: 700; }
+  .phase-subtitle { font-size: 0.82rem; color: var(--muted2); margin-top: 2px; }
+  .phase-body { padding: 20px 24px; }
+
+  .feature-list { list-style: none; }
+  .feature-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .feature-list li:last-child { border-bottom: none; }
+  .feature-list li::before {
+    content: "→";
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .feature-name { font-weight: 600; }
+  .feature-desc { color: var(--muted2); font-size: 0.87rem; margin-top: 2px; }
+
+  /* ─── Mockup boxes ───────────────────────────── */
+  .mockup {
+    background: #000;
+    border: 1px solid rgba(0,242,255,0.25);
+    border-radius: 10px;
+    padding: 20px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #00f2ff;
+    margin-top: 16px;
+    line-height: 1.7;
+    position: relative;
+    overflow: hidden;
+  }
+  .mockup::before {
+    content: "MOCKUP";
+    position: absolute; top: 8px; right: 12px;
+    font-size: 9px; font-weight: 700; letter-spacing: 2px;
+    color: rgba(0,242,255,0.3);
+  }
+  .mockup .dim { color: rgba(0,242,255,0.35); }
+  .mockup .red { color: #ff3e3e; }
+  .mockup .green { color: #3fb950; }
+  .mockup .yellow { color: #f6ad55; }
+  .mockup .white { color: #fff; }
+
+  /* ─── Flow diagram ───────────────────────────── */
+  .flow {
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: 0; margin: 20px 0;
+  }
+  .flow-step {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.82rem; font-weight: 600;
+    text-align: center;
+    min-width: 110px;
+  }
+  .flow-step.new { border-color: var(--accent); color: var(--accent); background: rgba(0,242,255,0.06); }
+  .flow-step.fixed { border-color: var(--accent2); color: var(--accent2); background: rgba(63,185,80,0.06); }
+  .flow-arrow { color: var(--muted); padding: 0 8px; font-size: 1rem; }
+
+  /* ─── Before/After ───────────────────────────── */
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  @media(max-width:650px) { .ba-grid { grid-template-columns: 1fr; } }
+  .ba-panel { border-radius: 10px; padding: 18px; }
+  .ba-panel.before { background: rgba(255,62,62,0.06); border: 1px solid rgba(255,62,62,0.2); }
+  .ba-panel.after  { background: rgba(63,185,80,0.06); border: 1px solid rgba(63,185,80,0.2); }
+  .ba-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .ba-panel.before .ba-label { color: var(--danger); }
+  .ba-panel.after  .ba-label { color: var(--accent2); }
+  .ba-item { font-size: 0.85rem; color: var(--muted2); margin-bottom: 6px; }
+  .ba-item::before { margin-right: 8px; }
+  .ba-panel.before .ba-item::before { content: "✗"; color: var(--danger); }
+  .ba-panel.after  .ba-item::before { content: "✓"; color: var(--accent2); }
+
+  /* ─── Priority table ─────────────────────────── */
+  table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+  thead th {
+    text-align: left; padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted2); font-weight: 600; font-size: 0.8rem;
+  }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 14px; vertical-align: top; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 4px;
+    font-size: 0.75rem; font-weight: 700;
+  }
+  .pill-high   { background: rgba(255,62,62,0.15); color: #ff6b6b; }
+  .pill-med    { background: rgba(246,173,85,0.15); color: var(--warn); }
+  .pill-low    { background: rgba(107,114,128,0.15); color: var(--muted2); }
+  .pill-1w     { background: rgba(0,242,255,0.1); color: var(--accent); }
+  .pill-2w     { background: rgba(167,139,250,0.1); color: var(--purple); }
+  .pill-1m     { background: rgba(63,185,80,0.1); color: var(--accent2); }
+
+  /* ─── Separator ──────────────────────────────── */
+  .sep { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  /* ─── TOC ────────────────────────────────────── */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+  }
+  .toc-title { font-weight: 700; margin-bottom: 12px; font-size: 0.9rem; color: var(--muted2); text-transform: uppercase; letter-spacing: 1px; }
+  .toc a { color: var(--muted2); text-decoration: none; display: block; padding: 4px 0; font-size: 0.88rem; }
+  .toc a:hover { color: var(--accent); }
+  .toc a span { color: var(--accent); margin-right: 8px; font-size: 0.8rem; }
+  .toc-indent { padding-left: 20px; }
+
+  /* ─── Monster chips ──────────────────────────── */
+  .monster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 12px; margin-top: 16px; }
+  .monster-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    font-size: 0.8rem;
+  }
+  .monster-chip .emoji { font-size: 2rem; display: block; margin-bottom: 6px; }
+  .monster-chip .name { font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .monster-chip .shape { color: var(--muted); font-size: 0.72rem; }
+  .monster-chip.new-chip { border-color: var(--accent); background: rgba(0,242,255,0.04); }
+
+  /* ─── Summary box ────────────────────────────── */
+  .summary-box {
+    background: rgba(0,242,255,0.05);
+    border: 1px solid rgba(0,242,255,0.25);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-top: 40px;
+    text-align: center;
+  }
+  .summary-box h2 { font-size: 1.4rem; margin-bottom: 10px; }
+  .summary-box p { color: var(--muted2); max-width: 600px; margin: 0 auto; }
+  .stat-row { display: flex; justify-content: center; gap: 40px; margin-top: 24px; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 2rem; font-weight: 800; color: var(--accent); }
+  .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ─── Hero ─────────────────────────────────── -->
+  <div class="hero">
+    <div class="hero-tag">Game Improvement Proposal · May 2026</div>
+    <h1>PathoHunt 3D<br><span>Enhancement Plan</span></h1>
+    <p>A structured review of the current game's functional gaps and a phased plan to make PathoHunt 3D genuinely fun, scientifically connected, and accessible for kids and non-technical players.</p>
+  </div>
+
+  <!-- ─── TOC ──────────────────────────────────── -->
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#diagnosis"><span>01</span> Current State Diagnosis (10 Issues)</a>
+    <a href="#gameflow"><span>02</span> Proposed Game Flow</a>
+    <a href="#phases"><span>03</span> Five Improvement Phases</a>
+    <div class="toc-indent">
+      <a href="#phase1"><span>P1</span> Pathogen Monster Selector (Missing Entry Point)</a>
+      <a href="#phase2"><span>P2</span> Unique Monster Visuals Per Pathogen</a>
+      <a href="#phase3"><span>P3</span> AI Molecule Deck — Fix Core Attack Loop</a>
+      <a href="#phase4"><span>P4</span> Science Feedback Cards (Education Layer)</a>
+      <a href="#phase5"><span>P5</span> Real Cross-Validate + Session Summary</a>
+    </div>
+    <a href="#priority"><span>04</span> Priority & Effort Matrix</a>
+    <a href="#files"><span>05</span> Files to Change</a>
+  </div>
+
+  <!-- ─── Diagnosis ─────────────────────────────── -->
+  <div class="section" id="diagnosis">
+    <div class="section-label">Step 01</div>
+    <div class="section-title">Current State Diagnosis</div>
+    <div class="section-subtitle">What Gemini built is visually impressive but functionally broken in 10 key areas. These are not cosmetic — they affect whether the game is actually playable and educational.</div>
+
+    <div class="issue-card">
+      <div class="issue-icon missing">🚫</div>
+      <div>
+        <div class="issue-title">No pathogen selection screen for 3D game <span class="issue-badge badge-critical">Critical</span></div>
+        <div class="issue-desc">URL goes directly to <code>/game/pathohunt-3d/covid19_mpro</code>. There is no lobby/selector for 3D mode. The game lobby (<code>/game</code>) still points to the old 2D battle route. Kids have no idea how to discover or choose a monster to fight.</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-icon bug">🐛</div>
+      <div>
+        <div class="issue-title">All bosses use identical visual — red spinning torus knot <span class="issue-badge badge-critical">Critical</span></div>
+        <div class="issue-desc">Regardless of which pathogen is selected (Flu, COVID, HIV, cancer), the monster looks exactly the same. The <code>game_battle_3d.js</code> has no per-boss logic. A kid fighting "Flu Commander" sees the same monster as "CDK2 Overlord". No narrative identity.</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-icon bug">🐛</div>
+      <div>
+        <div class="issue-title">Attack result is async-disconnected from visual <span class="issue-badge badge-critical">Critical</span></div>
+        <div class="issue-desc">Projectile hits monster visually immediately, but the API call resolves later. The code sets <code>proj.apiResult</code> asynchronously, so often the hit registers with no <code>apiResult</code> and only subtracts 2 HP regardless of molecule quality. Players see no feedback that their choice matters.</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-icon missing">🚫</div>
+      <div>
+        <div class="issue-title">Molecule spells are 5 hardcoded known drugs, not AI-generated <span class="issue-badge badge-missing">Missing Feature</span></div>
+        <div class="issue-desc">The <code>SPELL_DATABASE</code> in JS has Aspirin, Caffeine, Ibuprofen, Sulfanilamide, Salicylic Acid. The entire point of the game is AI-powered drug design, but the player never sees AI-generated molecules. The <code>generate()</code> service runs on the server but results are silently discarded.</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-icon bug">🐛</div>
+      <div>
+        <div class="issue-title">SMILES input is hidden — player has no agency <span class="issue-badge badge-ux">UX</span></div>
+        <div class="issue-desc">The SMILES field is <code>&lt;input type="hidden"&gt;</code>. The spell display only shows a preset name. Players cannot enter their own molecules, cannot see what SMILES string they are firing. The "CLICK ARENA TO FIRE" hint suggests interaction, but there's no way for a player to deliberately design anything.</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-icon ux">🎨</div>
+      <div>
+        <div class="issue-title">Zero science feedback after each attack <span class="issue-badge badge-missing">Missing Feature</span></div>
+        <div class="issue-desc">When an attack lands, no score breakdown is shown. The API returns QED, SAS, Lipinski, composite score, damage — all are ignored by the frontend. Kids never learn why one molecule is better than another. This is the core educational hook that's completely absent.</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-icon ux">🎨</div>
+      <div>
+        <div class="issue-title">No game intro / boss story shown before battle <span class="issue-badge badge-ux">UX</span></div>
+        <div class="issue-desc">The <code>game_levels.json</code> has rich lore: <code>boss_flavor</code>, <code>game_intro</code>, and <code>plain_english</code> fields. None of this is shown in the 3D game. A kid entering the COVID boss gets no context about what they're fighting or why it matters.</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-icon bug">🐛</div>
+      <div>
+        <div class="issue-title">Cross-Validate is completely fake <span class="issue-badge badge-critical">Critical</span></div>
+        <div class="issue-desc">The <code>crossValidate()</code> function in JS uses <code>setTimeout(2000)</code> and checks <code>tanimoto &lt; 0.8</code> against a hardcoded value. It shows "NOVEL CANDIDATE DETECTED" or "EXISTING ANALOG" based on nothing real. The existing <code>/api/v3/enrich</code> endpoint is never called.</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-icon missing">🚫</div>
+      <div>
+        <div class="issue-title">Tutorial hardcodes COVID boss, skips lobby <span class="issue-badge badge-ux">UX</span></div>
+        <div class="issue-desc">The "Skip Training & Join Battle" button in <code>game_tutorial_3d.html</code> hardcodes <code>/game/pathohunt-3d/covid19_mpro</code>. Tutorial final step also redirects there. Players who want to fight a different boss have no path.</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-icon ux">🎨</div>
+      <div>
+        <div class="issue-title">No session summary or "best molecule" highlight on victory <span class="issue-badge badge-missing">Missing Feature</span></div>
+        <div class="issue-desc">The victory screen shows only the final SMILES. There's no summary of how many attempts were made, score progression chart, or comparison of best molecule vs the known drug. The XP and badge are awarded server-side but never displayed in the 3D game.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+
+  <!-- ─── Proposed game flow ─────────────────────── -->
+  <div class="section" id="gameflow">
+    <div class="section-label">Step 02</div>
+    <div class="section-title">Proposed Game Flow</div>
+    <div class="section-subtitle">Current flow is broken and has no clear entry. The new flow gives players a complete, logical path with a dedicated selection screen.</div>
+
+    <div class="card">
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Current (Broken)</div>
+      <div class="flow">
+        <div class="flow-step">/game (lobby)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="color:var(--danger);border-color:rgba(255,62,62,0.3)">/game/battle (old 2D)</div>
+        <div class="flow-arrow" style="color:var(--danger)">✗</div>
+        <div class="flow-step" style="color:var(--muted);border-color:var(--border)">/game/pathohunt-3d/:id (hidden)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:0.82rem;color:var(--accent2);margin-bottom:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Proposed (Fixed)</div>
+      <div class="flow">
+        <div class="flow-step new">/game (3D lobby)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step new">Monster Selector</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step new">Boss Intro Screen</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step fixed">3D Battle Arena</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step fixed">Victory / Summary</div>
+      </div>
+
+      <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;font-size:0.83rem;">
+        <div style="background:rgba(0,242,255,0.05);border:1px solid rgba(0,242,255,0.2);border-radius:8px;padding:12px;">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:6px;">Monster Selector</div>
+          <div style="color:var(--muted2);">Animated 3D boss cards. Each unique shape + color. Click to preview lore. "ENTER BATTLE" button.</div>
+        </div>
+        <div style="background:rgba(0,242,255,0.05);border:1px solid rgba(0,242,255,0.2);border-radius:8px;padding:12px;">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:6px;">Boss Intro Screen</div>
+          <div style="color:var(--muted2);">5-second cinematic. Boss name, lore, plain-English description. TTS narration. "LAUNCH BATTLE" to dismiss.</div>
+        </div>
+        <div style="background:rgba(0,242,255,0.05);border:1px solid rgba(0,242,255,0.2);border-radius:8px;padding:12px;">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:6px;">3D Battle Arena</div>
+          <div style="color:var(--muted2);">AI molecule deck. Score cards after each attack. Real-time HP. Science feedback for kids.</div>
+        </div>
+        <div style="background:rgba(63,185,80,0.05);border:1px solid rgba(63,185,80,0.2);border-radius:8px;padding:12px;">
+          <div style="color:var(--accent2);font-weight:700;margin-bottom:6px;">Victory Summary</div>
+          <div style="color:var(--muted2);">Best molecule found. Score vs known drug. Real ChEMBL lookup. XP + badge display. Share link.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+
+  <!-- ─── Phases ─────────────────────────────────── -->
+  <div class="section" id="phases">
+    <div class="section-label">Step 03</div>
+    <div class="section-title">Five Improvement Phases</div>
+    <div class="section-subtitle">Each phase is self-contained and can be reviewed independently. UI/UX appearance is preserved — only functionality, data connections, and missing components are added.</div>
+
+    <!-- Phase 1 -->
+    <div class="phase-card phase-1" id="phase1">
+      <div class="phase-header">
+        <div class="phase-num">P1</div>
+        <div>
+          <div class="phase-title">Pathogen Monster Selector — The Missing Entry Point</div>
+          <div class="phase-subtitle">New page: <code>/game/pathohunt-3d</code> (no target_id) · Files: game.py, game_lobby.html, new template</div>
+        </div>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--muted2);margin-bottom:16px;">The 3D game has no front door. This phase adds a monster selection screen styled like a sci-fi threat board — identical concept to the <code>/run-3d</code> "Step 1: Target" picker, but with each pathogen displayed as a unique animated 3D monster card. The game lobby will also be updated to route to 3D.</p>
+
+        <ul class="feature-list">
+          <li>
+            <div>
+              <div class="feature-name">New route: <code>GET /game/pathohunt-3d</code></div>
+              <div class="feature-desc">Returns a new template showing all bosses in a grid. Clicking a boss enters <code>/game/pathohunt-3d/&lt;id&gt;</code>. Add to <code>api/game.py</code>.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Monster cards with Three.js mini-previews</div>
+              <div class="feature-desc">Each boss card has a small inline Three.js canvas (~120×120px) rendering its unique 3D shape. On hover the shape spins faster. Clicking expands a detail overlay with boss lore.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Boss detail overlay with TTS intro</div>
+              <div class="feature-desc">When a boss card is clicked: slide-in overlay shows <code>boss_flavor</code> text, <code>plain_english</code> description, difficulty badge, and a "ENTER BATTLE" button. TTS narrates the <code>game_intro</code> text via <code>/api/v3/game/tts</code>.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Update game lobby to route 3D</div>
+              <div class="feature-desc">Change boss card hrefs in <code>game_lobby.html</code> from <code>/game/battle/&lt;id&gt;</code> to <code>/game/pathohunt-3d/&lt;id&gt;</code>. Add "3D ARENA" mode badge to each card.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Tutorial "Skip" button → selector</div>
+              <div class="feature-desc">Change tutorial's hardcoded <code>/game/pathohunt-3d/covid19_mpro</code> links to <code>/game/pathohunt-3d</code> so players choose their boss.</div>
+            </div>
+          </li>
+        </ul>
+
+        <div class="mockup">
+<span class="dim">┌──────────────────────────────────────────────────────────────┐</span>
+<span class="dim">│</span>  <span class="white">⚔️  PATHOHUNT 3D — SELECT YOUR TARGET</span>
+<span class="dim">│</span>  <span class="dim">Defeat pathogens. Design real drug molecules. Save lives.</span>
+<span class="dim">├──────────────────────────────────────────────────────────────┤</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="green">[ 🤧 Flu Commander ]</span>    <span class="green">[ 🦠 Corona Cutter ]</span>    <span class="red">[ 🔴 HIV Hydra ]</span>
+<span class="dim">│</span>   <span class="dim">LVL 1 · Junior</span>          <span class="dim">LVL 2 · Junior</span>          <span class="yellow">LVL 3 · Fellow</span>
+<span class="dim">│</span>   <span class="dim">[mini 3D canvas]</span>         <span class="dim">[mini 3D canvas]</span>         <span class="dim">[mini 3D canvas]</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  ← HOVER TO PREVIEW    CLICK TO SELECT → ENTER BATTLE
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">// SELECTED: 🦠 Corona Cutter</span>
+<span class="dim">│</span>  <span class="white">  SARS-CoV-2 uses this molecular scissors to build itself.</span>
+<span class="dim">│</span>  <span class="dim">  Your job: jam those scissors better than Paxlovid.</span>
+<span class="dim">│</span>  <span class="green">  [ ▶  ENTER BATTLE ]</span>
+<span class="dim">└──────────────────────────────────────────────────────────────┘</span></div>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase-card phase-2" id="phase2">
+      <div class="phase-header">
+        <div class="phase-num">P2</div>
+        <div>
+          <div class="phase-title">Unique Monster Visuals Per Pathogen</div>
+          <div class="phase-subtitle">Files: <code>game_battle_3d.js</code> · Boss shape + color driven by target_id</div>
+        </div>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--muted2);margin-bottom:16px;">Currently all bosses are the same red TorusKnot. Each pathogen in biology has a distinct visual character — the flu virus looks different from HIV which looks different from a kinase. We map each target to a unique Three.js geometry, color palette, and animation behavior.</p>
+
+        <div class="monster-grid">
+          <div class="monster-chip new-chip">
+            <span class="emoji">🤧</span>
+            <div class="name">Flu Commander</div>
+            <div class="shape">IcosahedronGeometry<br>Blue-grey · Spiky viral envelope</div>
+          </div>
+          <div class="monster-chip new-chip">
+            <span class="emoji">🦠</span>
+            <div class="name">Corona Cutter</div>
+            <div class="shape">SphereGeometry + spike cones<br>Orange-red · Crown of spikes</div>
+          </div>
+          <div class="monster-chip new-chip">
+            <span class="emoji">🔴</span>
+            <div class="name">HIV Hydra</div>
+            <div class="shape">Multiple OctahedronGeometry<br>Red · Multi-head cluster</div>
+          </div>
+          <div class="monster-chip new-chip">
+            <span class="emoji">🧬</span>
+            <div class="name">EGFR Enforcer</div>
+            <div class="shape">TorusGeometry + rings<br>Purple · Kinase ring structure</div>
+          </div>
+          <div class="monster-chip new-chip">
+            <span class="emoji">⚡</span>
+            <div class="name">Mutant BRAF</div>
+            <div class="shape">BoxGeometry distorted<br>Yellow · Mutated jagged shape</div>
+          </div>
+          <div class="monster-chip new-chip">
+            <span class="emoji">⏳</span>
+            <div class="name">Aging Architect</div>
+            <div class="shape">TorusKnotGeometry slow<br>Silver · Slow ethereal drift</div>
+          </div>
+          <div class="monster-chip new-chip">
+            <span class="emoji">🔥</span>
+            <div class="name">CDK2 Overlord</div>
+            <div class="shape">CylinderGeometry + orbiting spheres<br>Deep red · Mechanical timer</div>
+          </div>
+        </div>
+
+        <ul class="feature-list" style="margin-top:20px;">
+          <li>
+            <div>
+              <div class="feature-name">BOSS_PROFILES map in <code>game_battle_3d.js</code></div>
+              <div class="feature-desc">A JS constant object keyed by <code>target_id</code> containing: geometry constructor, primary color, emissive color, scale, rotation speed, and a <code>buildMesh()</code> factory method. Replaces the current hardcoded TorusKnot.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Boss idle animation per type</div>
+              <div class="feature-desc">Flu: wobble/pulse. Corona: slow rotation with spike jitter. HIV: multi-head orbit. Kinase: ring spin. BRAF: erratic twitch (mutation behavior). SIRT1: gentle float. CDK2: mechanical step rotation.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Boss "wounded" visual state</div>
+              <div class="feature-desc">When HP drops below 50%, monster geometry starts fragmenting (vertices offset). Below 25%, it glitches and flickers. This gives visual progression without changing the core render loop.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Spore color matches boss type</div>
+              <div class="feature-desc">Incoming obstacle spores take the boss's primary color. When a spore is destroyed, the explosion color matches the molecule (cyan for standard, magenta for hypersonic). Creates visual connection between pathogen and molecule.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase-card phase-3" id="phase3">
+      <div class="phase-header">
+        <div class="phase-num">P3</div>
+        <div>
+          <div class="phase-title">AI Molecule Deck — Fix the Core Attack Loop</div>
+          <div class="phase-subtitle">Files: <code>game_battle_3d.js</code>, <code>game_battle_3d.html</code> · This is the biggest functional fix</div>
+        </div>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--muted2);margin-bottom:16px;">The entire point of PathoHunt is AI-powered drug design. The server already generates molecules via Gemma4 and scores them — but the frontend throws this data away. This phase surfaces the AI candidates as a visual "molecule deck" and fixes the async attack flow so damage is accurately applied.</p>
+
+        <div class="ba-grid">
+          <div class="ba-panel before">
+            <div class="ba-label">Before</div>
+            <div class="ba-item">5 hardcoded preset molecules (Aspirin etc.)</div>
+            <div class="ba-item">Player cycles through ◀ ▶ arrows, no choice</div>
+            <div class="ba-item">Projectile hits monster BEFORE API responds</div>
+            <div class="ba-item">If API slow: always -2 HP regardless of score</div>
+            <div class="ba-item">Generated molecules silently discarded</div>
+            <div class="ba-item">SMILES hidden, player sees only preset name</div>
+          </div>
+          <div class="ba-panel after">
+            <div class="ba-label">After</div>
+            <div class="ba-item">3 AI-generated molecule cards shown per round</div>
+            <div class="ba-item">Player taps a card to select, then clicks to fire</div>
+            <div class="ba-item">Projectile held in "pending" state at monster</div>
+            <div class="ba-item">Impact applies AFTER API result (with spinner)</div>
+            <div class="ba-item">Card shows molecule preview + estimated power</div>
+            <div class="ba-item">SMILES visible; "Custom SMILES" input option</div>
+          </div>
+        </div>
+
+        <ul class="feature-list" style="margin-top:20px;">
+          <li>
+            <div>
+              <div class="feature-name">Molecule deck UI — replaces spell console</div>
+              <div class="feature-desc">Bottom HUD shows 3 cards horizontally. Each card: molecule code name (auto-generated e.g. "CX-7142"), a short SMILES truncated to 20 chars, and colored power indicator (green/yellow/red estimated from molecular weight). Cards refresh after each attack.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Fetch initial deck from <code>/api/v3/game/session/&lt;id&gt;/candidates</code></div>
+              <div class="feature-desc">New lightweight endpoint: calls <code>molecule_generator.generate()</code> with the boss's starter SMILES, returns 3 candidates with basic metadata. Called on session start and after each attack. No heavy scoring — just generation.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Fix async attack: "pending impact" state</div>
+              <div class="feature-desc">When projectile reaches monster, instead of immediately applying damage: play "ANALYZING" animation on monster (pulse glow), lock further attacks, await API response, then apply damage with a visible floating number. Timeout fallback: if API takes >8s, apply -1 HP and unlock.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Custom SMILES input mode</div>
+              <div class="feature-desc">A "⌨️ Custom" button on the deck opens a text input for advanced players to enter their own SMILES. Validates client-side (basic character check) before enabling fire. For kids: hide by default behind "Expert Mode" toggle in tactical sidebar.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Attack count indicator</div>
+              <div class="feature-desc">Show remaining attacks (e.g. "Attack 3/10") for difficulty modes with limits. In Junior mode show "∞ attempts" with a soft encouragement message instead of pressure.</div>
+            </div>
+          </li>
+        </ul>
+
+        <div class="mockup">
+<span class="dim">┌──────────────────────── MOLECULE DECK ─────────────────────────┐</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="green">[ CARD 1 ]</span>         <span class="green">[ CARD 2 ]</span>         <span class="yellow">[ CARD 3 ]</span>         <span class="dim">[ Custom ]</span>
+<span class="dim">│</span>  <span class="white">CX-7142</span>           <span class="white">DL-0891</span>           <span class="white">VK-3310</span>
+<span class="dim">│</span>  <span class="dim">CC(=O)Oc1...</span>      <span class="dim">CN1C=NC2=...</span>      <span class="dim">CC(C)Cc1c...</span>
+<span class="dim">│</span>  <span class="green">Power: HIGH ████</span>  <span class="green">Power: HIGH ███</span>   <span class="yellow">Power: MED  ██</span>
+<span class="dim">│</span>  <span class="dim">(selected)</span>
+<span class="dim">│</span>
+<span class="dim">│</span>         <span class="white">▼ CLICK ARENA TO FIRE SELECTED MOLECULE ▼</span>
+<span class="dim">└────────────────────────────────────────────────────────────────┘</span>
+
+<span class="dim">// After firing — pending impact state:</span>
+<span class="dim">┌────────────────────────────────────────────────────────────────┐</span>
+<span class="dim">│</span>  <span class="yellow">⚡ ANALYZING MOLECULAR IMPACT... (boss pulsing)</span>
+<span class="dim">│</span>  <span class="dim">Gemma4 scoring CX-7142 against COVID-19 Mpro...</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="green">RESULT: -18.5 HP DAMAGE</span>   <span class="dim">[floating number over monster]</span>
+<span class="dim">│</span>  <span class="dim">Score: 0.74  |  QED: 0.82  |  Lipinski: ✓</span>
+<span class="dim">└────────────────────────────────────────────────────────────────┘</span></div>
+      </div>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="phase-card phase-4" id="phase4">
+      <div class="phase-header">
+        <div class="phase-num">P4</div>
+        <div>
+          <div class="phase-title">Science Feedback Cards — The Education Layer</div>
+          <div class="phase-subtitle">Files: <code>game_battle_3d.js</code>, <code>game_battle_3d.html</code> · Kid-friendly science after every attack</div>
+        </div>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--muted2);margin-bottom:16px;">PathoHunt is designed for kids and non-technical users. After every attack the game should explain in plain English what happened and why the molecule scored as it did. This is the core educational value — transforming raw computational scores into a story a 10-year-old can follow.</p>
+
+        <ul class="feature-list">
+          <li>
+            <div>
+              <div class="feature-name">Post-attack science card panel</div>
+              <div class="feature-desc">A slide-in card appears on the left after each hit. Shows: molecule name, 3 simple stats with emoji ratings (💊 Drugability, 🔬 Ease to make, 🎯 Target fit), one plain-English sentence about what happened. Auto-dismisses after 5s or on next click. Never blocks the arena.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Kid-friendly score translation</div>
+              <div class="feature-desc">QED → "Drugability ⭐⭐⭐⭐" (0-5 stars). SAS → "Hard to Make / Easy to Make". Lipinski pass → "Body-Friendly ✅". Composite → "POWER LEVEL: 74%". All technical terms hidden behind a "Show Science Details" toggle for advanced users.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">TTS narration on score result</div>
+              <div class="feature-desc">After each attack result, a 1-sentence TTS narration plays: e.g. "Great hit! Your molecule blocked 18% of the virus's scissors. Try making it even more body-friendly next round!" Uses existing <code>/api/v3/game/tts</code>. Can be muted from HUD.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Combat log shows real score data</div>
+              <div class="feature-desc">Update the bottom-left combat log to show: <code>> ATTACK 3: Score 0.74 | Damage -18.5 HP | NEW BEST!</code> instead of the current generic messages. Color-code: green for new best, yellow for improvement, dim for no improvement.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Score progression indicator</div>
+              <div class="feature-desc">Add a thin "BEST SCORE" bar under the boss HP bar. It fills toward the win threshold. A gold star marker shows where the win threshold is. This gives players a clear visual goal independent of HP.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">"Kids Mode" / "Science Mode" toggle</div>
+              <div class="feature-desc">In the tactical sidebar, add a mode toggle. Kids Mode: all scores as emoji stars + plain English + TTS always on. Science Mode: raw QED/SAS/Tanimoto values + SMILES editable. Default: Kids Mode. Preference saved in localStorage.</div>
+            </div>
+          </li>
+        </ul>
+
+        <div class="mockup">
+<span class="dim">// Science Card (slides in from left after attack)</span>
+<span class="dim">┌─────────────────────────────────────────┐</span>
+<span class="dim">│</span> <span class="green">⚗️ ATTACK RESULT — CX-7142</span>
+<span class="dim">│</span>
+<span class="dim">│</span> <span class="white">💊 Drugability     ⭐⭐⭐⭐☆</span>
+<span class="dim">│</span> <span class="white">🔬 Easy to Make    ⭐⭐⭐☆☆</span>
+<span class="dim">│</span> <span class="white">🎯 Target Fit      ⭐⭐⭐⭐⭐</span>
+<span class="dim">│</span> <span class="white">🛡️ Body-Friendly   ✅</span>
+<span class="dim">│</span>
+<span class="dim">│</span> <span class="green">POWER LEVEL: 74% — NEW BEST! 🏆</span>
+<span class="dim">│</span>
+<span class="dim">│</span> <span class="dim">Your molecule fit the virus's weak point</span>
+<span class="dim">│</span> <span class="dim">like a key in a lock. Try adjusting the</span>
+<span class="dim">│</span> <span class="dim">tail group to improve Target Fit further!</span>
+<span class="dim">│</span>
+<span class="dim">│</span> <span class="dim">[SCIENCE DETAILS ▾]  [DISMISS]</span>
+<span class="dim">└─────────────────────────────────────────┘</span></div>
+      </div>
+    </div>
+
+    <!-- Phase 5 -->
+    <div class="phase-card phase-5" id="phase5">
+      <div class="phase-header">
+        <div class="phase-num">P5</div>
+        <div>
+          <div class="phase-title">Real Cross-Validate + Meaningful Victory Screen</div>
+          <div class="phase-subtitle">Files: <code>game_battle_3d.js</code>, <code>game_battle_3d.html</code>, <code>api/game.py</code></div>
+        </div>
+      </div>
+      <div class="phase-body">
+        <p style="color:var(--muted2);margin-bottom:16px;">The current victory screen is nearly empty and cross-validate is fake. This phase transforms victory into a genuine moment of discovery — showing the player's best molecule compared to the known drug, and actually checking if it's novel.</p>
+
+        <ul class="feature-list">
+          <li>
+            <div>
+              <div class="feature-name">Fix cross-validate: call real enrich API</div>
+              <div class="feature-desc">Replace the fake <code>setTimeout</code> in <code>crossValidate()</code> with a real POST to the existing <code>/api/v3/enrich</code> endpoint (or a new <code>/api/v3/game/validate</code> wrapper). Show actual Tanimoto similarity hits from ChEMBL/PubChem with compound names.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Victory: best molecule vs known drug comparison</div>
+              <div class="feature-desc">Add a side-by-side comparison: player's best molecule score vs the known drug score from <code>game_levels.json</code>. Show improvement delta: "You beat Paxlovid by 12%!" or "You matched Tamiflu!". For kids: "You found a molecule BETTER than the real medicine!"</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Session statistics panel</div>
+              <div class="feature-desc">Victory screen shows: total attacks, best score achieved, score progression (simple bar chart using CSS widths), time taken. Fetched from <code>/api/v3/game/session/&lt;id&gt;</code> which already returns all attacks.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Display earned XP and badge</div>
+              <div class="feature-desc">The server already awards XP and badges on win — but the 3D game never shows them. Add the badge emoji and XP amount from the session's <code>won</code> response data. Animate badge drop with CSS keyframe.</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <div class="feature-name">Share your discovery</div>
+              <div class="feature-desc">A copy-to-clipboard button shares a text like: "I defeated COVID-19 Mpro in PathoHunt with a molecule scoring 0.76 — beating Paxlovid! 🏆 #PathoHunt #DrugDesign". Optional future: generate a shareable card image via canvas toDataURL.</div>
+            </div>
+          </li>
+        </ul>
+
+        <div class="mockup">
+<span class="dim">┌──────────────────── 🏆 MISSION ACCOMPLISHED ────────────────────┐</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="green">You defeated: 🦠 Corona Cutter (COVID-19 Mpro)</span>
+<span class="dim">│</span>  <span class="white">Best molecule: CX-7142 — Score: 0.76</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">YOUR MOLECULE</span>           <span class="dim">vs</span>    <span class="dim">KNOWN DRUG (Paxlovid)</span>
+<span class="dim">│</span>  <span class="green">Score: 0.76 ████████░</span>        <span class="yellow">Score: 0.58 ██████░░░</span>
+<span class="dim">│</span>  <span class="green">+18% BETTER THAN KNOWN DRUG! 🎉</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">CROSS-VALIDATION (ChEMBL)</span>
+<span class="dim">│</span>  <span class="green">NOVEL: 72% similarity — no exact match found</span>
+<span class="dim">│</span>  <span class="dim">Closest analog: Compound CHEMBL123456 (68% Tanimoto)</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">BATTLE STATS: 7 attacks · 4m 22s · Best on attempt 5</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="white">EARNED: 🏅 Covid Crusher  +250 XP</span>
+<span class="dim">│</span>
+<span class="dim">│</span>  <span class="green">[ 🔬 Full Validation ]  [ 📋 Copy Discovery ]  [ ← Lobby ]</span>
+<span class="dim">└────────────────────────────────────────────────────────────────┘</span></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+
+  <!-- ─── Priority matrix ────────────────────────── -->
+  <div class="section" id="priority">
+    <div class="section-label">Step 04</div>
+    <div class="section-title">Priority & Effort Matrix</div>
+    <div class="section-subtitle">Ranked by impact on playability and educational value. UI/UX is intentionally not in scope — existing visual design is preserved.</div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:3%">#</th>
+            <th style="width:28%">Change</th>
+            <th style="width:10%">Phase</th>
+            <th style="width:10%">Priority</th>
+            <th style="width:10%">Effort</th>
+            <th style="width:39%">Why it matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Add /game/pathohunt-3d selector route</strong></td>
+            <td><span class="pill" style="background:rgba(0,242,255,0.1);color:var(--accent);">P1</span></td>
+            <td><span class="pill pill-high">Critical</span></td>
+            <td><span class="pill pill-1w">Small</span></td>
+            <td style="color:var(--muted2);">Without this, 3D game is unreachable from normal navigation</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>Fix async attack / pending impact state</strong></td>
+            <td><span class="pill" style="background:rgba(167,139,250,0.1);color:var(--purple);">P3</span></td>
+            <td><span class="pill pill-high">Critical</span></td>
+            <td><span class="pill pill-1w">Small</span></td>
+            <td style="color:var(--muted2);">Core mechanic is broken — score has no effect on damage most of the time</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>AI molecule deck (surface Gemma4 output)</strong></td>
+            <td><span class="pill" style="background:rgba(167,139,250,0.1);color:var(--purple);">P3</span></td>
+            <td><span class="pill pill-high">High</span></td>
+            <td><span class="pill pill-2w">Medium</span></td>
+            <td style="color:var(--muted2);">The game's unique value prop — AI drug design — is invisible to players</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>Update lobby to link to 3D game</strong></td>
+            <td><span class="pill" style="background:rgba(0,242,255,0.1);color:var(--accent);">P1</span></td>
+            <td><span class="pill pill-high">High</span></td>
+            <td><span class="pill pill-1w">Tiny</span></td>
+            <td style="color:var(--muted2);">One-line href change — lobby currently points to old 2D game</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>Post-attack science feedback card</strong></td>
+            <td><span class="pill" style="background:rgba(246,173,85,0.1);color:var(--warn);">P4</span></td>
+            <td><span class="pill pill-high">High</span></td>
+            <td><span class="pill pill-2w">Medium</span></td>
+            <td style="color:var(--muted2);">Without feedback, kids can't learn — game is just button-mashing</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><strong>Unique 3D monster per pathogen</strong></td>
+            <td><span class="pill" style="background:rgba(63,185,80,0.1);color:var(--accent2);">P2</span></td>
+            <td><span class="pill pill-med">Medium</span></td>
+            <td><span class="pill pill-2w">Medium</span></td>
+            <td style="color:var(--muted2);">Narrative identity — each boss should feel different and scary</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><strong>Boss lore/intro screen before battle</strong></td>
+            <td><span class="pill" style="background:rgba(0,242,255,0.1);color:var(--accent);">P1</span></td>
+            <td><span class="pill pill-med">Medium</span></td>
+            <td><span class="pill pill-1w">Small</span></td>
+            <td style="color:var(--muted2);">Sets context so kids understand what they're fighting and why it matters</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><strong>Fix cross-validate (real ChEMBL call)</strong></td>
+            <td><span class="pill" style="background:rgba(255,62,62,0.1);color:var(--danger);">P5</span></td>
+            <td><span class="pill pill-med">Medium</span></td>
+            <td><span class="pill pill-2w">Medium</span></td>
+            <td style="color:var(--muted2);">Currently shows fake results — misleads players about novelty</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td><strong>Victory: XP + badge display</strong></td>
+            <td><span class="pill" style="background:rgba(255,62,62,0.1);color:var(--danger);">P5</span></td>
+            <td><span class="pill pill-med">Medium</span></td>
+            <td><span class="pill pill-1w">Small</span></td>
+            <td style="color:var(--muted2);">XP is earned server-side but player never sees it — kills motivation loop</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td><strong>Kids Mode / Science Mode toggle</strong></td>
+            <td><span class="pill" style="background:rgba(246,173,85,0.1);color:var(--warn);">P4</span></td>
+            <td><span class="pill pill-low">Low</span></td>
+            <td><span class="pill pill-2w">Medium</span></td>
+            <td style="color:var(--muted2);">Nice-to-have — enables both kids and researchers to use the same UI</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td><strong>Boss wounded visual / damage states</strong></td>
+            <td><span class="pill" style="background:rgba(63,185,80,0.1);color:var(--accent2);">P2</span></td>
+            <td><span class="pill pill-low">Low</span></td>
+            <td><span class="pill pill-1w">Small</span></td>
+            <td style="color:var(--muted2);">Visual juice — makes hitting the boss feel impactful</td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td><strong>Victory: score progression chart</strong></td>
+            <td><span class="pill" style="background:rgba(255,62,62,0.1);color:var(--danger);">P5</span></td>
+            <td><span class="pill pill-low">Low</span></td>
+            <td><span class="pill pill-1w">Small</span></td>
+            <td style="color:var(--muted2);">Shows players how they improved — good for screenshots and sharing</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="sep">
+
+  <!-- ─── Files to change ───────────────────────── -->
+  <div class="section" id="files">
+    <div class="section-label">Step 05</div>
+    <div class="section-title">Files to Change</div>
+    <div class="section-subtitle">All changes are additive or fixes. No file deletions. No new Python packages needed. CSS/JS will be split into separate files per project guidelines.</div>
+
+    <div class="card-row">
+      <div class="card">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Backend (Python)</div>
+        <div style="font-size:0.85rem;">
+          <div style="margin-bottom:10px;"><code style="color:var(--warn);">api/game.py</code><br><span style="color:var(--muted2);">Add <code>GET /game/pathohunt-3d</code> route (selector page). Add <code>POST /api/v3/game/session/&lt;id&gt;/candidates</code> for molecule deck generation.</span></div>
+          <div style="margin-bottom:10px;"><code style="color:var(--warn);">services/game_service.py</code><br><span style="color:var(--muted2);">Add <code>get_candidates(session_id, user_id)</code> — calls molecule_generator, returns 3 pre-scored options without committing a full attack.</span></div>
+          <div><code style="color:var(--muted2);">models/game_models.py</code><br><span style="color:var(--muted2);">No changes needed — existing model already has all required fields.</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Frontend (HTML/CSS/JS)</div>
+        <div style="font-size:0.85rem;">
+          <div style="margin-bottom:10px;"><code style="color:var(--warn);">templates/game_selector_3d.html</code> <em style="color:var(--accent2);">(new)</em><br><span style="color:var(--muted2);">Monster selection screen. Inline Three.js mini-previews. Boss overlay with lore.</span></div>
+          <div style="margin-bottom:10px;"><code style="color:var(--warn);">static/js/game_battle_3d.js</code><br><span style="color:var(--muted2);">Add BOSS_PROFILES map. Fix async attack flow. Add molecule deck logic. Add science card render. Add post-attack feedback.</span></div>
+          <div style="margin-bottom:10px;"><code style="color:var(--warn);">static/css/game_battle_3d.css</code> <em style="color:var(--accent2);">(new)</em><br><span style="color:var(--muted2);">Extract inline styles from game_battle_3d.html. Add science card, molecule deck, selector page styles.</span></div>
+          <div style="margin-bottom:10px;"><code style="color:var(--warn);">templates/game_battle_3d.html</code><br><span style="color:var(--muted2);">Link CSS file. Replace spell-console HTML with molecule deck HTML. Add science card panel. Update victory screen.</span></div>
+          <div><code style="color:var(--warn);">templates/game_lobby.html</code><br><span style="color:var(--muted2);">Update boss card hrefs from <code>/game/battle/</code> to <code>/game/pathohunt-3d/</code>.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Summary ───────────────────────────────── -->
+  <div class="summary-box">
+    <h2>Summary</h2>
+    <p>PathoHunt 3D has a strong visual foundation built by Gemini. The game simply needs its science engine wired to the frontend and a proper entry point added. All 5 phases preserve existing UI/UX completely — they only connect, fix, and extend.</p>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-num">10</div>
+        <div class="stat-label">Issues Found</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">5</div>
+        <div class="stat-label">Phases Proposed</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">7</div>
+        <div class="stat-label">Files to Change</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">0</div>
+        <div class="stat-label">UI Redesigns</div>
+      </div>
+    </div>
+    <p style="margin-top:20px;font-size:0.88rem;">Please review and indicate which phases to proceed with, any adjustments, or any issues missed. Implementation can begin with Phase 1 + Phase 3 (highest impact, lowest effort) as a first sprint.</p>
+  </div>
+
+</div>
+</body>
+</html>
