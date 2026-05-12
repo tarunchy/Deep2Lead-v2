@@ -227,14 +227,17 @@ class PathoHunt3D {
         this.sessionId = null;
         this.isGameOver = false;
         this.attackLocked = false;
-        this.deckSize = 3; // configurable 1-3 before mission starts
+        this.deckSize = 1; // single molecule at a time (configurable 1-3 before mission starts)
         this.currentDeck = [];
         this.selectedCardIdx = 0;
         this.selectedSmiles = window.GAME_STARTER_SMILES || '';
         this.selectedMolName = 'SEED';
         this.bestScore = 0;
-        this.winThreshold = window.GAME_WIN_THRESHOLD || 0.70;
+        this.knownScore = window.GAME_KNOWN_SCORE || 0.60;
+        this.winThreshold = this.knownScore + 0.05; // discovery: beat known drug by 5%
         this.attackCount = 0;
+        this.journeyDots = [];       // [{composite, molName}]
+        this.consecutiveLowScores = 0;  // hint system trigger
         this.scienceCardTimer = null;
         this.mouse = new THREE.Vector2();
         this.raycaster = new THREE.Raycaster();
@@ -415,10 +418,12 @@ class PathoHunt3D {
         const emojiEl = document.getElementById('storyBossEmoji');
         const textEl = document.getElementById('storyText');
         const winEl = document.getElementById('storyWinPct');
+        const knownEl = document.getElementById('storyKnownPct');
         if (bossNameEl) bossNameEl.textContent = window.GAME_BOSS_NAME || window.GAME_BOSS_ID;
         if (emojiEl) emojiEl.textContent = window.GAME_BOSS_EMOJI || '🦠';
         if (textEl) textEl.textContent = window.GAME_PLAIN_ENGLISH || window.GAME_BOSS_FLAVOR || 'A dangerous pathogen is threatening the host.';
         if (winEl) winEl.textContent = Math.round((this.winThreshold || 0.70) * 100) + '%';
+        if (knownEl) knownEl.textContent = Math.round(this.knownScore * 100) + '%';
 
         // ── Carousel logic ───────────────────────────────────────
         let currentSlide = ps.name ? 0 : 1;
@@ -549,14 +554,15 @@ class PathoHunt3D {
         }
         this.attackLocked = false;
         this.comboCount = 0;
+        this.consecutiveLowScores = (this.consecutiveLowScores || 0) + 1;
         this.updateComboDisplay();
-        this.log('EVADED! The pathogen dodged your molecule!', '#ff6600');
+        this.log('Molecule missed the binding pocket — every test is data!', '#f6ad55');
 
-        // Floating EVADED text
+        // Floating miss feedback
         const div = document.createElement('div');
         div.className = 'float-dmg';
-        div.style.cssText = 'color:#ff6600;font-size:22px;font-weight:900;';
-        div.textContent = '💨 EVADED!';
+        div.style.cssText = 'color:#f6ad55;font-size:18px;font-weight:900;';
+        div.textContent = '🔬 No pocket fit — adjust scaffold!';
         const rect = this.container.getBoundingClientRect();
         div.style.left = (rect.width * 0.42 + (Math.random() - 0.5) * 50) + 'px';
         div.style.top = (rect.height * 0.32) + 'px';
@@ -625,9 +631,9 @@ class PathoHunt3D {
         const badge = document.getElementById('comboBadge');
         if (!badge) return;
         if (this.comboCount >= 2) {
-            badge.textContent = this.comboCount >= 5 ? `🔥🔥 ${this.comboCount}x COMBO` : `🔥 ${this.comboCount}x COMBO`;
+            badge.textContent = this.comboCount >= 5 ? `🔥🔥 ${this.comboCount}x Optimization Streak` : `🔥 ${this.comboCount}x Optimization Streak`;
             badge.style.display = 'block';
-            badge.className = 'combo-badge' + (this.comboCount >= 5 ? ' combo-hot' : '');
+            badge.className = 'combo-badge optimization-streak' + (this.comboCount >= 5 ? ' combo-hot' : '');
         } else {
             badge.style.display = 'none';
         }
@@ -722,6 +728,10 @@ class PathoHunt3D {
             const barColor = pct >= 65 ? '#3fb950' : pct >= 50 ? '#f6ad55' : '#ff3e3e';
             const shortSmiles = c.smiles.length > 22 ? c.smiles.substring(0, 22) + '...' : c.smiles;
             const isPinned = this.pinnedSmiles === c.smiles;
+            const knownPct = Math.round(this.knownScore * 100);
+            const delta = pct - knownPct;
+            const deltaStr = delta >= 0 ? `+${delta}% vs known` : `${delta}% vs known`;
+            const deltaColor = delta >= 0 ? '#3fb950' : '#f6ad55';
             const div = document.createElement('div');
             div.className = `mol-card${i === 0 ? ' selected' : ''}`;
             div.id = `card-${i}`;
@@ -729,11 +739,12 @@ class PathoHunt3D {
                 <div class="mol-card-key">[${i + 1}]</div>
                 <button class="mol-card-pin${isPinned ? ' pinned' : ''}" data-idx="${i}" title="Pin as scaffold">📌</button>
                 <div class="mol-card-name">${c.name}</div>
-                <div class="mol-card-smiles">${shortSmiles}</div>
+                <div class="mol-card-smiles" title="${c.smiles}">${shortSmiles}</div>
                 <div class="mol-card-power">
                     <div class="power-bar" style="width:${pct}%;background:${barColor};"></div>
                 </div>
                 <div class="mol-card-pct" style="color:${barColor}">${pct}%</div>
+                <div class="mol-card-delta" style="color:${deltaColor};font-size:0.65rem;margin-top:2px;">${deltaStr}</div>
             `;
             div.addEventListener('click', () => this.selectCard(i));
             dc.appendChild(div);
@@ -1086,14 +1097,20 @@ class PathoHunt3D {
 
         if (composite >= 0.55) {
             this.comboCount++;
+            this.consecutiveLowScores = 0;
         } else {
             this.comboCount = 0;
+            this.consecutiveLowScores = (this.consecutiveLowScores || 0) + 1;
         }
         this.updateComboDisplay();
+        this.updateBaselineStrip(composite);
+        this.addJourneyDot(composite, proj?.molName || '?');
+        if (composite >= this.knownScore) this.liveNoveltyCheck(data.best_smiles || '');
+        this.checkAndShowHint();
 
         const comboDmgBonus = this.comboCount >= 3 ? 1.25 : 1;
         this.createExplosion(this.monster.position.clone(), this.bossProfile.color || 0xff3e3e, 2 * comboDmgBonus);
-        this.showFloatingDamage(damage * comboDmgBonus, isNewBest);
+        this.showFloatingDamage(damage * comboDmgBonus, isNewBest, composite);
         this.updateHUD();
         this.showScienceCard(data);
         this.setBossWounded();
@@ -1114,10 +1131,16 @@ class PathoHunt3D {
         setTimeout(() => this.refreshOneCard(this.firedCardIdx ?? 0), 500);
     }
 
-    showFloatingDamage(damage, isNewBest) {
+    showFloatingDamage(damage, isNewBest, composite) {
         const div = document.createElement('div');
         div.className = 'float-dmg' + (isNewBest ? ' float-dmg-best' : damage > 0 ? ' float-dmg-hit' : ' float-dmg-miss');
-        div.textContent = damage > 0 ? `-${damage.toFixed(1)} HP` : 'NO IMPROVEMENT';
+        const pct = composite !== undefined ? Math.round(composite * 100) : null;
+        if (pct !== null) {
+            const beatKnown = composite >= this.knownScore;
+            div.textContent = isNewBest ? `⭐ ${pct}% binding — New Best!` : beatKnown ? `✅ ${pct}% — Beats known drug!` : `${pct}% binding`;
+        } else {
+            div.textContent = damage > 0 ? `${damage.toFixed(1)} pts` : 'Low binding';
+        }
         const arena = this.container.getBoundingClientRect();
         div.style.left = (arena.width * 0.45 + (Math.random()-.5)*60) + 'px';
         div.style.top = (arena.height * 0.35) + 'px';
@@ -1391,9 +1414,12 @@ class PathoHunt3D {
         document.getElementById('best-score-text').textContent = `${Math.round(this.bestScore * 100)}%`;
         const ac = document.getElementById('attack-counter');
         if (ac) ac.textContent = `ATTACKS: ${this.attackCount}`;
-        // Winning badge: show when boss HP is below 50% of initial
+        // Winning badge: show when bestScore beats known drug baseline
         const wb = document.getElementById('winningBadge');
-        if (wb) wb.style.display = (bossHpPct < 50 && !this.isGameOver) ? 'block' : 'none';
+        if (wb) wb.style.display = (this.bestScore >= this.knownScore && !this.isGameOver) ? 'block' : 'none';
+        // Keep baseline strip known drug label current
+        const bsKnownEl = document.getElementById('bs-known-pct');
+        if (bsKnownEl) bsKnownEl.textContent = Math.round(this.knownScore * 100) + '%';
     }
 
     log(msg, color) {
@@ -1635,6 +1661,77 @@ class PathoHunt3D {
             results.innerHTML = `<p style="color:#888">ChEMBL query unavailable.</p>`;
         }
         btn.innerText = "Validated ✓";
+    }
+
+    updateBaselineStrip(composite) {
+        const strip = document.getElementById('baselineStrip');
+        if (!strip) return;
+        const bestPct = Math.round(this.bestScore * 100);
+        const knownPct = Math.round(this.knownScore * 100);
+        const delta = bestPct - knownPct;
+        const bestEl = document.getElementById('bs-best-pct');
+        const deltaEl = document.getElementById('bs-delta');
+        if (bestEl) bestEl.textContent = bestPct + '%';
+        if (deltaEl) {
+            if (bestPct > 0) {
+                deltaEl.style.display = '';
+                deltaEl.textContent = delta >= 0 ? `(+${delta}% ahead!)` : `(${delta}% to go)`;
+                deltaEl.style.color = delta >= 0 ? '#3fb950' : '#f6ad55';
+            } else {
+                deltaEl.style.display = 'none';
+            }
+        }
+    }
+
+    addJourneyDot(composite, molName) {
+        this.journeyDots.push({ composite, molName });
+        const container = document.getElementById('journeyDots');
+        if (!container) return;
+        const dot = document.createElement('div');
+        dot.className = 'journey-dot';
+        const pct = composite * 100;
+        dot.style.background = pct >= 65 ? '#3fb950' : pct >= 50 ? '#f6ad55' : '#ff4d4d';
+        dot.title = `${molName}: ${Math.round(pct)}%`;
+        // Scale dot slightly larger for new best
+        if (composite >= this.bestScore) dot.style.transform = 'scale(1.4)';
+        container.appendChild(dot);
+        // Keep last 20 dots visible
+        while (container.children.length > 20) container.firstChild.remove();
+    }
+
+    async liveNoveltyCheck(smiles) {
+        if (!smiles) return;
+        const iconEl = document.getElementById('dgNoveltyIcon');
+        const textEl = document.getElementById('dgNoveltyText');
+        const checkEl = document.getElementById('dgNoveltyCheck');
+        if (checkEl) checkEl.style.display = 'flex';
+        if (iconEl) iconEl.textContent = '🔍';
+        if (textEl) textEl.textContent = 'Checking ChEMBL for known analogs…';
+        try {
+            const resp = await fetch('/api/v3/game/validate', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ smiles })
+            });
+            const data = await resp.json();
+            if (iconEl) iconEl.textContent = data.novel ? '✅' : '⚠️';
+            if (textEl) textEl.textContent = data.novel ? 'Novel candidate — not in ChEMBL!' : 'Similar to known compound in ChEMBL';
+        } catch (_) {
+            if (checkEl) checkEl.style.display = 'none';
+        }
+    }
+
+    checkAndShowHint() {
+        if ((this.consecutiveLowScores || 0) < 3) return;
+        const hints = [
+            'Tip: Add a hydroxyl (-OH) group to improve QED drugability score.',
+            'Tip: Try a piperidine ring — simpler to synthesize and often better binding.',
+            'Tip: Keep molecular weight under 400 Da for better oral absorption.',
+            'Tip: A pyrimidine core often fits kinase binding pockets well.',
+            'Tip: Reduce rotatable bonds below 10 for better binding entropy.',
+        ];
+        const hint = hints[Math.floor(Math.random() * hints.length)];
+        this.log(`💡 ${hint}`, '#a78bfa');
+        this.consecutiveLowScores = 0;
     }
 
     animateBoss(t) {

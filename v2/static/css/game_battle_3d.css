@@ -980,3 +980,76 @@ kbd {
     position:absolute; inset:0; background:#3fb950;
     pointer-events:none; z-index:50; opacity:0;
 }
+
+/* ── Baseline strip (always-visible known drug vs your best) ── */
+.baseline-strip {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    background: rgba(0,0,0,0.45); border: 1px solid rgba(0,242,255,0.15);
+    border-radius: 6px; padding: 4px 10px; margin-top: 4px;
+    pointer-events: none;
+}
+.bs-known { color: #888; }
+.bs-known strong { color: #aaa; }
+.bs-sep { color: rgba(0,242,255,0.25); }
+.bs-yours { color: #00f2ff; }
+.bs-yours strong { color: #00f2ff; }
+.bs-delta { font-weight: 900; font-size: 9px; }
+
+/* ── Journey timeline (optimization path dots) ── */
+.journey-timeline {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 8px;
+    pointer-events: none;
+}
+.journey-label {
+    font-size: 8px; font-weight: 800; letter-spacing: 1.5px;
+    color: rgba(0,242,255,0.35); white-space: nowrap;
+}
+.journey-dots { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.journey-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+/* ── Novelty check inline indicator (inside docking guide) ── */
+.dg-novelty-check {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; color: #a78bfa; margin-top: 6px;
+    padding: 4px 8px;
+    background: rgba(167,139,250,0.08);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 5px;
+}
+
+/* ── Optimization streak badge variant ── */
+.combo-badge.optimization-streak {
+    color: #3fb950;
+    border-color: #3fb950;
+    text-shadow: 0 0 18px rgba(63,185,80,0.7);
+    font-size: 1.1rem;
+}
+.combo-badge.optimization-streak.combo-hot {
+    color: #f6ad55;
+    border-color: #f6ad55;
+    text-shadow: 0 0 18px rgba(246,173,85,0.8);
+}
+
+/* ── Molecule card delta label ── */
+.mol-card-delta { font-size: 0.65rem; letter-spacing: 0.3px; }
+
+/* ── Semantic color tweaks ── */
+.enemy-bar-fill {
+    background: linear-gradient(90deg, #ff1a1a, #ff4d4d);
+    box-shadow: 0 0 12px #ff3e3e;
+}
+.player-bar-fill {
+    background: linear-gradient(90deg, #0891b2, #22d3ee);
+    box-shadow: 0 0 10px #22d3ee;
+}
+#best-score-fill {
+    background: linear-gradient(90deg, #d97706, #fbbf24);
+    box-shadow: 0 0 8px rgba(251,191,36,0.5);
+}

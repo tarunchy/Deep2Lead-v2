@@ -41,7 +41,7 @@
                 <div class="story-lore" id="storyText">Loading mission data...</div>
                 <div class="story-objective">
                     <span class="story-obj-icon">🎯</span>
-                    Achieve <strong id="storyWinPct">70%</strong> composite score to defeat the pathogen
+                    Beat the known drug score (<strong id="storyKnownPct">–%</strong>) by 5% — one great molecule wins!
                 </div>
                 <label class="outbreak-toggle-label">
                     <input type="checkbox" id="outbreakToggle">
@@ -142,6 +142,11 @@
             <div class="dg-term-name" id="dgTermName">–</div>
             <div class="dg-term-def"  id="dgTermDef">–</div>
         </div>
+        <!-- Live novelty indicator — shown when score beats baseline -->
+        <div class="dg-novelty-check" id="dgNoveltyCheck" style="display:none;">
+            <span id="dgNoveltyIcon">🔍</span>
+            <span id="dgNoveltyText">Checking ChEMBL for known analogs…</span>
+        </div>
         <div class="dg-progress-track"><div class="dg-progress-fill" id="dgProgressFill"></div></div>
         <div class="dg-wait-hint" id="dgWaitHint">⏳ Wait for docking to complete before firing again</div>
         <div class="dg-complete-hint" id="dgCompleteHint" style="display:none;">✅ Docking Complete — take your time reading!</div>
@@ -201,6 +206,13 @@
                         <div id="best-score-fill"></div>
                         <div id="win-threshold-marker"></div>
                     </div>
+                </div>
+                <!-- Baseline strip: always shows known drug vs your best -->
+                <div class="baseline-strip" id="baselineStrip">
+                    <span class="bs-known">⚗️ Known Drug: <strong id="bs-known-pct">–%</strong></span>
+                    <span class="bs-sep">|</span>
+                    <span class="bs-yours">Your Best: <strong id="bs-best-pct">0%</strong></span>
+                    <span class="bs-delta" id="bs-delta" style="display:none;"></span>
                 </div>
             </div>
             <div style="text-align:right;">
@@ -322,12 +334,17 @@
         <div class="hud-bottom">
             <div class="molecule-deck" id="moleculeDeck">
                 <div class="deck-header">
-                    <span class="deck-label">⚗️ SELECT MOLECULE TO FIRE</span>
-                    <button class="deck-custom-btn" id="btnDesignMol" title="Design your own drug">🧪 Design Drug</button>
+                    <span class="deck-label">⚗️ LOADED MOLECULE</span>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <!-- Molecule journey timeline -->
+                        <div class="journey-timeline" id="journeyTimeline" title="Your optimization journey">
+                            <span class="journey-label">JOURNEY ▸</span>
+                            <div class="journey-dots" id="journeyDots"></div>
+                        </div>
+                        <button class="deck-custom-btn" id="btnDesignMol" title="Design your own drug">🧪 Design Drug</button>
+                    </div>
                 </div>
                 <div class="deck-cards" id="deckCards">
-                    <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
-                    <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
                     <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
                 </div>
                 <div class="deck-fire-hint">// SPACE or CLICK ARENA TO FIRE · ← ↑ ↓ → MOVE SHIP //</div>

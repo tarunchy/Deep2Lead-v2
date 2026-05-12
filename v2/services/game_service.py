@@ -107,7 +107,8 @@ def start_session(user_id, target_id: str, mode: str = "quick_battle", difficult
         raise ValueError(f"Target '{target_id}' is not a game boss")
 
     boss_initial_hp = 300.0
-    win_threshold = meta.get("win_threshold_easy", 0.72)
+    known_score = meta.get("known_drug_score", 0.60)
+    win_threshold = round(known_score + 0.05, 4)  # discovery: beat known drug by 5%
 
     session = GameSession(
         user_id=user_id,
@@ -236,8 +237,10 @@ def execute_attack(session_id, smiles: str, user_id) -> dict:
             updated_mutations = list(active_mutations) + [new_mutation]
             session.active_mutations = updated_mutations
 
-    min_attacks_to_win = 8
-    won = new_hp <= 0.0 and session.attacks_count >= min_attacks_to_win
+    # Discovery win: one molecule that beats the known drug by ≥5%
+    known_score = meta.get("known_drug_score", 0.60) if meta else 0.60
+    discovery_threshold = round(known_score + 0.05, 4)
+    won = composite >= discovery_threshold
     max_attempts = config["max_attempts"]
     lost = not won and session.attacks_count >= max_attempts
 
@@ -337,6 +340,8 @@ def execute_attack(session_id, smiles: str, user_id) -> dict:
         "new_mutation": new_mutation,
         "phase_taunt": phase_taunt,
         "memory_penalty": memory_penalty,
+        "known_score": known_score,
+        "discovery_threshold": discovery_threshold,
     }
 
 
