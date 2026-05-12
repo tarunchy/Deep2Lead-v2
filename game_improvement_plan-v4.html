@@ -1179,9 +1179,14 @@
 
 <div class="tab-content" id="tab-mockgame">
   <h2 style="margin-bottom:8px;">Mock Game Screen — Hypercasual Redesign</h2>
-  <p style="margin-bottom:8px;color:#94a3b8;">Redesigned mockup per UX expert guidance and CTML principles. <strong style="color:#e2e8f0;">Sky-blue world</strong>, bright 3D molecule blocks, clean white HUD — designed for ages 10–16.</p>
+  <p style="margin-bottom:8px;color:#94a3b8;">Redesigned mockup per UX expert guidance and CTML principles. <strong style="color:#e2e8f0;">Single-molecule firing</strong> — one molecule loaded at a time, fire it, see the result, request the next.</p>
+
+  <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:10px 14px;font-size:12px;color:#94a3b8;margin-bottom:10px;">
+    ⚠️ <strong style="color:#ef4444;">Color note (from this document's own Color tab):</strong> The sky-blue reference image was identified as a game for <strong>6–9 year olds</strong>. Verified research in the Color tab confirms 14–18 year olds reject this aesthetic as "childish" — they prefer Discord/Twitch/Foldit dark sci-fi. <strong>Please confirm your target age range</strong> before finalising the colour scheme. The mockup below uses sky-blue as requested; the Color tab recommends dark navy for 14+ audiences.
+  </div>
+
   <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:#94a3b8;margin-bottom:16px;">
-    ✅ Follows CTML: low-saturation background, bright focal elements, single primary task, minimal HUD, positive reinforcement, calm world with readable feedback — no dark navy, no neon glows.
+    ✅ Fixed: <strong style="color:#e2e8f0;">One molecule at a time</strong> — matches the "one great shot can win" mechanics from Win Logic tab. No selection deck of 3. One block on the lane = the molecule currently loaded in your firing chamber.
   </div>
 
   <div id="mock-hc-wrapper">
@@ -1240,32 +1245,26 @@
           <div class="hc-boss-name">COVID-19 MPRO</div>
         </div>
 
-        <!-- 3D molecule blocks -->
-        <div class="hc-blocks-row">
-          <div class="hc-mol-block col-green selected-block">
+        <!-- Single loaded molecule block (one at a time) -->
+        <div class="hc-blocks-row" style="justify-content:center;">
+          <div class="hc-mol-block col-green selected-block" style="width:116px;height:116px;">
             <div class="hc-mol-block-inner">
-              <div class="hc-mol-name">MX-4203</div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div class="hc-mol-name">MX-4203</div>
+                <span class="hc-mol-tag" style="background:rgba(255,255,255,0.5);color:#166534;font-size:7px;">LOADED</span>
+              </div>
               <div class="hc-mol-score">71%</div>
-              <div><span class="hc-mol-delta">+11% above baseline</span></div>
-              <div><span class="hc-mol-tag">NOVEL</span> <span class="hc-mol-tag">BEST</span></div>
+              <div><span class="hc-mol-delta">+11% above known drug</span></div>
+              <div style="display:flex;gap:3px;margin-top:2px;">
+                <span class="hc-mol-tag">NOVEL</span>
+                <span class="hc-mol-tag">NEW BEST</span>
+              </div>
             </div>
           </div>
-          <div class="hc-mol-block col-blue">
-            <div class="hc-mol-block-inner">
-              <div class="hc-mol-name">MX-3491</div>
-              <div class="hc-mol-score">65%</div>
-              <div><span class="hc-mol-delta">+5% above baseline</span></div>
-              <div><span class="hc-mol-tag">NOVEL</span></div>
-            </div>
-          </div>
-          <div class="hc-mol-block col-orange">
-            <div class="hc-mol-block-inner">
-              <div class="hc-mol-name">MX-5102</div>
-              <div class="hc-mol-score">48%</div>
-              <div><span class="hc-mol-delta">-12% below baseline</span></div>
-              <div></div>
-            </div>
-          </div>
+        </div>
+        <!-- Fire hint below block -->
+        <div style="position:absolute;bottom:110px;left:50%;transform:translateX(-50%);white-space:nowrap;">
+          <span style="background:rgba(255,255,255,0.88);border-radius:20px;padding:4px 14px;font-size:9px;font-weight:800;color:#1e293b;box-shadow:0 1px 6px rgba(0,0,0,0.1);letter-spacing:1px;">SPACE to fire · ← → to aim</span>
         </div>
 
         <!-- Notification log (bright pills) -->
@@ -1313,71 +1312,64 @@
 
     </div><!-- end hc-world -->
 
-    <!-- BOTTOM MOLECULE DECK -->
+    <!-- BOTTOM: LOADED MOLECULE PANEL (single molecule at a time) -->
     <div class="hc-deck">
       <div class="hc-deck-hdr">
-        <span>⚗️ SELECT MOLECULE TO FIRE</span>
-        <span>SPACE or CLICK TO FIRE &nbsp;·&nbsp; ← ↑ ↓ → MOVE</span>
+        <span>⚗️ LOADED MOLECULE</span>
+        <span style="color:#22c55e;font-weight:900;">SPACE = FIRE &nbsp;·&nbsp; ← → AIM</span>
       </div>
-      <div class="hc-deck-cards">
-        <!-- Card 1: selected, best score -->
-        <div class="hc-card green-card hc-selected">
-          <div class="hc-card-key">[1] SELECTED</div>
+      <!-- Single molecule: card + details + fire button -->
+      <div style="display:flex;gap:14px;align-items:center;">
+        <!-- The one loaded molecule card -->
+        <div class="hc-card green-card hc-selected" style="flex:none;width:195px;">
+          <div class="hc-card-key">LOADED &amp; READY</div>
           <div class="hc-card-name">MX-4203</div>
-          <div class="hc-card-smiles">CC1CC(NC(=O)C(F)(F)Cl…</div>
+          <div class="hc-card-smiles">CC1CC(NC(=O)C(F)(F)Cl… <span style="color:#7c3aed;font-style:italic;cursor:pointer;font-size:7px;">what is this?</span></div>
           <div class="hc-card-bar"><div class="hc-card-fill hcf-g" style="width:71%"></div></div>
-          <div class="hc-card-pct" style="color:#16a34a;">71% <small style="font-size:9px;color:#22c55e;">+11% ↑</small></div>
+          <div class="hc-card-pct" style="color:#16a34a;">71% <small style="font-size:9px;color:#22c55e;">+11% above known drug ↑</small></div>
           <div class="hc-card-tags">
             <span class="hc-tag hct-novel">NOVEL</span>
             <span class="hc-tag hct-best">NEW BEST</span>
             <span class="hc-tag hct-synth">Easy Synthesis</span>
           </div>
         </div>
-        <!-- Card 2: medium score -->
-        <div class="hc-card yellow-card">
-          <div class="hc-card-key">[2]</div>
-          <div class="hc-card-name">MX-3491</div>
-          <div class="hc-card-smiles">O=C(Nc1ccc(F)cc1)C1CC…</div>
-          <div class="hc-card-bar"><div class="hc-card-fill hcf-y" style="width:65%"></div></div>
-          <div class="hc-card-pct" style="color:#ca8a04;">65% <small style="font-size:9px;color:#eab308;">+5% ↑</small></div>
-          <div class="hc-card-tags">
-            <span class="hc-tag hct-novel">NOVEL</span>
+        <!-- Middle: journey + science nudge -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+          <div class="hc-journey" style="margin:0;padding:0;border:none;">
+            <span class="hc-journey-label">JOURNEY ▸</span>
+            <div class="hc-dot" style="background:#ef4444;" title="MX-2807: 28% — low binding"></div>
+            <div class="hc-jline"></div>
+            <div class="hc-dot" style="background:#eab308;" title="MX-3491: 65% — above baseline"></div>
+            <div class="hc-jline"></div>
+            <div class="hc-dot best" style="background:#22c55e;border:2px solid #16a34a;box-shadow:0 0 8px rgba(34,197,94,0.5);" title="MX-4203: 71% ← LOADED (best)"></div>
+            <span class="hc-journey-best">← Loaded (best so far)</span>
+          </div>
+          <div style="background:#f0fdf4;border-radius:10px;padding:7px 12px;font-size:10px;color:#15803d;">
+            🔬 <strong>71% binding affinity</strong> — 11% better than the known drug. Fire to attempt the discovery!
           </div>
         </div>
-        <!-- Card 3: low score -->
-        <div class="hc-card red-card">
-          <div class="hc-card-key">[3]</div>
-          <div class="hc-card-name">MX-5102</div>
-          <div class="hc-card-smiles">CC(C)Cc1ccc(C(C)C(=O)…</div>
-          <div class="hc-card-bar"><div class="hc-card-fill hcf-r" style="width:48%"></div></div>
-          <div class="hc-card-pct" style="color:#dc2626;">48% <small style="font-size:9px;color:#ef4444;">-12% ↓</small></div>
-          <div class="hc-card-tags"></div>
+        <!-- Right: fire + next buttons -->
+        <div style="flex:none;display:flex;flex-direction:column;gap:8px;align-items:center;">
+          <button style="background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;font-size:13px;font-weight:900;letter-spacing:1px;padding:14px 22px;border-radius:14px;cursor:pointer;box-shadow:0 4px 14px rgba(34,197,94,0.4);width:120px;">🚀 FIRE</button>
+          <button style="background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;font-size:10px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;width:120px;">🔬 Next Molecule →</button>
+          <div style="font-size:8px;color:#94a3b8;text-align:center;">AI generates a<br>new candidate</div>
         </div>
-      </div>
-      <!-- Molecule journey timeline -->
-      <div class="hc-journey">
-        <span class="hc-journey-label">JOURNEY ▸</span>
-        <div class="hc-dot" style="background:#ef4444;" title="MX-2807: 28%"></div>
-        <div class="hc-jline"></div>
-        <div class="hc-dot" style="background:#eab308;" title="MX-3491: 65%"></div>
-        <div class="hc-jline"></div>
-        <div class="hc-dot best" style="background:#22c55e;border:2px solid #16a34a;box-shadow:0 0 8px rgba(34,197,94,0.5);" title="MX-4203: 71% ← BEST"></div>
-        <span class="hc-journey-best">← Current Best</span>
       </div>
     </div>
 
   </div><!-- end mock-hc-wrapper -->
 
   <div style="margin-top:24px;" class="card">
-    <div class="card-title">Design System Changes vs Previous Dark Mockup</div>
+    <div class="card-title">Alignment Check — Mockup vs Document Requirements</div>
     <ol style="color:#64748b;font-size:13px;padding-left:20px;display:flex;flex-direction:column;gap:6px;margin-top:8px;">
-      <li><strong style="color:#e2e8f0">Sky-blue world (replaces dark navy):</strong> Bright, calm background matched to 10–16 age preference per UX expert. Reduces visual fatigue, keeps focus on the molecule blocks.</li>
-      <li><strong style="color:#e2e8f0">3D glossy molecule blocks (NEW):</strong> Colorful glass-effect blocks on a perspective lane — immediate visual grammar: green = great, blue = good, orange = low. No text required.</li>
-      <li><strong style="color:#e2e8f0">White HUD pills (replaces neon overlays):</strong> Clean white panels for lives ❤️, score, and counters — high contrast, zero glare, one metric each.</li>
-      <li><strong style="color:#e2e8f0">White docking guide card (replaces dark frosted overlay):</strong> Bright, readable panel with clean typography — information stays calm during the pause moment.</li>
-      <li><strong style="color:#e2e8f0">Light-tinted molecule cards (replaces dark translucent boxes):</strong> Green/yellow/red tinted cards — scores are immediately readable, colour signals quality at a glance.</li>
-      <li><strong style="color:#e2e8f0">Positive reinforcement only:</strong> "WINNING — Beat the known drug!" badge, journey dots showing progress, log says "still learning!" not "EVADED!".</li>
-      <li><strong style="color:#e2e8f0">All educational content preserved:</strong> Binding score vs known drug baseline, novelty check, docking phases, key terms, molecule journey — same information, friendlier presentation.</li>
+      <li><strong style="color:#22c55e">✅ One molecule at a time:</strong> Single block on lane + single card in firing chamber. No more 3-card selector deck. Matches "one great shot can win" from Win Logic tab.</li>
+      <li><strong style="color:#22c55e">✅ Known drug baseline visible at all times:</strong> Score box always shows "Known Drug: 60% · +11% better!" — matches Improvement #2 (P1 Critical).</li>
+      <li><strong style="color:#22c55e">✅ Binding affinity ring (not HP bar):</strong> Ring around virus shows % of active site blocked — science-accurate, no combat HP metaphor.</li>
+      <li><strong style="color:#22c55e">✅ No "EVADED!" language:</strong> Log uses "low pocket fit. Still learning!" — positive framing per Improvement #3 (P1 Critical).</li>
+      <li><strong style="color:#22c55e">✅ Novelty check inline:</strong> Docking guide panel shows "✓ Novel — not found in ChEMBL!" immediately after docking — matches Improvement #6.</li>
+      <li><strong style="color:#22c55e">✅ Molecule journey timeline:</strong> Coloured dots (red → amber → green) showing optimization path — matches Improvement #5.</li>
+      <li><strong style="color:#22c55e">✅ "Next Molecule →" button:</strong> Player explicitly requests the next AI-generated candidate — reinforces iterative drug design concept.</li>
+      <li><strong style="color:#ef4444">⚠️ OPEN QUESTION — Color scheme:</strong> This mockup uses sky-blue (per UX expert request). However the Color tab in this document identifies sky-blue as a 6–9 year-old aesthetic and recommends dark navy for 14–18. Please confirm target age range to finalise.</li>
     </ol>
   </div>
 </div>
