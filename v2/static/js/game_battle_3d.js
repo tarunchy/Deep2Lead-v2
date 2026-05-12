@@ -193,6 +193,17 @@ function sasToStars(sas) {
     return toStars(1 - (sas - 1) / 9, 1);
 }
 
+const DOCKING_FACTS = [
+    { title: "How Molecular Docking Works", body: "Your molecule is being computationally fitted into the pathogen's active site — like a key into a lock. The docking score predicts how tightly it binds.", term: "Binding Affinity", def: "How strongly a drug sticks to its target protein. Measured in Ki or IC50 — lower values mean tighter binding and stronger inhibition of the pathogen." },
+    { title: "Lipinski's Rule of 5", body: "Good oral drugs follow 5 rules: MW < 500 Da, LogP < 5, H-bond donors ≤ 5, acceptors ≤ 10. Violating these often predicts poor absorption through the gut wall.", term: "Bioavailability", def: "The fraction of a drug that reaches the bloodstream after oral dosing. Poor bioavailability = drug never reaches its target, no matter how potent it is." },
+    { title: "QED — Drug-likeness Score", body: "QED (Quantitative Estimate of Drug-likeness) scores molecules 0–1. Aspirin ≈ 0.55, Ibuprofen ≈ 0.73. Above 0.6 is considered strongly drug-like.", term: "Drug-likeness", def: "A composite score of molecular properties predicting oral drug potential. The higher the QED, the more likely the molecule behaves like a real medicine." },
+    { title: "Synthesis Accessibility", body: "A brilliant molecule is useless if chemists can't make it. SAS scores synthesis difficulty 1 (trivial) to 10 (near impossible). Simple ring systems score lower — aim for ≤ 4.", term: "SAS Score", def: "Synthesis Accessibility Score (1–10). Most approved drugs score 2–4. Complex or rare bond patterns push the score up and make manufacturing harder." },
+    { title: "ADMET — Beyond Binding", body: "Even a perfect binder can fail if it's toxic, unstable in the body, or excreted too fast. Over 90% of drug candidates fail in clinical trials — mostly due to ADMET failures, not potency.", term: "ADMET", def: "Absorption, Distribution, Metabolism, Excretion, Toxicity. Five key properties that determine whether a drug actually works safely in a living patient." },
+    { title: "Structure–Activity Relationship", body: "Tiny changes to a molecule can completely change its potency. Adding one fluorine atom, flipping a ring, or changing a linker can make or break a drug candidate.", term: "SAR", def: "Structure–Activity Relationship: the study of how molecular structure changes affect biological activity. The core tool used by medicinal chemists every day." },
+    { title: "The Active Site Pocket", body: "The pathogen's protein has a precise 3D pocket lined with amino acids. Your molecule must complement its shape and charge to lock in and block the enzyme.", term: "Active Site", def: "The specific region of a protein where a drug binds. Blocking it can halt the pathogen's critical function — this is the goal of all enzyme inhibitor drugs." },
+    { title: "Real Drug Discovery", body: "Tamiflu (Oseltamivir) took 10+ years and ~$1 billion to develop before it could block Influenza NA. In this game you're compressing that entire journey into seconds!", term: "Drug Discovery Timeline", def: "On average, 12–15 years and $2.6 billion separate an idea from an approved drug. Only 1 in ~10,000 screened compounds ever reaches a patient." },
+];
+
 function getAttackMsg(composite, bossName, isNewBest) {
     const nb = isNewBest ? ' 🏆 New best!' : '';
     if (composite >= 0.80) return `Perfect strike! Your molecule nearly perfectly blocks ${bossName}.${nb}`;
@@ -991,6 +1002,7 @@ class PathoHunt3D {
                 if (m.isMesh && m.material && m.material.emissive) m.material.emissive.setHex(0xffaa00);
             });
         }
+        this.showDockingGuide(molName); // show educational guide during docking
     }
 
     hideAnalyzing() {
@@ -1002,6 +1014,7 @@ class PathoHunt3D {
                 if (m.isMesh && m.material && m.material.emissive) m.material.emissive.setHex(profile.emissive || 0x000000);
             });
         }
+        this.hideDockingGuide(); // hide educational guide when docking completes
     }
 
     applyAttackResult(data, proj) {
@@ -1394,7 +1407,58 @@ class PathoHunt3D {
         const el2 = document.getElementById('analyzingMolName');
         if (el) el.textContent = line1 || 'ANALYZING MOLECULAR IMPACT';
         if (el2) el2.textContent = line2 || '';
+        // advance guide phase indicator
+        if (line1.includes('MEMBRANE')) this.setDockingGuideStep(0);
+        else if (line1.includes('BINDING')) this.setDockingGuideStep(1);
+        else if (line1.includes('DOCKING')) this.setDockingGuideStep(2);
     }
+
+    // ── Docking education guide ───────────────────────────────────
+    showDockingGuide(molName) {
+        const el = document.getElementById('dockingGuide');
+        if (!el) return;
+        const fact = DOCKING_FACTS[Math.floor(Math.random() * DOCKING_FACTS.length)];
+        const set = (id, val) => { const n = document.getElementById(id); if (n) n.textContent = val; };
+        set('dgMolLabel',  molName || '–');
+        set('dgFactTitle', fact.title);
+        set('dgFactBody',  fact.body);
+        set('dgTermName',  fact.term);
+        set('dgTermDef',   fact.def);
+        document.querySelectorAll('.dg-phase-step').forEach(s => s.classList.remove('active', 'done'));
+        const fill = document.getElementById('dgProgressFill');
+        if (fill) fill.style.width = '0%';
+        el.style.display = 'flex';
+        el.classList.remove('dg-exit');
+        // animate progress bar over ~3 s (matches docking phase duration)
+        this._dgStart = Date.now();
+        if (this._dgRaf) cancelAnimationFrame(this._dgRaf);
+        const tick = () => {
+            if (!this._dgStart) return;
+            const pct = Math.min(95, ((Date.now() - this._dgStart) / 3200) * 100);
+            if (fill) fill.style.width = pct + '%';
+            if (pct < 95) this._dgRaf = requestAnimationFrame(tick);
+        };
+        this._dgRaf = requestAnimationFrame(tick);
+    }
+
+    hideDockingGuide() {
+        if (this._dgRaf) { cancelAnimationFrame(this._dgRaf); this._dgRaf = null; }
+        this._dgStart = null;
+        const el = document.getElementById('dockingGuide');
+        if (!el || el.style.display === 'none') return;
+        const fill = document.getElementById('dgProgressFill');
+        if (fill) fill.style.width = '100%';
+        el.classList.add('dg-exit');
+        setTimeout(() => { el.style.display = 'none'; el.classList.remove('dg-exit'); }, 380);
+    }
+
+    setDockingGuideStep(step) {
+        document.querySelectorAll('.dg-phase-step').forEach((el, i) => {
+            el.classList.toggle('done',   i < step);
+            el.classList.toggle('active', i === step);
+        });
+    }
+    // ─────────────────────────────────────────────────────────────
 
     spawnObstacle() {
         if (this.isGameOver || !this.gameStarted) return;
@@ -1576,8 +1640,8 @@ class PathoHunt3D {
         this.lastFrameTime = now;
         const t = now / 1000;
 
-        // Safety: auto-unlock if attackLocked for > 12s (network/state hang)
-        if (this.attackLocked && this._lockTimestamp && (now - this._lockTimestamp) > 12000) {
+        // Safety: auto-unlock if attackLocked for > 35s (network/state hang)
+        if (this.attackLocked && this._lockTimestamp && (now - this._lockTimestamp) > 35000) {
             this.attackLocked = false;
             this._lockTimestamp = null;
             this.hideAnalyzing();
@@ -1658,8 +1722,8 @@ class PathoHunt3D {
                 // Apply result as soon as phase3 done AND API responded
                 if (p.phase3 && p.apiSettled) {
                     this.applyAttackResult(p.apiResult, p);
-                } else if (elapsed > 8000) {
-                    // Hard timeout — don't leave player stuck
+                } else if (elapsed > 25000) {
+                    // Hard timeout — LLM can take 10-20s on busy GPU; 25s gives it room
                     this.applyAttackResult(null, p);
                 }
                 continue;
