@@ -564,3 +564,277 @@ kbd {
     font-family: monospace;
     margin-bottom: 2px;
 }
+
+/* Pin button on mol-card */
+.mol-card-pin {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: none;
+    border: 1px solid rgba(0,242,255,0.25);
+    border-radius: 4px;
+    color: rgba(0,242,255,0.4);
+    font-size: 10px;
+    cursor: pointer;
+    padding: 1px 5px;
+    line-height: 1;
+    transition: all 0.15s;
+}
+.mol-card-pin:hover, .mol-card-pin.pinned {
+    background: rgba(246,173,85,0.15);
+    border-color: #f6ad55;
+    color: #f6ad55;
+}
+.mol-card { position: relative; }
+
+/* Pinned seed indicator */
+.pinned-seed-bar {
+    font-size: 9px;
+    color: #f6ad55;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-top: 4px;
+    opacity: 0.8;
+    display: none;
+}
+
+/* ── Story Carousel ──────────────────────────────────────── */
+.story-slide { display: none; }
+.story-slide.active-slide { display: block; animation: storyFadeIn 0.35s ease-out; }
+
+.story-carousel-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.story-nav-btn {
+    background: rgba(0,242,255,0.08);
+    border: 1px solid rgba(0,242,255,0.3);
+    color: #00f2ff;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.story-nav-btn:hover { background: rgba(0,242,255,0.2); }
+.story-nav-btn:disabled { opacity: 0.25; cursor: default; }
+
+.story-dots { display: flex; gap: 8px; align-items: center; }
+.story-dot {
+    width: 8px; height: 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+.story-dot.active {
+    background: #00f2ff;
+    transform: scale(1.3);
+}
+
+/* Patient story slide */
+.story-patient-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #ff6600;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    opacity: 0.9;
+}
+.story-patient-name {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 8px;
+}
+.story-patient-stats {
+    font-size: 0.82rem;
+    color: #aaa;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid #ff6600;
+    border-radius: 0 6px 6px 0;
+}
+.story-patient-urgency {
+    font-size: 0.82rem;
+    color: #ff6600;
+    margin-bottom: 14px;
+    font-weight: 600;
+    padding: 8px 12px;
+    background: rgba(255,102,0,0.06);
+    border: 1px solid rgba(255,102,0,0.25);
+    border-radius: 6px;
+}
+.story-patient-note {
+    font-size: 0.78rem;
+    color: #3fb950;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+/* Outbreak toggle */
+.outbreak-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    font-size: 0.8rem;
+    color: #aaa;
+    cursor: pointer;
+    padding: 8px 12px;
+    background: rgba(255,62,62,0.05);
+    border: 1px solid rgba(255,62,62,0.2);
+    border-radius: 8px;
+}
+.outbreak-toggle-label input { cursor: pointer; accent-color: #ff3e3e; }
+.outbreak-toggle-label strong { color: #ff3e3e; }
+
+/* ── Mutation Alert ─────────────────────────────────────── */
+#mutationAlert {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 80;
+    pointer-events: none;
+    background: rgba(0,0,0,0.55);
+}
+
+.mutation-alert-box {
+    background: linear-gradient(135deg, rgba(20,0,0,0.98), rgba(40,10,0,0.98));
+    border: 2px solid #ff3e3e;
+    border-radius: 14px;
+    padding: 28px 36px;
+    text-align: center;
+    max-width: 440px;
+    animation: mutAlertPop 0.4s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 60px rgba(255,62,62,0.3);
+}
+@keyframes mutAlertPop {
+    0%  { opacity: 0; transform: scale(0.75) rotate(-2deg); }
+    60% { transform: scale(1.05) rotate(0.5deg); }
+    100%{ opacity: 1; transform: scale(1) rotate(0); }
+}
+
+.mutation-alert-icon { font-size: 2.8rem; margin-bottom: 8px; }
+.mutation-alert-title {
+    font-size: 0.7rem; letter-spacing: 4px; font-weight: 700;
+    color: #ff3e3e; text-transform: uppercase; margin-bottom: 10px;
+}
+.mutation-alert-name {
+    font-size: 1.3rem; font-weight: 900; color: #fff;
+    letter-spacing: 1px; margin-bottom: 8px;
+}
+.mutation-alert-desc {
+    font-size: 0.82rem; color: #aaa; line-height: 1.5;
+}
+
+/* ── Leaderboard Panel ─────────────────────────────────── */
+.leaderboard-panel {
+    position: absolute;
+    right: 234px;
+    top: 24px;
+    width: 220px;
+    background: rgba(0,10,20,0.95);
+    border: 1px solid #f6ad55;
+    border-radius: 10px;
+    padding: 12px 14px;
+    pointer-events: all;
+    backdrop-filter: blur(10px);
+    font-size: 11px;
+    z-index: 25;
+    max-height: 340px;
+    overflow-y: auto;
+}
+.lb-header {
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #f6ad55;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(246,173,85,0.3);
+}
+.lb-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 10px;
+}
+.lb-rank { width: 18px; color: #888; font-weight: bold; }
+.lb-rank.top1 { color: #f6ad55; }
+.lb-rank.top2 { color: #ccc; }
+.lb-rank.top3 { color: #cd7f32; }
+.lb-name { flex: 1; color: #00f2ff; }
+.lb-score { color: #3fb950; font-weight: bold; }
+
+/* ── Researcher's Notebook ─────────────────────────────── */
+#notebookOverlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0,0,0,0.94) !important;
+    z-index: 600 !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.notebook-panel {
+    background: rgba(5,15,30,0.98);
+    border: 1px solid rgba(0,242,255,0.4);
+    border-radius: 14px;
+    padding: 28px;
+    max-width: 700px;
+    width: 92%;
+}
+.notebook-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    color: #fff;
+}
+.notebook-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    color: #aaa;
+}
+
+/* ── Patient Outcome Box (victory/defeat) ─────────────── */
+.patient-outcome-box {
+    background: rgba(63,185,80,0.08);
+    border: 1px solid rgba(63,185,80,0.35);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin: 16px 0;
+    font-size: 0.88rem;
+    color: #ccc;
+    line-height: 1.55;
+    text-align: left;
+    max-width: 540px;
+}
+.patient-outcome-loss {
+    background: rgba(255,62,62,0.06);
+    border-color: rgba(255,62,62,0.3);
+}
+.patient-outcome-box strong { color: #fff; }
+
+/* Outbreak timer pulse */
+@keyframes outbreakPulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+}
+#outbreak-timer.critical { animation: outbreakPulse 0.7s ease-in-out infinite; color: #ff0000 !important; }

@@ -4,6 +4,7 @@
 {% block head %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/smiles-drawer@2.1.7/dist/smiles-drawer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/game_battle_3d.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/molecule_designer.css') }}">
 {% endblock %}
@@ -21,42 +22,82 @@
     <div id="vfx-flash"></div>
     <div id="vfx-damage"></div>
 
-    <!-- Story/Mission Briefing Screen -->
+    <!-- Story/Mission Briefing Screen — 3-slide carousel -->
     <div id="storyScreen">
         <div class="story-panel">
-            <div class="story-boss-emoji" id="storyBossEmoji">🦠</div>
-            <div class="story-mission-label">⚡ MISSION BRIEFING</div>
-            <div class="story-boss-name" id="storyBossName">TARGET</div>
-            <div class="story-lore" id="storyText">Loading mission data...</div>
-            <div class="story-objective">
-                <span class="story-obj-icon">🎯</span>
-                Achieve <strong id="storyWinPct">70%</strong> composite score to defeat the pathogen
+            <!-- Slide 0: Patient Case File -->
+            <div class="story-slide active-slide" id="slide-0">
+                <div class="story-patient-badge">🏥 PATIENT CASE FILE</div>
+                <div class="story-patient-name" id="patientName">Loading…</div>
+                <div class="story-patient-stats" id="patientStats"></div>
+                <div class="story-patient-urgency" id="patientUrgency"></div>
+                <div class="story-patient-note">Your mission: design a molecule to save this patient.</div>
             </div>
-            <div class="story-controls-grid">
-                <div class="story-ctrl-item">
-                    <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd>
-                    <span>Move Ship</span>
+            <!-- Slide 1: Boss Science Briefing -->
+            <div class="story-slide" id="slide-1">
+                <div class="story-boss-emoji" id="storyBossEmoji">🦠</div>
+                <div class="story-mission-label">⚡ MISSION BRIEFING</div>
+                <div class="story-boss-name" id="storyBossName">TARGET</div>
+                <div class="story-lore" id="storyText">Loading mission data...</div>
+                <div class="story-objective">
+                    <span class="story-obj-icon">🎯</span>
+                    Achieve <strong id="storyWinPct">70%</strong> composite score to defeat the pathogen
                 </div>
-                <div class="story-ctrl-item">
-                    <kbd>SPACE</kbd>
-                    <span>Fire Molecule</span>
-                </div>
-                <div class="story-ctrl-item">
-                    <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>
-                    <span>Select Molecule</span>
-                </div>
-                <div class="story-ctrl-item story-safe-warning">
-                    <span class="safe-cell-icon">🟢</span>
-                    <span><strong style="color:#00ff88">GREEN CELLS</strong> = Friendly!<br>Don't shoot them!</span>
-                </div>
+                <label class="outbreak-toggle-label">
+                    <input type="checkbox" id="outbreakToggle">
+                    <span>⏱️ <strong>OUTBREAK MODE</strong> — 8 min countdown + escalating spores</span>
+                </label>
             </div>
-            <button class="story-start-btn" id="storyStartBtn">⚔️ START MISSION</button>
+            <!-- Slide 2: Controls -->
+            <div class="story-slide" id="slide-2">
+                <div class="story-mission-label">🎮 HOW TO PLAY</div>
+                <div class="story-controls-grid">
+                    <div class="story-ctrl-item">
+                        <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd>
+                        <span>Move Ship</span>
+                    </div>
+                    <div class="story-ctrl-item">
+                        <kbd>SPACE</kbd>
+                        <span>Fire Molecule</span>
+                    </div>
+                    <div class="story-ctrl-item">
+                        <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>
+                        <span>Select Molecule</span>
+                    </div>
+                    <div class="story-ctrl-item story-safe-warning">
+                        <span class="safe-cell-icon">🟢</span>
+                        <span><strong style="color:#00ff88">GREEN CELLS</strong> = Friendly!<br>Don't shoot them!</span>
+                    </div>
+                </div>
+                <button class="story-start-btn" id="storyStartBtn">⚔️ START MISSION</button>
+            </div>
+            <!-- Carousel navigation -->
+            <div class="story-carousel-nav">
+                <button class="story-nav-btn" id="storyPrev">◀</button>
+                <div class="story-dots">
+                    <span class="story-dot active" data-idx="0"></span>
+                    <span class="story-dot" data-idx="1"></span>
+                    <span class="story-dot" data-idx="2"></span>
+                </div>
+                <button class="story-nav-btn" id="storyNext">Next ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mutation Alert Overlay -->
+    <div id="mutationAlert" style="display:none;">
+        <div class="mutation-alert-box">
+            <div class="mutation-alert-icon" id="mutAlertIcon">🧬</div>
+            <div class="mutation-alert-title">PATHOGEN MUTATED!</div>
+            <div class="mutation-alert-name" id="mutAlertName">–</div>
+            <div class="mutation-alert-desc" id="mutAlertDesc">–</div>
         </div>
     </div>
 
     <div id="screen-game-over">
         <h1 style="font-size:3rem;letter-spacing:5px;color:#ff3e3e;">MISSION FAILED</h1>
         <p id="game-over-reason" style="color:#aaa;margin-bottom:8px;font-size:1.1rem;">The host immune system collapsed under pathogen pressure.</p>
+        <div id="patient-outcome-loss" class="patient-outcome-box patient-outcome-loss" style="display:none;"></div>
         <p style="color:#666;margin-bottom:24px;font-size:0.9rem;">Tip: shoot down red spores to protect the host — and avoid green cells!</p>
         <button class="game-btn" onclick="location.reload()">RE-MATERIALIZE</button>
     </div>
@@ -73,8 +114,10 @@
                 <code id="win-smiles" style="word-break:break-all;color:#00f2ff;font-size:0.95rem;">–</code>
             </div>
             <div id="score-comparison" style="margin-bottom:20px;"></div>
-            <div class="d-flex justify-content-center gap-3">
+            <div id="patient-outcome-win" class="patient-outcome-box" style="display:none;"></div>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
                 <button class="game-btn" style="background:#3fb950;" id="btn-cross-validate">🔬 Cross-Validate in ChEMBL</button>
+                <button class="game-btn" style="background:#1a3a5c;" id="btn-show-notebook">📔 Notebook</button>
                 <a href="/game/pathohunt-3d" class="game-btn">Return to Base</a>
             </div>
             <div id="enrich-results" style="margin-top:20px;text-align:left;display:none;max-height:200px;overflow-y:auto;"></div>
@@ -119,7 +162,11 @@
                 <div style="font-size:12px;font-weight:bold;">ARENA: <span id="loc-name" style="color:#fff">JUNGLE_SECTOR</span></div>
                 <div style="font-size:10px;opacity:0.6;margin-top:4px;">SYNC_STATUS: ACTIVE</div>
                 <div id="attack-counter" style="font-size:11px;color:#888;margin-top:6px;">ATTACKS: 0</div>
+                <div id="rp-display" style="font-size:11px;color:#f5c518;margin-top:4px;">⭐ 0 RP</div>
+                <div id="outbreak-timer" style="display:none;font-size:13px;font-weight:900;color:#ff3e3e;margin-top:6px;letter-spacing:2px;">⏱ 8:00</div>
                 <button id="btnMute" class="mute-btn" title="Toggle audio">🔊</button>
+                <button id="btnLeaderboard" class="mute-btn" title="Leaderboard" style="margin-left:4px;">🏆</button>
+                <button id="btnNotebook" class="mute-btn" title="Researcher's Notebook" style="margin-left:4px;display:none;">📔</button>
             </div>
         </div>
 
@@ -177,6 +224,15 @@
             </div>
         </div>
 
+        <!-- Boss Phase Indicator -->
+        <div id="phaseIndicator" style="display:none;position:absolute;top:130px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;letter-spacing:2px;color:#ff6600;pointer-events:none;text-shadow:0 0 8px #ff6600;"></div>
+
+        <!-- Leaderboard Panel -->
+        <div id="leaderboardPanel" style="display:none;" class="leaderboard-panel">
+            <div class="lb-header">🏆 TOP SCIENTISTS<button id="lbClose" style="float:right;background:none;border:none;color:#888;cursor:pointer;font-size:14px;">✕</button></div>
+            <div id="lbList"><div style="opacity:0.5;font-size:11px;padding:10px;">Loading…</div></div>
+        </div>
+
         <div id="combat-log"></div>
 
         <div class="science-card" id="scienceCard">
@@ -228,6 +284,24 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- ── Researcher's Notebook Overlay ──────────────────────────── -->
+<div id="notebookOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;display:none;align-items:center;justify-content:center;">
+  <div class="notebook-panel">
+    <div class="notebook-header">
+      <div>
+        <h2 style="margin:0;font-size:1.3rem;">📔 Researcher's Notebook</h2>
+        <p style="margin:4px 0 0;font-size:0.8rem;opacity:0.6;">All molecules fired this session — composite score vs attack number</p>
+      </div>
+      <button id="notebookClose" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;">✕</button>
+    </div>
+    <canvas id="notebookChart" height="300"></canvas>
+    <div class="notebook-actions">
+      <span id="notebookStats" style="font-size:0.8rem;opacity:0.7;"></span>
+      <button id="notebookCsvBtn" class="game-btn" style="font-size:0.8rem;padding:6px 14px;">⬇ Export CSV</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── Molecule Designer Modal ─────────────────────────────────── -->
@@ -347,6 +421,10 @@ window.GAME_PLAIN_ENGLISH = {{ (boss.plain_english or '') | tojson }};
 window.GAME_BOSS_FLAVOR = {{ (boss.boss_flavor or '') | tojson }};
 window.GAME_BOSS_NAME = {{ (boss.game_name or boss.id) | tojson }};
 window.GAME_BOSS_EMOJI = {{ (boss.game_emoji or '🦠') | tojson }};
+window.GAME_PATIENT_STORY = {{ (boss.patient_story or {}) | tojson }};
+window.GAME_MUTATION_POOL = {{ (boss.mutation_pool or []) | tojson }};
+window.GAME_PHASE2_TAUNT = {{ (boss.phase2_taunt or '') | tojson }};
+window.GAME_PHASE3_TAUNT = {{ (boss.phase3_taunt or '') | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/molecule_designer.js') }}"></script>
 <script src="{{ url_for('static', filename='js/game_battle_3d.js') }}"></script>

@@ -201,6 +201,15 @@ class PathoHunt3D {
         this.bossEvadeTimer = 0;
         this.dodgeCooldown = false;
 
+        // Phase / mutation / outbreak / pinning / notebook
+        this.bossPhase = 0;
+        this.pinnedSmiles = null;
+        this.outbreakMode = false;
+        this.outbreakTimeLeft = 480;
+        this.outbreakTimer = null;
+        this.attackLog = [];       // [{n, composite, molName}]
+        this.totalRp = 0;
+
         this.init();
     }
 
@@ -263,26 +272,70 @@ class PathoHunt3D {
         const overlay = document.getElementById('storyScreen');
         if (!overlay) { this.startBattle(); return; }
 
-        const nameEl = document.getElementById('storyBossName');
+        // ── Slide 0: Patient story ───────────────────────────────
+        const ps = window.GAME_PATIENT_STORY || {};
+        const nameEl = document.getElementById('patientName');
+        if (nameEl) nameEl.textContent = ps.name ? `${ps.name}, age ${ps.age}` : (window.GAME_BOSS_NAME || 'Unknown Patient');
+        const statsEl = document.getElementById('patientStats');
+        if (statsEl) statsEl.textContent = ps.condition || '';
+        const urgEl = document.getElementById('patientUrgency');
+        if (urgEl) urgEl.textContent = ps.urgency ? `🚨 ${ps.urgency}` : '';
+
+        // ── Slide 1: Boss science ────────────────────────────────
+        const bossNameEl = document.getElementById('storyBossName');
         const emojiEl = document.getElementById('storyBossEmoji');
         const textEl = document.getElementById('storyText');
         const winEl = document.getElementById('storyWinPct');
-        if (nameEl) nameEl.textContent = window.GAME_BOSS_NAME || window.GAME_BOSS_ID;
+        if (bossNameEl) bossNameEl.textContent = window.GAME_BOSS_NAME || window.GAME_BOSS_ID;
         if (emojiEl) emojiEl.textContent = window.GAME_BOSS_EMOJI || '🦠';
-        if (textEl) textEl.textContent = window.GAME_PLAIN_ENGLISH || window.GAME_BOSS_FLAVOR || 'A dangerous pathogen is threatening the host. Your mission: design molecules that block its key proteins. Good luck, Scientist.';
+        if (textEl) textEl.textContent = window.GAME_PLAIN_ENGLISH || window.GAME_BOSS_FLAVOR || 'A dangerous pathogen is threatening the host.';
         if (winEl) winEl.textContent = Math.round((this.winThreshold || 0.70) * 100) + '%';
 
+        // ── Carousel logic ───────────────────────────────────────
+        let currentSlide = ps.name ? 0 : 1;
+        const totalSlides = ps.name ? 3 : 2;
+        const slideIds = ps.name ? ['slide-0', 'slide-1', 'slide-2'] : ['slide-1', 'slide-2'];
+
+        const showSlide = (idx) => {
+            currentSlide = idx;
+            slideIds.forEach((sid, i) => {
+                const el = document.getElementById(sid);
+                if (el) el.classList.toggle('active-slide', i === idx);
+            });
+            const dots = overlay.querySelectorAll('.story-dot');
+            dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+            const prev = document.getElementById('storyPrev');
+            const next = document.getElementById('storyNext');
+            if (prev) prev.disabled = idx === 0;
+            if (next) {
+                if (idx >= slideIds.length - 1) {
+                    next.style.display = 'none';
+                } else {
+                    next.style.display = '';
+                    next.textContent = idx === 0 ? 'Science ▶' : 'Controls ▶';
+                }
+            }
+        };
+
+        showSlide(currentSlide);
         overlay.style.display = 'flex';
+
+        document.getElementById('storyPrev')?.addEventListener('click', () => showSlide(Math.max(0, currentSlide - 1)));
+        document.getElementById('storyNext')?.addEventListener('click', () => showSlide(Math.min(slideIds.length - 1, currentSlide + 1)));
+        overlay.querySelectorAll('.story-dot').forEach((d, i) => d.addEventListener('click', () => showSlide(i)));
 
         const startBtn = document.getElementById('storyStartBtn');
         if (startBtn) {
             startBtn.addEventListener('click', () => {
+                this.outbreakMode = document.getElementById('outbreakToggle')?.checked || false;
                 overlay.style.display = 'none';
                 this.startBattle();
             });
         }
-        const introText = window.GAME_PLAIN_ENGLISH || window.GAME_BOSS_FLAVOR || '';
-        if (introText) this.playTTS(introText.substring(0, 300));
+
+        // Narrate the patient story if available, otherwise boss lore
+        const introText = ps.name ? `Patient ${ps.name}, age ${ps.age}. ${ps.urgency || ''}` : (window.GAME_PLAIN_ENGLISH || '');
+        if (introText) this.playTTS(introText.substring(0, 280));
     }
 
     startBattle() {
@@ -293,6 +346,8 @@ class PathoHunt3D {
         this.fetchDeck();
         this.updateWinMarker();
         this.log(`MISSION STARTED — TARGET: ${window.GAME_BOSS_NAME || window.GAME_BOSS_ID}`);
+        this.loadLeaderboard();
+        if (this.outbreakMode) this.startOutbreakTimer();
     }
 
     startSafeSpawner() {
@@ -484,7 +539,8 @@ class PathoHunt3D {
     async fetchDeck() {
         if (!this.sessionId) return;
         try {
-            const resp = await fetch(`/api/v3/game/session/${this.sessionId}/candidates`);
+            const qs = this.pinnedSmiles ? `?pinned_seed=${encodeURIComponent(this.pinnedSmiles)}` : '';
+            const resp = await fetch(`/api/v3/game/session/${this.sessionId}/candidates${qs}`);
             const data = await resp.json();
             if (data.candidates && data.candidates.length) {
                 this.currentDeck = data.candidates;
@@ -511,11 +567,13 @@ class PathoHunt3D {
             const pct = Math.round(c.composite * 100);
             const barColor = pct >= 65 ? '#3fb950' : pct >= 50 ? '#f6ad55' : '#ff3e3e';
             const shortSmiles = c.smiles.length > 22 ? c.smiles.substring(0, 22) + '...' : c.smiles;
+            const isPinned = this.pinnedSmiles === c.smiles;
             const div = document.createElement('div');
             div.className = `mol-card${i === 0 ? ' selected' : ''}`;
             div.id = `card-${i}`;
             div.innerHTML = `
                 <div class="mol-card-key">[${i + 1}]</div>
+                <button class="mol-card-pin${isPinned ? ' pinned' : ''}" data-idx="${i}" title="Pin as scaffold">📌</button>
                 <div class="mol-card-name">${c.name}</div>
                 <div class="mol-card-smiles">${shortSmiles}</div>
                 <div class="mol-card-power">
@@ -526,6 +584,34 @@ class PathoHunt3D {
             div.addEventListener('click', () => this.selectCard(i));
             dc.appendChild(div);
         });
+        // Pin button events (stop propagation so card click isn't also triggered)
+        dc.querySelectorAll('.mol-card-pin').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const idx = parseInt(btn.dataset.idx);
+                const smiles = candidates[idx]?.smiles;
+                if (this.pinnedSmiles === smiles) {
+                    this.pinnedSmiles = null;
+                    this.log('SCAFFOLD PIN removed', '#888');
+                } else {
+                    this.pinnedSmiles = smiles;
+                    this.log(`SCAFFOLD PINNED: ${candidates[idx]?.name}`, '#f6ad55');
+                }
+                this.renderDeck(candidates);
+                const bar = document.getElementById('pinnedSeedBar');
+                if (bar) { bar.style.display = this.pinnedSmiles ? 'block' : 'none'; }
+            });
+        });
+        // Update pinned-seed indicator
+        let bar = document.getElementById('pinnedSeedBar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'pinnedSeedBar';
+            bar.className = 'pinned-seed-bar';
+            bar.textContent = '📌 SCAFFOLD LOCKED';
+            dc.parentElement?.appendChild(bar);
+        }
+        bar.style.display = this.pinnedSmiles ? 'block' : 'none';
         this.selectCard(0);
     }
 
@@ -600,6 +686,23 @@ class PathoHunt3D {
         });
         document.getElementById('btn-cross-validate')?.addEventListener('click', () => this.crossValidate());
         document.getElementById('btnMute')?.addEventListener('click', () => audioMgr.toggle());
+
+        // Leaderboard toggle
+        document.getElementById('btnLeaderboard')?.addEventListener('click', () => {
+            const panel = document.getElementById('leaderboardPanel');
+            if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        });
+        document.getElementById('lbClose')?.addEventListener('click', () => {
+            document.getElementById('leaderboardPanel').style.display = 'none';
+        });
+
+        // Notebook
+        document.getElementById('btnNotebook')?.addEventListener('click', () => this.showNotebook());
+        document.getElementById('btn-show-notebook')?.addEventListener('click', () => this.showNotebook());
+        document.getElementById('notebookClose')?.addEventListener('click', () => {
+            document.getElementById('notebookOverlay').style.display = 'none';
+        });
+        document.getElementById('notebookCsvBtn')?.addEventListener('click', () => this.exportNotebookCsv());
     }
 
     onSpacebarFire() {
@@ -751,6 +854,33 @@ class PathoHunt3D {
         if (composite > this.bestScore) this.bestScore = composite;
         this.attackCount = data.session?.attacks_count || (this.attackCount + 1);
 
+        // Log attack for notebook
+        this.attackLog.push({ n: this.attackCount, composite, molName: proj?.molName || '?' });
+
+        // RP earned
+        if (data.rp_earned) {
+            this.totalRp += data.rp_earned;
+            const rpEl = document.getElementById('rp-display');
+            if (rpEl) rpEl.textContent = `⭐ ${this.totalRp} RP`;
+            if (data.rp_earned > 10) this.log(`+${data.rp_earned} RP earned!`, '#f5c518');
+        }
+
+        // Memory penalty note
+        if (data.memory_penalty) {
+            this.log('⚠️ Molecular memory penalty — try a novel scaffold!', '#888');
+        }
+
+        // Phase transition
+        if (data.phase_changed && data.session) {
+            const newPhase = data.session.phase ?? this.bossPhase;
+            if (newPhase !== this.bossPhase) {
+                this.bossPhase = newPhase;
+                this.triggerPhaseTransition(newPhase, data.new_mutation);
+            }
+        } else if (data.new_mutation) {
+            this.showMutationAlert(data.new_mutation);
+        }
+
         if (composite >= 0.55) {
             this.comboCount++;
         } else {
@@ -771,6 +901,8 @@ class PathoHunt3D {
             const r = document.getElementById('game-over-reason');
             if (r) r.textContent = 'You exhausted all attack attempts without defeating the pathogen. Try easier difficulty or a different molecule strategy.';
             document.getElementById('screen-game-over').style.display = 'flex';
+            this.showPatientOutcome(false);
+            if (this.outbreakTimer) clearInterval(this.outbreakTimer);
             return;
         }
 
@@ -795,6 +927,7 @@ class PathoHunt3D {
         const qed = props.qed || 0;
         const sas = props.sas || 5;
         const lipinski = props.lipinski_pass;
+        const tanimoto = props.tanimoto || 0;
         const isNewBest = data.is_new_best;
 
         document.getElementById('scMolName').textContent = molCodename(data.best_smiles || '');
@@ -803,7 +936,16 @@ class PathoHunt3D {
         document.getElementById('scQED').textContent = toStars(qed, 1);
         document.getElementById('scSAS').textContent = sasToStars(sas);
         document.getElementById('scLipinski').textContent = lipinski ? '✅ Yes' : '❌ No';
-        document.getElementById('scMsg').textContent = getAttackMsg(composite, window.GAME_BOSS_NAME || 'the pathogen', isNewBest);
+
+        // Contextual science message based on limiting property
+        let msg = getAttackMsg(composite, window.GAME_BOSS_NAME || 'the pathogen', isNewBest);
+        if (composite >= 0.40) {
+            if (qed < 0.4) msg = `Low drugability score (${Math.round(qed*100)}%). Try adding a hydroxyl or amine group to improve oral bioavailability.`;
+            else if (sas > 6) msg = `Synthesis score is high (${sas.toFixed(1)}). Simpler ring systems like piperidine or pyrimidine are easier to make.`;
+            else if (tanimoto > 0.8) msg = `Very similar to known drugs (${Math.round(tanimoto*100)}% match). Explore different scaffolds for true novelty.`;
+            else if (!lipinski) msg = `Lipinski failure — molecule may have poor oral absorption. Keep MW < 500 Da and LogP < 5.`;
+        }
+        document.getElementById('scMsg').textContent = msg;
         const nb = document.getElementById('scNewBest');
         if (nb) nb.style.display = isNewBest ? 'block' : 'none';
 
@@ -827,6 +969,193 @@ class PathoHunt3D {
         if (hpPct < 0.5 && this.bossProfile.rotY) {
             this.bossProfile._rotYBoost = this.bossProfile.rotY * 0.5;
         }
+        // Update phase indicator text
+        const phases = ['', '⚠️ PHASE 2 — WOUNDED', '🔴 PHASE 3 — CRITICAL'];
+        const pi = document.getElementById('phaseIndicator');
+        if (pi && this.bossPhase > 0) {
+            pi.textContent = phases[this.bossPhase] || '';
+            pi.style.display = 'block';
+        }
+    }
+
+    triggerPhaseTransition(newPhase, mutation) {
+        const phaseTaunts = [null, window.GAME_PHASE2_TAUNT, window.GAME_PHASE3_TAUNT];
+        const taunt = phaseTaunts[newPhase];
+        const phaseColors = [0x000000, 0xff6600, 0xff0000];
+        const phaseColor = phaseColors[newPhase] || 0xff0000;
+
+        // Flash boss with phase colour
+        if (this.monster) {
+            this.monster.traverse(m => {
+                if (m.isMesh && m.material?.emissive) m.material.emissive.setHex(phaseColor);
+            });
+            setTimeout(() => {
+                this.monster?.traverse(m => {
+                    if (m.isMesh && m.material?.emissive) m.material.emissive.setHex(this.bossProfile.emissive || 0);
+                });
+            }, 600);
+        }
+
+        // Phase banner
+        const phaseLabels = ['', 'PHASE 2: WOUNDED', 'PHASE 3: CRITICAL'];
+        this.log(`⚡ ${phaseLabels[newPhase] || 'NEW PHASE'} — pathogen adapting!`, '#ff6600');
+
+        if (taunt) {
+            const phaseDiv = document.createElement('div');
+            phaseDiv.className = 'ff-alert';
+            phaseDiv.style.cssText = 'border-color:#ff6600;color:#ff6600;text-shadow:0 0 12px #ff6600;font-size:17px;';
+            phaseDiv.textContent = `💀 ${taunt}`;
+            this.container.appendChild(phaseDiv);
+            setTimeout(() => phaseDiv.remove(), 3500);
+            setTimeout(() => this.playTTS(taunt.substring(0, 200)), 800);
+        }
+
+        if (mutation) this.showMutationAlert(mutation);
+    }
+
+    showMutationAlert(mutation) {
+        const el = document.getElementById('mutationAlert');
+        if (!el) return;
+        document.getElementById('mutAlertIcon').textContent = mutation.icon || '🧬';
+        document.getElementById('mutAlertName').textContent = mutation.name || 'Unknown Mutation';
+        document.getElementById('mutAlertDesc').textContent = mutation.description || '';
+        el.style.display = 'flex';
+        this.log(`🧬 MUTATION: ${mutation.name}`, '#ff3e3e');
+        setTimeout(() => { el.style.display = 'none'; }, 4500);
+        this.playTTS(`Warning! Pathogen mutation detected — ${mutation.name}. ${(mutation.description||'').substring(0,120)}`);
+    }
+
+    startOutbreakTimer() {
+        const el = document.getElementById('outbreak-timer');
+        if (el) el.style.display = 'block';
+        this.outbreakTimer = setInterval(() => {
+            this.outbreakTimeLeft--;
+            const m = Math.floor(this.outbreakTimeLeft / 60);
+            const s = String(this.outbreakTimeLeft % 60).padStart(2, '0');
+            if (el) {
+                el.textContent = `⏱ ${m}:${s}`;
+                if (this.outbreakTimeLeft <= 60) el.classList.add('critical');
+            }
+            // Escalate spore rate every 2 minutes
+            if (this.outbreakTimeLeft % 120 === 0 && this.outbreakTimeLeft > 0) {
+                this.log('🦠 OUTBREAK ESCALATING — spore pressure rising!', '#ff3e3e');
+                const diff = document.getElementById('diff-select')?.value || 'normal';
+                const baseRate = DIFFICULTY[diff]?.spawnRate || 4000;
+                const escalation = Math.max(1200, baseRate - ((480 - this.outbreakTimeLeft) / 120) * 600);
+                if (this.spawnTimer) clearInterval(this.spawnTimer);
+                this.spawnTimer = setInterval(() => this.spawnObstacle(), escalation);
+            }
+            if (this.outbreakTimeLeft <= 0) {
+                clearInterval(this.outbreakTimer);
+                if (!this.isGameOver) {
+                    this.isGameOver = true;
+                    const r = document.getElementById('game-over-reason');
+                    if (r) r.textContent = 'The outbreak window closed. The pathogen spread beyond containment.';
+                    document.getElementById('screen-game-over').style.display = 'flex';
+                    this.showPatientOutcome(false);
+                }
+            }
+        }, 1000);
+    }
+
+    async loadLeaderboard() {
+        try {
+            const resp = await fetch(`/api/v3/game/leaderboard/${window.GAME_BOSS_ID}`);
+            const entries = await resp.json();
+            const list = document.getElementById('lbList');
+            if (!list) return;
+            if (!entries.length) { list.innerHTML = '<div style="opacity:0.5;font-size:10px;padding:8px;">No entries yet — be first!</div>'; return; }
+            list.innerHTML = entries.slice(0, 8).map((e, i) => {
+                const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+                const name = (e.username || 'Scientist').substring(0, 12);
+                const pct = Math.round((e.best_score || 0) * 100);
+                return `<div class="lb-entry"><span class="lb-rank ${rankClass}">${i+1}</span><span class="lb-name">${name}</span><span class="lb-score">${pct}%</span></div>`;
+            }).join('');
+        } catch (e) { /* leaderboard unavailable — silent */ }
+    }
+
+    showNotebook() {
+        const overlay = document.getElementById('notebookOverlay');
+        if (!overlay) return;
+        overlay.style.display = 'flex';
+
+        const canvas = document.getElementById('notebookChart');
+        if (!canvas || !window.Chart || !this.attackLog.length) return;
+
+        // Destroy previous chart instance if exists
+        if (this._notebookChart) { this._notebookChart.destroy(); this._notebookChart = null; }
+
+        const labels = this.attackLog.map(a => `#${a.n}`);
+        const scores = this.attackLog.map(a => Math.round(a.composite * 100));
+        const colors = scores.map(s => s >= 65 ? '#3fb950' : s >= 50 ? '#f6ad55' : '#ff3e3e');
+
+        this._notebookChart = new Chart(canvas, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Composite Score',
+                    data: this.attackLog.map((a, i) => ({ x: i + 1, y: Math.round(a.composite * 100) })),
+                    pointBackgroundColor: colors,
+                    pointBorderColor: colors,
+                    pointRadius: 6,
+                    showLine: true,
+                    borderColor: 'rgba(0,242,255,0.3)',
+                    borderWidth: 1,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const a = this.attackLog[ctx.dataIndex];
+                                return `${a.molName}: ${Math.round(a.composite*100)}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Attack #', color: '#888' }, ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { title: { display: true, text: 'Score (%)', color: '#888' }, ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' }, min: 0, max: 100,
+                         annotations: { winLine: { type: 'line', yMin: Math.round(this.winThreshold*100), yMax: Math.round(this.winThreshold*100), borderColor: '#3fb950', borderWidth: 1, label: { content: 'Win threshold', display: true } } }
+                    }
+                },
+                backgroundColor: 'transparent',
+            }
+        });
+
+        // Summary stats
+        const best = Math.max(...scores);
+        const avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+        const statsEl = document.getElementById('notebookStats');
+        if (statsEl) statsEl.textContent = `${this.attackLog.length} attacks · Best: ${best}% · Avg: ${avg}%`;
+
+        // Threshold line annotation fallback
+        if (canvas.getContext) {
+            // Draw win threshold line via afterDraw plugin workaround — skip if chartjs-plugin-annotation not loaded
+        }
+    }
+
+    exportNotebookCsv() {
+        const rows = ['Attack,Molecule,Score_%'];
+        this.attackLog.forEach(a => rows.push(`${a.n},"${a.molName}",${Math.round(a.composite*100)}`));
+        const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `pathohunt_${window.GAME_BOSS_ID}_notebook.csv`;
+        a.click(); URL.revokeObjectURL(url);
+    }
+
+    showPatientOutcome(won) {
+        const ps = window.GAME_PATIENT_STORY || {};
+        const text = won ? ps.outcome_win : ps.outcome_loss;
+        if (!text) return;
+        const id = won ? 'patient-outcome-win' : 'patient-outcome-loss';
+        const el = document.getElementById(id);
+        if (el) { el.innerHTML = `<strong>${ps.name || 'Patient'}:</strong> ${text}`; el.style.display = 'block'; }
+        if (won && text) setTimeout(() => this.playTTS(text.substring(0, 250)), 3000);
     }
 
     updateWinMarker() {
@@ -966,6 +1295,10 @@ class PathoHunt3D {
             <span>🏆 Best: ${bestPct}%</span>
         `;
         this.playTTS(`Great job! By defeating the pathogen, you discovered a novel drug candidate scoring ${bestPct} percent. That's ${diff >= 0 ? 'better than' : 'close to'} the known drug!`);
+        this.showPatientOutcome(true);
+        const nbBtn = document.getElementById('btnNotebook');
+        if (nbBtn) nbBtn.style.display = 'inline-block';
+        if (this.outbreakTimer) clearInterval(this.outbreakTimer);
     }
 
     async crossValidate() {
