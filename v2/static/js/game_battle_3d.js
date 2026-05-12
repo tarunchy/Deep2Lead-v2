@@ -193,49 +193,6 @@ function sasToStars(sas) {
     return toStars(1 - (sas - 1) / 9, 1);
 }
 
-const DOCKING_FACTS = [
-    {
-        title: "How Molecular Docking Works",
-        body: "Your molecule is being computationally fitted into the pathogen's active site — like a key into a lock. The docking score predicts how tightly it binds and how much damage it deals.",
-        term: "Binding Affinity", def: "How strongly a drug sticks to its protein target. Measured in Ki or IC50 — lower values mean tighter binding and stronger inhibition."
-    },
-    {
-        title: "Lipinski's Rule of 5",
-        body: "Oral drugs usually obey 5 rules: MW < 500 Da, LogP < 5, H-bond donors ≤ 5, H-bond acceptors ≤ 10. Violating these predicts poor absorption in the gut.",
-        term: "Bioavailability", def: "The fraction of a drug that reaches the bloodstream after oral dosing. Poor bioavailability means the drug never reaches the target, no matter how potent it is."
-    },
-    {
-        title: "QED — Drug-likeness Score",
-        body: "QED (Quantitative Estimate of Drug-likeness) scores molecules 0–1. Aspirin ≈ 0.55, Ibuprofen ≈ 0.73. Scores above 0.6 suggest strong drug-like character.",
-        term: "Drug-likeness", def: "A composite measure of molecular properties predicting whether a compound could become an oral drug. The higher the QED, the more drug-like the molecule."
-    },
-    {
-        title: "Synthesis Accessibility",
-        body: "A brilliant molecule is useless if chemists can't make it. The SAS score rates ease of synthesis from 1 (trivially easy) to 10 (near impossible). Simple rings help!",
-        term: "SAS Score", def: "Synthesis Accessibility Score (1–10). Most successful drugs score 2–4. Complex, rare bond patterns push scores higher and make manufacturing harder."
-    },
-    {
-        title: "ADMET — The Hidden Hurdles",
-        body: "Beyond binding, a drug must be Absorbed, Distributed through the body, Metabolized safely, Excreted properly, and be non-Toxic. Most drugs fail at these invisible tests.",
-        term: "ADMET", def: "Absorption, Distribution, Metabolism, Excretion, Toxicity. Over 90% of drug candidates fail in clinical trials — mostly due to ADMET problems, not potency."
-    },
-    {
-        title: "Structure–Activity Relationship",
-        body: "Tiny changes in a molecule can drastically alter its potency. Adding a single fluorine atom, flipping a ring, or tweaking a linker can make or break a drug candidate.",
-        term: "SAR", def: "Structure–Activity Relationship: the systematic study of how changes in molecular structure affect biological activity. Core tool of medicinal chemists worldwide."
-    },
-    {
-        title: "The Active Site Pocket",
-        body: "The pathogen protein has a 3D pocket lined with amino acid residues. Your molecule must match this pocket's shape and electrostatic pattern to lock in and inhibit function.",
-        term: "Active Site", def: "The specific region of a protein where a substrate or inhibitor binds. Occupying or blocking the active site can halt the pathogen's critical biological function."
-    },
-    {
-        title: "Real Drug Discovery",
-        body: "Tamiflu (Oseltamivir) took 10+ years and ~$1 billion to develop before it could block Influenza NA. In this game, you're compressing that entire journey into seconds!",
-        term: "Drug Discovery Timeline", def: "On average, 12–15 years and $2.6 billion separate a target from an approved drug. Only 1 in ~10,000 screened compounds ever reaches patients."
-    },
-];
-
 function getAttackMsg(composite, bossName, isNewBest) {
     const nb = isNewBest ? ' 🏆 New best!' : '';
     if (composite >= 0.80) return `Perfect strike! Your molecule nearly perfectly blocks ${bossName}.${nb}`;
@@ -578,7 +535,7 @@ class PathoHunt3D {
             const i = this.projectiles.indexOf(proj);
             if (i > -1) this.projectiles.splice(i, 1);
         }
-        this.setAttackLock(false);
+        this.attackLocked = false;
         this.comboCount = 0;
         this.updateComboDisplay();
         this.log('EVADED! The pathogen dodged your molecule!', '#ff6600');
@@ -611,7 +568,7 @@ class PathoHunt3D {
         this.comboCount = 0;
         this.updateComboDisplay();
         this.takeDamage(80);
-        this.setAttackLock(false);
+        this.attackLocked = false;
         this.log('FRIENDLY FIRE! Healthy cell destroyed! -80 HP', '#ff6600');
 
         const vf = document.getElementById('vfx-flash');
@@ -767,10 +724,6 @@ class PathoHunt3D {
                 <div class="mol-card-pct" style="color:${barColor}">${pct}%</div>
             `;
             div.addEventListener('click', () => this.selectCard(i));
-            // Stop mousedown/mouseup from bubbling to the arena container so
-            // selecting a card does NOT accidentally trigger a fire shot.
-            div.addEventListener('mousedown', e => e.stopPropagation());
-            div.addEventListener('mouseup',   e => e.stopPropagation());
             dc.appendChild(div);
         });
         // Pin button events (stop propagation so card click isn't also triggered)
@@ -979,7 +932,7 @@ class PathoHunt3D {
 
     async launchAttack() {
         if (!this.selectedSmiles || this.attackLocked || this.isGameOver) return;
-        this.setAttackLock(true);
+        this.attackLocked = true;
         this._lockTimestamp = Date.now();
         this.firedCardIdx = this.selectedCardIdx;  // remember which slot was consumed
 
@@ -1038,7 +991,6 @@ class PathoHunt3D {
                 if (m.isMesh && m.material && m.material.emissive) m.material.emissive.setHex(0xffaa00);
             });
         }
-        this.showDockingGuide(molName);
     }
 
     hideAnalyzing() {
@@ -1050,7 +1002,6 @@ class PathoHunt3D {
                 if (m.isMesh && m.material && m.material.emissive) m.material.emissive.setHex(profile.emissive || 0x000000);
             });
         }
-        this.hideDockingGuide();
     }
 
     applyAttackResult(data, proj) {
@@ -1064,7 +1015,7 @@ class PathoHunt3D {
         if (!data || data.error) {
             this.bossHP = Math.max(0, this.bossHP - 1);
             this.updateHUD();
-            this.setAttackLock(false);
+            this.attackLocked = false;
             this.refreshOneCard(this.firedCardIdx ?? 0);
             this.log("API ERROR — minimal damage applied", "#ff3e3e");
             return;
@@ -1132,7 +1083,7 @@ class PathoHunt3D {
             return;
         }
 
-        this.setAttackLock(false);
+        this.attackLocked = false;
         // Only replace the slot that was fired — other cards stay unchanged
         setTimeout(() => this.refreshOneCard(this.firedCardIdx ?? 0), 500);
     }
@@ -1443,69 +1394,6 @@ class PathoHunt3D {
         const el2 = document.getElementById('analyzingMolName');
         if (el) el.textContent = line1 || 'ANALYZING MOLECULAR IMPACT';
         if (el2) el2.textContent = line2 || '';
-        // Advance docking guide phase step indicator
-        if (line1.includes('MEMBRANE')) this.setDockingGuideStep(0);
-        else if (line1.includes('BINDING')) this.setDockingGuideStep(1);
-        else if (line1.includes('DOCKING')) this.setDockingGuideStep(2);
-    }
-
-    // Unified lock helper — syncs deck UI with attackLocked state
-    setAttackLock(locked) {
-        this.attackLocked = locked;
-        const deck = document.getElementById('moleculeDeck');
-        if (deck) deck.classList.toggle('deck-locked', locked);
-        if (!locked) this.hideDockingGuide();
-    }
-
-    showDockingGuide(molName) {
-        const fact = DOCKING_FACTS[Math.floor(Math.random() * DOCKING_FACTS.length)];
-        const el = document.getElementById('dockingGuide');
-        if (!el) return;
-        const molEl = document.getElementById('dgMolLabel');
-        if (molEl) molEl.textContent = molName || '–';
-        const titleEl = document.getElementById('dgFactTitle');
-        if (titleEl) titleEl.textContent = fact.title;
-        const bodyEl = document.getElementById('dgFactBody');
-        if (bodyEl) bodyEl.textContent = fact.body;
-        const termEl = document.getElementById('dgTermName');
-        if (termEl) termEl.textContent = fact.term;
-        const defEl = document.getElementById('dgTermDef');
-        if (defEl) defEl.textContent = fact.def;
-        // Reset phase steps
-        document.querySelectorAll('.dg-phase-step').forEach(s => s.classList.remove('active', 'done'));
-        // Reset progress bar
-        const fill = document.getElementById('dgProgressFill');
-        if (fill) fill.style.width = '0%';
-        el.style.display = 'flex';
-        el.classList.remove('dg-exit');
-        // Animate progress bar over ~3s (docking phases complete ~2.2s + API)
-        this._dgStart = Date.now();
-        const tick = () => {
-            if (!this._dgStart) return;
-            const pct = Math.min(95, ((Date.now() - this._dgStart) / 3200) * 100);
-            if (fill) fill.style.width = pct + '%';
-            if (pct < 95) this._dgRaf = requestAnimationFrame(tick);
-        };
-        if (this._dgRaf) cancelAnimationFrame(this._dgRaf);
-        this._dgRaf = requestAnimationFrame(tick);
-    }
-
-    hideDockingGuide() {
-        if (this._dgRaf) { cancelAnimationFrame(this._dgRaf); this._dgRaf = null; }
-        this._dgStart = null;
-        const fill = document.getElementById('dgProgressFill');
-        if (fill) fill.style.width = '100%';
-        const el = document.getElementById('dockingGuide');
-        if (!el || el.style.display === 'none') return;
-        el.classList.add('dg-exit');
-        setTimeout(() => { el.style.display = 'none'; el.classList.remove('dg-exit'); }, 420);
-    }
-
-    setDockingGuideStep(step) {
-        document.querySelectorAll('.dg-phase-step').forEach((el, i) => {
-            el.classList.toggle('done', i < step);
-            el.classList.toggle('active', i === step);
-        });
     }
 
     spawnObstacle() {
@@ -1690,7 +1578,7 @@ class PathoHunt3D {
 
         // Safety: auto-unlock if attackLocked for > 12s (network/state hang)
         if (this.attackLocked && this._lockTimestamp && (now - this._lockTimestamp) > 12000) {
-            this.setAttackLock(false);
+            this.attackLocked = false;
             this._lockTimestamp = null;
             this.hideAnalyzing();
             this.log('SYSTEM: attack lock expired — ready to fire', '#555');
@@ -1822,7 +1710,7 @@ class PathoHunt3D {
                     obs.health--;
                     if (obs.health <= 0) { this.createExplosion(obs.position, 0x00f2ff, 1.5); this.scene.remove(obs); this.obstacles.splice(oi, 1); }
                     this.scene.remove(p.mesh); this.projectiles.splice(i, 1);
-                    this.setAttackLock(false);
+                    this.attackLocked = false;
                     // Molecule destroyed by spore — replace only that slot
                     setTimeout(() => this.refreshOneCard(this.firedCardIdx ?? 0), 300);
                     this.log('BLOCKED by enemy spore! Fire again.', '#ff6600');
