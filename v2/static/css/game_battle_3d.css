@@ -884,3 +884,190 @@ kbd {
     50%      { opacity: 0.55; }
 }
 #outbreak-timer.critical { animation: outbreakPulse 0.7s ease-in-out infinite; color: #ff0000 !important; }
+
+/* ── Molecule deck locked state (during docking) ───────────────── */
+.molecule-deck.deck-locked {
+    opacity: 0.55;
+    pointer-events: none;
+    position: relative;
+}
+.molecule-deck.deck-locked .deck-label::after {
+    content: ' — ⏳ DOCKING IN PROGRESS';
+    color: #f6ad55;
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+.molecule-deck.deck-locked .mol-card {
+    filter: grayscale(0.6) brightness(0.7);
+}
+
+/* ── Docking Education Guide Panel ─────────────────────────────── */
+.docking-guide {
+    position: absolute;
+    left: 50%;
+    top: 22%;
+    transform: translateX(-50%);
+    width: 440px;
+    max-width: calc(100% - 380px); /* stay clear of sidebars */
+    background: rgba(0, 6, 18, 0.95);
+    border: 1px solid rgba(0, 242, 255, 0.45);
+    border-radius: 14px;
+    padding: 16px 20px 12px;
+    z-index: 25;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 0 30px rgba(0, 242, 255, 0.12);
+    animation: dgEnter 0.35s ease-out;
+}
+.docking-guide.dg-exit {
+    animation: dgExit 0.42s ease-in forwards;
+}
+@keyframes dgEnter {
+    from { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes dgExit {
+    from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.95); }
+}
+
+.dg-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.dg-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+}
+.dg-header-text { flex: 1; }
+.dg-title {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 2.5px;
+    color: #00f2ff;
+    text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+}
+.dg-mol-line {
+    font-size: 10px;
+    color: #556;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+.dg-mol-line span { color: #aaa; }
+
+.dg-phases {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0;
+}
+.dg-phase-step {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #334;
+    padding: 3px 8px;
+    border: 1px solid rgba(0,242,255,0.12);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+.dg-phase-step.active {
+    color: #00f2ff;
+    border-color: rgba(0,242,255,0.55);
+    background: rgba(0,242,255,0.08);
+    text-shadow: 0 0 6px rgba(0,242,255,0.4);
+    animation: dgStepPulse 0.9s ease-in-out infinite;
+}
+.dg-phase-step.done {
+    color: #3fb950;
+    border-color: rgba(63,185,80,0.35);
+    background: rgba(63,185,80,0.06);
+}
+@keyframes dgStepPulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.65; }
+}
+.dg-phase-arrow {
+    font-size: 8px;
+    color: #334;
+    flex-shrink: 0;
+}
+
+.dg-divider {
+    height: 1px;
+    background: rgba(0,242,255,0.12);
+    margin: 2px 0;
+}
+
+.dg-fact-section { display: flex; flex-direction: column; gap: 5px; }
+.dg-fact-badge {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #f6ad55;
+    text-transform: uppercase;
+}
+.dg-fact-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e8e8ff;
+    line-height: 1.3;
+}
+.dg-fact-body {
+    font-size: 11px;
+    color: #8899aa;
+    line-height: 1.55;
+}
+
+.dg-term-box {
+    background: rgba(0, 242, 255, 0.04);
+    border: 1px solid rgba(0, 242, 255, 0.15);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.dg-term-label {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #00f2ff;
+    opacity: 0.6;
+}
+.dg-term-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #00f2ff;
+}
+.dg-term-def {
+    font-size: 10px;
+    color: #7788aa;
+    line-height: 1.5;
+}
+
+.dg-progress-track {
+    height: 3px;
+    background: rgba(0,242,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 2px;
+}
+.dg-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00f2ff, #3fb950);
+    border-radius: 2px;
+    transition: width 0.3s linear;
+}
+
+.dg-wait-hint {
+    font-size: 9px;
+    color: #445;
+    text-align: center;
+    letter-spacing: 0.5px;
+}

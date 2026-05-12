@@ -108,6 +108,39 @@
 
     <div id="render-canvas"></div>
 
+    <!-- Educational Docking Guide — shown during docking phases, hidden on result -->
+    <div id="dockingGuide" class="docking-guide" style="display:none;">
+        <div class="dg-header">
+            <div class="dg-icon">🔬</div>
+            <div class="dg-header-text">
+                <div class="dg-title">DOCKING IN PROGRESS</div>
+                <div class="dg-mol-line">Molecule: <span id="dgMolLabel">–</span></div>
+            </div>
+        </div>
+        <div class="dg-phases">
+            <div class="dg-phase-step" id="dgStep0">🧬 Membrane</div>
+            <div class="dg-phase-arrow">▶</div>
+            <div class="dg-phase-step" id="dgStep1">🔗 Binding</div>
+            <div class="dg-phase-arrow">▶</div>
+            <div class="dg-phase-step" id="dgStep2">⚗️ Docking</div>
+        </div>
+        <div class="dg-divider"></div>
+        <div class="dg-fact-section">
+            <div class="dg-fact-badge">💡 Drug Discovery Insight</div>
+            <div class="dg-fact-title" id="dgFactTitle">–</div>
+            <div class="dg-fact-body" id="dgFactBody">–</div>
+        </div>
+        <div class="dg-term-box">
+            <div class="dg-term-label">KEY TERM</div>
+            <div class="dg-term-name" id="dgTermName">–</div>
+            <div class="dg-term-def" id="dgTermDef">–</div>
+        </div>
+        <div class="dg-progress-track">
+            <div class="dg-progress-fill" id="dgProgressFill"></div>
+        </div>
+        <div class="dg-wait-hint">⏳ Wait for docking to complete before firing again</div>
+    </div>
+
     <div id="screen-victory">
         <h1 style="font-size:3rem;letter-spacing:5px;color:#3fb950;">🏆 MISSION ACCOMPLISHED</h1>
         <div class="victory-card">
