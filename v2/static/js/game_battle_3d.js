@@ -3,7 +3,7 @@ const audioMgr = {
     current: null,
     cache: {},      // key -> Blob (pre-generated)
     paused: false,  // soft pause — audio can resume
-    muted: false,   // hard mute — audio is suppressed
+    muted: true,    // hard mute — off by default; user enables via story screen toggle
 
     // Play a raw blob immediately
     play(blob) {
@@ -288,7 +288,7 @@ class PathoHunt3D {
         this.setupEventListeners();
         this.animate();
         await this.startSession();
-        this.preloadAudio();   // fire-and-forget; runs while story screen is showing
+        // preloadAudio() is deferred until user opts in via voice toggle in story screen
         this.showStoryScreen();
     }
 
@@ -440,6 +440,22 @@ class PathoHunt3D {
         document.getElementById('storyPrev')?.addEventListener('click', () => showSlide(Math.max(0, currentSlide - 1)));
         document.getElementById('storyNext')?.addEventListener('click', () => showSlide(Math.min(slideIds.length - 1, currentSlide + 1)));
         overlay.querySelectorAll('.story-dot').forEach((d, i) => d.addEventListener('click', () => showSlide(i)));
+
+        // Voice toggle: enable/disable preloading in real time
+        document.getElementById('voiceToggle')?.addEventListener('change', e => {
+            if (e.target.checked) {
+                audioMgr.muted = false;
+                audioMgr._updateBtn();
+                if (!this._audioPreloaded) {
+                    this._audioPreloaded = true;
+                    this.preloadAudio();
+                }
+            } else {
+                audioMgr.muted = true;
+                audioMgr.stop();
+                audioMgr._updateBtn();
+            }
+        });
 
         const startBtn = document.getElementById('storyStartBtn');
         if (startBtn) {
@@ -773,11 +789,12 @@ class PathoHunt3D {
         });
 
         window.addEventListener('keydown', e => {
-            this.keys[e.code] = true;
-            if (e.code === 'Space' && !e.repeat) {
+            // Prevent browser scroll / default actions for all game keys
+            if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) {
                 e.preventDefault();
-                this.onSpacebarFire();
             }
+            this.keys[e.code] = true;
+            if (e.code === 'Space' && !e.repeat) this.onSpacebarFire();
             if (e.code === 'Digit1') this.selectCard(0);
             if (e.code === 'Digit2') this.selectCard(1);
             if (e.code === 'Digit3') this.selectCard(2);
@@ -884,6 +901,7 @@ class PathoHunt3D {
     async launchAttack() {
         if (!this.selectedSmiles || this.attackLocked || this.isGameOver) return;
         this.attackLocked = true;
+        this._lockTimestamp = Date.now();
         this.firedCardIdx = this.selectedCardIdx;  // remember which slot was consumed
 
         const type = document.getElementById('missile-select')?.value || 'standard';
@@ -1526,6 +1544,15 @@ class PathoHunt3D {
         this.lastFrameTime = now;
         const t = now / 1000;
 
+        // Safety: auto-unlock if attackLocked for > 12s (network/state hang)
+        if (this.attackLocked && this._lockTimestamp && (now - this._lockTimestamp) > 12000) {
+            this.attackLocked = false;
+            this._lockTimestamp = null;
+            this.hideAnalyzing();
+            this.log('SYSTEM: attack lock expired — ready to fire', '#555');
+            this.refreshOneCard(this.firedCardIdx ?? 0);
+        }
+
         // Arrow key ship movement — full 2D (left/right + up/down)
         if (this.gameStarted && this.playerShip) {
             const shipSpeed = 22;
@@ -1580,25 +1607,27 @@ class PathoHunt3D {
                 p.mesh.position.x = this.monster.position.x + Math.cos(t * 4 + i) * 2;
                 p.mesh.position.y = this.monster.position.y + Math.sin(t * 4 + i) * 2;
 
-                if (!p.phase1 && elapsed > 700) {
+                if (!p.phase1 && elapsed > 400) {
                     p.phase1 = true;
                     const fake = Math.round(10 + Math.random() * 22);
-                    this.log(`OUTER MEMBRANE: ${fake}% — probing surface...`, '#445566');
-                    this.setAnalyzingPhase(`OUTER MEMBRANE SCAN: ${fake}%`, p.molName);
+                    this.log(`MEMBRANE: ${fake}% — surface probe`, '#334455');
+                    this.setAnalyzingPhase(`MEMBRANE: ${fake}%`, p.molName);
                 }
-                if (!p.phase2 && elapsed > 2000) {
+                if (!p.phase2 && elapsed > 1200) {
                     p.phase2 = true;
                     const fake = Math.round(28 + Math.random() * 28);
-                    this.log(`ACTIVE SITE: ${fake}% — binding analysis...`, '#f6ad55');
-                    this.setAnalyzingPhase(`BINDING SITE ANALYSIS: ${fake}%`, p.molName);
+                    this.log(`BINDING: ${fake}% — active site`, '#445533');
+                    this.setAnalyzingPhase(`BINDING: ${fake}%`, p.molName);
                 }
-                if (!p.phase3 && elapsed > 3400) {
+                if (!p.phase3 && elapsed > 2200) {
                     p.phase3 = true;
-                    this.setAnalyzingPhase('QUANTUM DOCKING... CALCULATING FINAL SCORE', p.molName);
+                    this.setAnalyzingPhase('DOCKING…', p.molName);
                 }
+                // Apply result as soon as phase3 done AND API responded
                 if (p.phase3 && p.apiSettled) {
                     this.applyAttackResult(p.apiResult, p);
-                } else if (elapsed > 14000) {
+                } else if (elapsed > 8000) {
+                    // Hard timeout — don't leave player stuck
                     this.applyAttackResult(null, p);
                 }
                 continue;

@@ -241,32 +241,43 @@ select.game-select {
     color: #f6ad55; text-align: center;
 }
 
+/* Analyzing badge — small corner indicator, no full-screen overlay */
 .analyzing-overlay {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    pointer-events: none; z-index: 15;
-    background: rgba(0,0,0,0.3);
+    position: absolute;
+    bottom: 190px;
+    right: 240px;
+    width: auto;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    z-index: 15;
+    background: rgba(0,10,20,0.88);
+    border: 1px solid rgba(0,242,255,0.35);
+    border-radius: 8px;
+    padding: 7px 13px;
+    backdrop-filter: blur(6px);
 }
 
 .analyzing-ring {
-    width: 60px; height: 60px;
-    border: 3px solid rgba(0,242,255,0.2);
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,242,255,0.2);
     border-top-color: #00f2ff;
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-bottom: 14px;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .analyzing-text {
-    font-size: 14px; font-weight: bold; letter-spacing: 3px;
-    color: #00f2ff; margin-bottom: 6px;
-    animation: pulse-text 1s ease-in-out infinite;
+    font-size: 10px; font-weight: bold; letter-spacing: 1.5px;
+    color: #00f2ff;
 }
 
 .analyzing-mol {
-    font-size: 11px; color: #888; letter-spacing: 1px;
+    font-size: 9px; color: #555; letter-spacing: 1px;
 }
 
 #combat-log {
