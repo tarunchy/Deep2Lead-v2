@@ -1,23 +1,77 @@
-// Global audio manager — ensures only one TTS clip plays at a time
+// Global audio manager — pre-cached TTS, pause/resume, mute
 const audioMgr = {
     current: null,
-    muted: false,
+    cache: {},      // key -> Blob (pre-generated)
+    paused: false,  // soft pause — audio can resume
+    muted: false,   // hard mute — audio is suppressed
+
+    // Play a raw blob immediately
     play(blob) {
         this.stop();
-        if (this.muted) return;
-        this.current = new Audio(URL.createObjectURL(blob));
-        this.current.play().catch(() => {});
-        this.current.onended = () => { this.current = null; };
+        if (this.muted || this.paused) return;
+        const audio = new Audio(URL.createObjectURL(blob));
+        this.current = audio;
+        audio.play().catch(() => {});
+        audio.onended = () => { this.current = null; };
     },
+
+    // Play from pre-generated cache
+    playKey(key) {
+        const blob = this.cache[key];
+        if (blob) this.play(blob);
+    },
+
+    // Pre-generate a batch of clips in parallel: { key: 'text', ... }
+    async preload(clips) {
+        const entries = Object.entries(clips).filter(([, t]) => t && t.length > 0);
+        await Promise.allSettled(entries.map(async ([key, text]) => {
+            try {
+                const r = await fetch('/api/v3/game/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: String(text).substring(0, 300) })
+                });
+                if (r.ok) this.cache[key] = await r.blob();
+            } catch (_) {}
+        }));
+    },
+
     stop() {
-        if (this.current) { this.current.pause(); this.current = null; }
+        if (this.current) { this.current.pause(); URL.revokeObjectURL(this.current.src); this.current = null; }
     },
-    toggle() {
+
+    // Soft pause — click button to resume
+    pause() {
+        this.paused = true;
+        if (this.current && !this.current.paused) this.current.pause();
+        this._updateBtn();
+    },
+
+    // Resume from soft pause
+    resume() {
+        this.paused = false;
+        if (this.current && this.current.paused && !this.muted) this.current.play().catch(() => {});
+        this._updateBtn();
+    },
+
+    togglePause() { this.paused ? this.resume() : this.pause(); },
+
+    // Hard mute (M key)
+    toggleMute() {
         this.muted = !this.muted;
         if (this.muted) this.stop();
+        this._updateBtn();
+    },
+
+    // Backward-compat (button click → pause toggle)
+    toggle() { this.togglePause(); },
+
+    _updateBtn() {
         const btn = document.getElementById('btnMute');
-        if (btn) btn.textContent = this.muted ? '🔇' : '🔊';
-        return this.muted;
+        if (!btn) return;
+        if (this.muted)        { btn.textContent = '🔇'; btn.title = 'Unmute (M)'; }
+        else if (this.paused)  { btn.textContent = '⏸️'; btn.title = 'Resume audio'; }
+        else                   { btn.textContent = '🔊'; btn.title = 'Pause audio (M = mute)'; }
     }
 };
 
@@ -234,7 +288,63 @@ class PathoHunt3D {
         this.setupEventListeners();
         this.animate();
         await this.startSession();
+        this.preloadAudio();   // fire-and-forget; runs while story screen is showing
         this.showStoryScreen();
+    }
+
+    preloadAudio() {
+        const boss = window.GAME_BOSS_NAME || 'the pathogen';
+        const ps   = window.GAME_PATIENT_STORY || {};
+
+        const clips = {
+            // Evade taunts
+            evade_0: 'Ooh, you missed! The pathogen dodged your molecule. Try again!',
+            evade_1: 'So close! It slipped away. Pick a better molecule and fire!',
+            evade_2: "Ha! The target evaded. Don't give up — hit it harder next time!",
+            evade_3: 'Missed! The pathogen is fast. Adjust your aim and try again!',
+
+            // Friendly fire
+            ff_0: 'Oh no, you destroyed a healthy cell! The patient loses 80 hit points!',
+            ff_1: 'That was a friendly cell! Watch your targeting — minus 80 hit points!',
+            ff_2: 'Oof, friendly fire! You just nuked a healthy cell. Minus 80 hit points!',
+            ff_3: 'Careful! You hit a friendly cell. The patient is taking damage — minus 80 hit points!',
+
+            // HP warnings
+            warn_300: 'Warning! Host defences are critical. Destroy the pathogen now or the mission fails!',
+            warn_150: 'Critical alert! Immune system collapse imminent. Fire your best molecule immediately!',
+
+            // Attack quality messages (uses boss name so generate after boss is known)
+            hit_perfect:   `Perfect strike! Your molecule nearly perfectly blocks ${boss}.`,
+            hit_excellent: `Excellent hit! Better than known drugs against ${boss}.`,
+            hit_good:      'Good hit! The molecule shows real therapeutic potential.',
+            hit_moderate:  'Moderate hit. Keep improving molecular properties.',
+            hit_weak:      'Weak hit. Try a different molecular structure.',
+            hit_minimal:   'Minimal effect. The pathogen barely noticed. Keep experimenting!',
+
+            // Phase taunts
+            phase2: window.GAME_PHASE2_TAUNT || '',
+            phase3: window.GAME_PHASE3_TAUNT || '',
+
+            // Patient intro narration
+            patient_intro: ps.name ? `Patient ${ps.name}, age ${ps.age}. ${ps.urgency || ''}` : '',
+
+            // Outbreak escalation
+            outbreak_escalate: 'Warning! Outbreak is escalating — pathogen spore pressure rising!',
+        };
+
+        // Pre-generate all mutation descriptions
+        (window.GAME_MUTATION_POOL || []).forEach(m => {
+            if (m.id && m.name) {
+                clips[`mut_${m.id}`] = `Pathogen mutation detected: ${m.name}. ${(m.description || '').substring(0, 150)}`;
+            }
+        });
+
+        // Show a subtle loading indicator on the mute button while pre-generating
+        const btn = document.getElementById('btnMute');
+        if (btn) { btn.textContent = '⏳'; btn.title = 'Pre-loading audio…'; }
+        audioMgr.preload(clips).then(() => {
+            audioMgr._updateBtn();
+        });
     }
 
     buildPlayerShip() {
@@ -333,9 +443,13 @@ class PathoHunt3D {
             });
         }
 
-        // Narrate the patient story if available, otherwise boss lore
-        const introText = ps.name ? `Patient ${ps.name}, age ${ps.age}. ${ps.urgency || ''}` : (window.GAME_PLAIN_ENGLISH || '');
-        if (introText) this.playTTS(introText.substring(0, 280));
+        // Narrate patient intro (pre-generated) or boss lore (dynamic fallback)
+        if (ps.name) {
+            audioMgr.playKey('patient_intro');
+        } else {
+            const intro = window.GAME_PLAIN_ENGLISH || window.GAME_BOSS_FLAVOR || '';
+            if (intro) this.playTTS(intro.substring(0, 280));
+        }
     }
 
     startBattle() {
@@ -428,18 +542,8 @@ class PathoHunt3D {
         // Refresh deck so player can try again quickly
         setTimeout(() => this.fetchDeck(), 300);
 
-        // Taunt voice line
-        const taunts = [
-            'Ooh, you missed! The pathogen dodged your molecule. Try again!',
-            'So close! It slipped away. Pick a better molecule and fire!',
-            'Ha! The target evaded. Don\'t give up — hit it harder next time!',
-            'Missed! The pathogen is fast. Adjust your aim and try again!',
-        ];
-        const line = taunts[Math.floor(Math.random() * taunts.length)];
-        fetch('/api/v3/game/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: line }) })
-            .then(r => r.ok ? r.blob() : null)
-            .then(blob => { if (blob) audioMgr.play(blob); })
-            .catch(() => {});
+        // Taunt voice line (pre-generated)
+        audioMgr.playKey(`evade_${Math.floor(Math.random() * 4)}`);
     }
 
     friendlyFire() {
@@ -480,18 +584,8 @@ class PathoHunt3D {
         this.container.appendChild(msgDiv);
         setTimeout(() => msgDiv.remove(), 2800);
 
-        // Voice line via TTS
-        const lines = [
-            'Oh no, you destroyed a healthy cell! The patient loses 80 hit points!',
-            'That was a friendly cell! Watch your targeting — minus 80 hit points!',
-            'Oof, friendly fire! You just nuked a healthy cell. Minus 80 hit points!',
-            'Careful! You hit a friendly cell. The patient is taking damage — minus 80 hit points!',
-        ];
-        const line = lines[Math.floor(Math.random() * lines.length)];
-        fetch('/api/v3/game/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: line }) })
-            .then(r => r.ok ? r.blob() : null)
-            .then(blob => { if (blob) audioMgr.play(blob); })
-            .catch(() => {});
+        // Friendly-fire voice line (pre-generated)
+        audioMgr.playKey(`ff_${Math.floor(Math.random() * 4)}`);
 
         setTimeout(() => this.fetchDeck(), 300);
     }
@@ -634,9 +728,8 @@ class PathoHunt3D {
         this.selectedMolName = label;
         document.querySelectorAll('.mol-card').forEach((c, i) => c.classList.toggle('selected', i === 0));
         this.log(`🧪 CUSTOM DRUG LOADED: ${label}`, '#00f2ff');
-        // Audio confirmation
-        fetch('/api/v3/game/tts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: `Custom molecule ${label} loaded into weapon bay. Ready to fire!` }) })
-            .then(r => r.ok ? r.blob() : null).then(b => { if (b) audioMgr.play(b); }).catch(() => {});
+        // Dynamic confirmation — label is unknown at preload time
+        this.playTTS(`Custom drug ${label} loaded. Ready to fire!`);
     }
 
     setupEventListeners() {
@@ -656,6 +749,7 @@ class PathoHunt3D {
             if (e.code === 'Digit1') this.selectCard(0);
             if (e.code === 'Digit2') this.selectCard(1);
             if (e.code === 'Digit3') this.selectCard(2);
+            if (e.code === 'KeyM' && !e.repeat) audioMgr.toggleMute();
         });
         window.addEventListener('keyup', e => { this.keys[e.code] = false; });
 
@@ -685,7 +779,7 @@ class PathoHunt3D {
             }
         });
         document.getElementById('btn-cross-validate')?.addEventListener('click', () => this.crossValidate());
-        document.getElementById('btnMute')?.addEventListener('click', () => audioMgr.toggle());
+        document.getElementById('btnMute')?.addEventListener('click', () => audioMgr.togglePause());
 
         // Leaderboard toggle
         document.getElementById('btnLeaderboard')?.addEventListener('click', () => {
@@ -955,7 +1049,14 @@ class PathoHunt3D {
         if (this.scienceCardTimer) clearTimeout(this.scienceCardTimer);
         this.scienceCardTimer = setTimeout(() => this.hideScienceCard(), 7000);
 
-        this.playTTS(getAttackMsg(composite, window.GAME_BOSS_NAME || 'the boss', isNewBest).replace(/🏆/g,''));
+        // Play the matching pre-generated hit clip
+        const hitKey = composite >= 0.80 ? 'hit_perfect'
+                     : composite >= 0.70 ? 'hit_excellent'
+                     : composite >= 0.60 ? 'hit_good'
+                     : composite >= 0.50 ? 'hit_moderate'
+                     : composite >= 0.40 ? 'hit_weak'
+                     : 'hit_minimal';
+        audioMgr.playKey(hitKey);
     }
 
     hideScienceCard() {
@@ -1007,7 +1108,9 @@ class PathoHunt3D {
             phaseDiv.textContent = `💀 ${taunt}`;
             this.container.appendChild(phaseDiv);
             setTimeout(() => phaseDiv.remove(), 3500);
-            setTimeout(() => this.playTTS(taunt.substring(0, 200)), 800);
+            // Play pre-generated phase taunt
+            const phaseKey = newPhase === 1 ? 'phase2' : 'phase3';
+            setTimeout(() => audioMgr.playKey(phaseKey), 800);
         }
 
         if (mutation) this.showMutationAlert(mutation);
@@ -1022,7 +1125,10 @@ class PathoHunt3D {
         el.style.display = 'flex';
         this.log(`🧬 MUTATION: ${mutation.name}`, '#ff3e3e');
         setTimeout(() => { el.style.display = 'none'; }, 4500);
-        this.playTTS(`Warning! Pathogen mutation detected — ${mutation.name}. ${(mutation.description||'').substring(0,120)}`);
+        // Play pre-generated mutation clip, fall back to dynamic TTS
+        const mutKey = `mut_${mutation.id}`;
+        if (audioMgr.cache[mutKey]) audioMgr.playKey(mutKey);
+        else this.playTTS(`Warning! Pathogen mutation: ${mutation.name}. ${(mutation.description||'').substring(0,100)}`);
     }
 
     startOutbreakTimer() {
@@ -1249,14 +1355,12 @@ class PathoHunt3D {
         if (!this._warned300 && prevHP > 300 && this.playerHP <= 300) {
             this._warned300 = true;
             this.log('⚠️ WARNING: Host defences critical! Destroy the pathogen fast!', '#ff3e3e');
-            fetch('/api/v3/game/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'Warning! Host defences are critical. Destroy the pathogen now or the mission fails!' }) })
-                .then(r => r.ok ? r.blob() : null).then(b => { if (b) audioMgr.play(b); }).catch(() => {});
+            audioMgr.playKey('warn_300');
         }
         if (!this._warned150 && prevHP > 150 && this.playerHP <= 150) {
             this._warned150 = true;
             this.log('🚨 CRITICAL: Immune collapse imminent!', '#ff0000');
-            fetch('/api/v3/game/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'Critical alert! Immune system collapse imminent. Fire your best molecule immediately!' }) })
-                .then(r => r.ok ? r.blob() : null).then(b => { if (b) audioMgr.play(b); }).catch(() => {});
+            audioMgr.playKey('warn_150');
         }
 
         if (this.playerHP <= 0 && !this.isGameOver) {
