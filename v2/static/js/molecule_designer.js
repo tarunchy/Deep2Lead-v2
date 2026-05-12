@@ -10,11 +10,13 @@ const MolDesigner = (() => {
 
     function open() {
         document.getElementById('molDesignerOverlay').style.display = 'flex';
+        if (typeof audioMgr !== 'undefined') audioMgr.pause();
         reset();
     }
 
     function close() {
         document.getElementById('molDesignerOverlay').style.display = 'none';
+        if (typeof audioMgr !== 'undefined') audioMgr.resume();
     }
 
     function reset() {
