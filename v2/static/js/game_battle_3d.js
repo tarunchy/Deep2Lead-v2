@@ -767,6 +767,10 @@ class PathoHunt3D {
                 <div class="mol-card-pct" style="color:${barColor}">${pct}%</div>
             `;
             div.addEventListener('click', () => this.selectCard(i));
+            // Stop mousedown/mouseup from bubbling to the arena container so
+            // selecting a card does NOT accidentally trigger a fire shot.
+            div.addEventListener('mousedown', e => e.stopPropagation());
+            div.addEventListener('mouseup',   e => e.stopPropagation());
             dc.appendChild(div);
         });
         // Pin button events (stop propagation so card click isn't also triggered)
@@ -846,17 +850,12 @@ class PathoHunt3D {
         window.addEventListener('keyup', e => { this.keys[e.code] = false; });
 
         this.container.addEventListener('mousemove', e => this.onMouseMove(e));
-        this.container.addEventListener('mousedown', (e) => {
+        this.container.addEventListener('mousedown', () => {
             if (this.isGameOver || this.attackLocked) return;
-            // Ignore clicks on HUD elements (cards, buttons) — only aim on arena canvas
-            if (e.target.closest('#game-hud')) return;
             this.isAiming = true;
             document.getElementById('crosshair-ui')?.classList.add('aiming');
         });
-        this.container.addEventListener('mouseup', (e) => {
-            if (e.target.closest('#game-hud')) { this.isAiming = false; return; }
-            this.onMouseUp();
-        });
+        this.container.addEventListener('mouseup', () => this.onMouseUp());
         document.getElementById('biome-select')?.addEventListener('change', e => this.applyTheme(e.target.value));
         document.getElementById('diff-select')?.addEventListener('change', () => this.updateSpawnRate());
         document.getElementById('scClose')?.addEventListener('click', () => this.hideScienceCard());
