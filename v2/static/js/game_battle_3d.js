@@ -330,6 +330,13 @@ class PathoHunt3D {
 
             // Outbreak escalation
             outbreak_escalate: 'Warning! Outbreak is escalating — pathogen spore pressure rising!',
+
+            // Boss intro fallback (no patient story)
+            boss_intro: (window.GAME_PLAIN_ENGLISH || window.GAME_BOSS_FLAVOR || '').substring(0, 280),
+
+            // Patient outcomes — known from game_levels.json at page load
+            patient_win:  (ps.outcome_win  || '').substring(0, 280),
+            patient_loss: (ps.outcome_loss || '').substring(0, 280),
         };
 
         // Pre-generate all mutation descriptions
@@ -443,13 +450,9 @@ class PathoHunt3D {
             });
         }
 
-        // Narrate patient intro (pre-generated) or boss lore (dynamic fallback)
-        if (ps.name) {
-            audioMgr.playKey('patient_intro');
-        } else {
-            const intro = window.GAME_PLAIN_ENGLISH || window.GAME_BOSS_FLAVOR || '';
-            if (intro) this.playTTS(intro.substring(0, 280));
-        }
+        // Narrate patient intro or boss intro — both pre-generated
+        if (ps.name) audioMgr.playKey('patient_intro');
+        else audioMgr.playKey('boss_intro');
     }
 
     startBattle() {
@@ -1261,7 +1264,7 @@ class PathoHunt3D {
         const id = won ? 'patient-outcome-win' : 'patient-outcome-loss';
         const el = document.getElementById(id);
         if (el) { el.innerHTML = `<strong>${ps.name || 'Patient'}:</strong> ${text}`; el.style.display = 'block'; }
-        if (won && text) setTimeout(() => this.playTTS(text.substring(0, 250)), 3000);
+        if (text) setTimeout(() => audioMgr.playKey(won ? 'patient_win' : 'patient_loss'), 3000);
     }
 
     updateWinMarker() {
