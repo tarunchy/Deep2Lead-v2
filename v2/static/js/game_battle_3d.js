@@ -542,8 +542,7 @@ class PathoHunt3D {
             vd.style.opacity = '1';
             setTimeout(() => { vd.style.opacity = '0'; setTimeout(() => { vd.style.background = ''; }, 200); }, 220);
         }
-        // Refresh deck so player can try again quickly
-        setTimeout(() => this.fetchDeck(), 300);
+        // Miss = molecule not consumed — keep deck as-is, just unlock
 
         // Taunt voice line (pre-generated)
         audioMgr.playKey(`evade_${Math.floor(Math.random() * 4)}`);
@@ -590,7 +589,8 @@ class PathoHunt3D {
         // Friendly-fire voice line (pre-generated)
         audioMgr.playKey(`ff_${Math.floor(Math.random() * 4)}`);
 
-        setTimeout(() => this.fetchDeck(), 300);
+        // Molecule was consumed by friendly cell — replace only that slot
+        setTimeout(() => this.refreshOneCard(this.firedCardIdx ?? 0), 300);
     }
 
     updateComboDisplay() {
@@ -647,6 +647,35 @@ class PathoHunt3D {
             }
         } catch (e) {
             this.renderFallbackDeck();
+        }
+    }
+
+    // Replace only the slot that was consumed, keep the other cards unchanged
+    async refreshOneCard(firedIdx) {
+        if (!this.sessionId) return;
+        try {
+            const qs = this.pinnedSmiles ? `?pinned_seed=${encodeURIComponent(this.pinnedSmiles)}` : '';
+            const resp = await fetch(`/api/v3/game/session/${this.sessionId}/candidates${qs}`);
+            const data = await resp.json();
+            if (data.candidates && data.candidates.length) {
+                // Pick the first candidate that isn't already in the other deck slots
+                const existingSmiles = new Set(
+                    this.currentDeck.filter((_, i) => i !== firedIdx).map(c => c.smiles)
+                );
+                const replacement = data.candidates.find(c => !existingSmiles.has(c.smiles))
+                                 || data.candidates[0];
+                if (this.currentDeck[firedIdx]) {
+                    this.currentDeck[firedIdx] = replacement;
+                } else {
+                    this.currentDeck.push(replacement);
+                }
+                this.renderDeck(this.currentDeck);
+                // Auto-select next available card (prefer lowest index)
+                const nextIdx = firedIdx === 0 && this.currentDeck.length > 1 ? 0 : Math.max(0, firedIdx - 1);
+                this.selectCard(nextIdx);
+            }
+        } catch (e) {
+            // On error keep existing deck — player can still fire other slots
         }
     }
 
@@ -855,6 +884,7 @@ class PathoHunt3D {
     async launchAttack() {
         if (!this.selectedSmiles || this.attackLocked || this.isGameOver) return;
         this.attackLocked = true;
+        this.firedCardIdx = this.selectedCardIdx;  // remember which slot was consumed
 
         const type = document.getElementById('missile-select')?.value || 'standard';
         const isParabolic = document.getElementById('traj-select')?.value === 'nonlinear';
@@ -936,7 +966,7 @@ class PathoHunt3D {
             this.bossHP = Math.max(0, this.bossHP - 1);
             this.updateHUD();
             this.attackLocked = false;
-            this.fetchDeck();
+            this.refreshOneCard(this.firedCardIdx ?? 0);
             this.log("API ERROR — minimal damage applied", "#ff3e3e");
             return;
         }
@@ -1004,7 +1034,8 @@ class PathoHunt3D {
         }
 
         this.attackLocked = false;
-        setTimeout(() => this.fetchDeck(), 500);
+        // Only replace the slot that was fired — other cards stay unchanged
+        setTimeout(() => this.refreshOneCard(this.firedCardIdx ?? 0), 500);
     }
 
     showFloatingDamage(damage, isNewBest) {
@@ -1619,7 +1650,8 @@ class PathoHunt3D {
                     if (obs.health <= 0) { this.createExplosion(obs.position, 0x00f2ff, 1.5); this.scene.remove(obs); this.obstacles.splice(oi, 1); }
                     this.scene.remove(p.mesh); this.projectiles.splice(i, 1);
                     this.attackLocked = false;
-                    setTimeout(() => this.fetchDeck(), 300);
+                    // Molecule destroyed by spore — replace only that slot
+                    setTimeout(() => this.refreshOneCard(this.firedCardIdx ?? 0), 300);
                     this.log('BLOCKED by enemy spore! Fire again.', '#ff6600');
                     hitSomething = true; break;
                 }
