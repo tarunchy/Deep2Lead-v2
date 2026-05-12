@@ -73,6 +73,15 @@
                         <span><strong style="color:#00ff88">GREEN CELLS</strong> = Friendly!<br>Don't shoot them!</span>
                     </div>
                 </div>
+                <div class="story-weapon-picker">
+                    <div class="story-weapon-label">⚗️ WEAPON LOADOUT — Choose cards per round</div>
+                    <div class="story-weapon-btns">
+                        <button class="story-weapon-btn active" data-count="1">1 Molecule</button>
+                        <button class="story-weapon-btn" data-count="2">2 Molecules</button>
+                        <button class="story-weapon-btn" data-count="3">3 Molecules</button>
+                    </div>
+                    <div class="story-weapon-hint">Fewer cards = harder challenge. More cards = more options.</div>
+                </div>
                 <button class="story-start-btn" id="storyStartBtn">⚔️ START MISSION</button>
             </div>
             <!-- Carousel navigation -->
@@ -134,7 +143,9 @@
             <div class="dg-term-def"  id="dgTermDef">–</div>
         </div>
         <div class="dg-progress-track"><div class="dg-progress-fill" id="dgProgressFill"></div></div>
-        <div class="dg-wait-hint">⏳ Wait for docking to complete before firing again</div>
+        <div class="dg-wait-hint" id="dgWaitHint">⏳ Wait for docking to complete before firing again</div>
+        <div class="dg-complete-hint" id="dgCompleteHint" style="display:none;">✅ Docking Complete — take your time reading!</div>
+        <button class="dg-resume-btn" id="dgResumeBtn" style="display:none;">▶ Resume Game</button>
     </div>
 
     <div id="screen-victory">
@@ -158,6 +169,7 @@
     </div>
 
     <div id="comboBadge" class="combo-badge" style="display:none;"></div>
+    <div id="victoryFlash"></div>
 
     <div id="game-hud">
         <div class="hud-top">
@@ -258,6 +270,9 @@
                 </select>
             </div>
         </div>
+
+        <!-- Winning badge — shown when boss HP < 50% -->
+        <div id="winningBadge" class="winning-badge" style="display:none;">🏆 WINNING!</div>
 
         <!-- Boss Phase Indicator -->
         <div id="phaseIndicator" style="display:none;position:absolute;top:130px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;letter-spacing:2px;color:#ff6600;pointer-events:none;text-shadow:0 0 8px #ff6600;"></div>

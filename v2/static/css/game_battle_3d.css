@@ -932,3 +932,51 @@ kbd {
 .dg-progress-track { height:3px; background:rgba(0,242,255,0.08); border-radius:2px; overflow:hidden; }
 .dg-progress-fill  { height:100%; width:0%; background:linear-gradient(90deg,#00f2ff,#3fb950); transition:width .3s linear; }
 .dg-wait-hint   { font-size:9px; color:#445; text-align:center; }
+
+/* ── Post-docking guide resume state ── */
+.docking-guide.dg-complete { pointer-events:auto; }
+.dg-complete-hint { font-size:10px; color:#3fb950; text-align:center; font-weight:700; letter-spacing:0.5px; }
+.dg-resume-btn {
+    background:linear-gradient(135deg,rgba(0,242,255,0.1),rgba(63,185,80,0.08));
+    border:1px solid rgba(0,242,255,0.4); color:#00f2ff;
+    font-size:11px; font-weight:800; letter-spacing:1.5px;
+    padding:8px 0; border-radius:7px; cursor:pointer; width:100%;
+    transition:background 0.2s, border-color 0.2s;
+}
+.dg-resume-btn:hover { background:rgba(0,242,255,0.18); border-color:rgba(0,242,255,0.7); }
+
+/* ── Deck-size weapon picker (story screen) ── */
+.story-weapon-picker { margin:14px 0 10px; text-align:center; }
+.story-weapon-label  { font-size:9px; font-weight:800; letter-spacing:2px; color:#f6ad55; margin-bottom:8px; }
+.story-weapon-btns   { display:flex; gap:8px; justify-content:center; }
+.story-weapon-btn {
+    background:rgba(0,6,18,0.8); border:1px solid rgba(0,242,255,0.2);
+    color:#667; font-size:11px; font-weight:700; letter-spacing:0.5px;
+    padding:6px 16px; border-radius:6px; cursor:pointer; transition:all .2s;
+}
+.story-weapon-btn.active {
+    background:rgba(0,242,255,0.12); border-color:rgba(0,242,255,0.55);
+    color:#00f2ff; box-shadow:0 0 8px rgba(0,242,255,0.2);
+}
+.story-weapon-hint { font-size:9px; color:#445; margin-top:6px; }
+
+/* ── Winning badge (HUD) ── */
+.winning-badge {
+    position:absolute; top:130px; right:22px;
+    background:linear-gradient(135deg,rgba(63,185,80,0.18),rgba(63,185,80,0.08));
+    border:1px solid rgba(63,185,80,0.6);
+    color:#3fb950; font-size:12px; font-weight:900; letter-spacing:2px;
+    padding:5px 14px; border-radius:8px; pointer-events:none; z-index:10;
+    text-shadow:0 0 8px rgba(63,185,80,0.5);
+    animation:winPulse 1.8s ease-in-out infinite;
+}
+@keyframes winPulse {
+    0%,100% { opacity:1; box-shadow:0 0 6px rgba(63,185,80,0.3); }
+    50%      { opacity:0.75; box-shadow:0 0 18px rgba(63,185,80,0.55); }
+}
+
+/* ── Victory flash overlay ── */
+#victoryFlash {
+    position:absolute; inset:0; background:#3fb950;
+    pointer-events:none; z-index:50; opacity:0;
+}

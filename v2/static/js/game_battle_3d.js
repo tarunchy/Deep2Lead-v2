@@ -227,6 +227,7 @@ class PathoHunt3D {
         this.sessionId = null;
         this.isGameOver = false;
         this.attackLocked = false;
+        this.deckSize = 3; // configurable 1-3 before mission starts
         this.currentDeck = [];
         this.selectedCardIdx = 0;
         this.selectedSmiles = window.GAME_STARTER_SMILES || '';
@@ -653,11 +654,10 @@ class PathoHunt3D {
     renderDeckLoading() {
         const dc = document.getElementById('deckCards');
         if (!dc) return;
-        dc.innerHTML = `
-            <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
-            <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
-            <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
-        `;
+        const count = this.deckSize || 1;
+        dc.innerHTML = Array.from({length: count}, () =>
+            `<div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>`
+        ).join('');
     }
 
     async fetchDeck() {
@@ -716,6 +716,7 @@ class PathoHunt3D {
         const dc = document.getElementById('deckCards');
         if (!dc) return;
         dc.innerHTML = '';
+        candidates = candidates.slice(0, this.deckSize || 1);
         candidates.forEach((c, i) => {
             const pct = Math.round(c.composite * 100);
             const barColor = pct >= 65 ? '#3fb950' : pct >= 50 ? '#f6ad55' : '#ff3e3e';
@@ -780,7 +781,7 @@ class PathoHunt3D {
     injectDesignedMolecule(smiles, label) {
         // Prepend the custom-designed molecule to the deck and select it
         const custom = { smiles, name: label, composite: 0, qed: 0, sas: 0, lipinski: true };
-        this.currentDeck = [custom, ...this.currentDeck.slice(0, 2)];
+        this.currentDeck = [custom, ...this.currentDeck.slice(0, Math.max(0, (this.deckSize || 1) - 1))];
         this.renderDeck(this.currentDeck);
         // Select it immediately
         this.selectedSmiles  = smiles;
@@ -857,6 +858,18 @@ class PathoHunt3D {
             document.getElementById('notebookOverlay').style.display = 'none';
         });
         document.getElementById('notebookCsvBtn')?.addEventListener('click', () => this.exportNotebookCsv());
+
+        // Docking guide resume button
+        document.getElementById('dgResumeBtn')?.addEventListener('click', () => this._forceDismissGuide());
+
+        // Weapon loadout picker (story screen)
+        document.querySelectorAll('.story-weapon-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.story-weapon-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.deckSize = parseInt(btn.dataset.count, 10) || 1;
+            });
+        });
     }
 
     onSpacebarFire() {
@@ -1368,7 +1381,8 @@ class PathoHunt3D {
 
     updateHUD() {
         const initHP = this.bossInitialHP || 300;
-        document.getElementById('enemy-hp-fill').style.width = `${Math.max(0, this.bossHP / initHP * 100)}%`;
+        const bossHpPct = Math.max(0, this.bossHP / initHP * 100);
+        document.getElementById('enemy-hp-fill').style.width = `${bossHpPct}%`;
         document.getElementById('enemy-hp-text').innerText = `${this.bossHP.toFixed(1)} HP`;
         document.getElementById('player-hp-fill').style.width = `${this.playerHP / 10}%`;
         document.getElementById('player-hp-text').innerText = `${this.playerHP} / 1000`;
@@ -1377,6 +1391,9 @@ class PathoHunt3D {
         document.getElementById('best-score-text').textContent = `${Math.round(this.bestScore * 100)}%`;
         const ac = document.getElementById('attack-counter');
         if (ac) ac.textContent = `ATTACKS: ${this.attackCount}`;
+        // Winning badge: show when boss HP is below 50% of initial
+        const wb = document.getElementById('winningBadge');
+        if (wb) wb.style.display = (bossHpPct < 50 && !this.isGameOver) ? 'block' : 'none';
     }
 
     log(msg, color) {
@@ -1448,6 +1465,32 @@ class PathoHunt3D {
         if (!el || el.style.display === 'none') return;
         const fill = document.getElementById('dgProgressFill');
         if (fill) fill.style.width = '100%';
+        // Mark all phase steps done
+        document.querySelectorAll('.dg-phase-step').forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
+        // Transition to post-docking "resume" state — let user finish reading
+        el.classList.add('dg-complete');
+        const waitHint = document.getElementById('dgWaitHint');
+        const completeHint = document.getElementById('dgCompleteHint');
+        const resumeBtn = document.getElementById('dgResumeBtn');
+        if (waitHint) waitHint.style.display = 'none';
+        if (completeHint) completeHint.style.display = '';
+        if (resumeBtn) resumeBtn.style.display = '';
+        // Auto-dismiss after 8 s if user doesn't click
+        if (this._dgAutoDismiss) clearTimeout(this._dgAutoDismiss);
+        this._dgAutoDismiss = setTimeout(() => this._forceDismissGuide(), 8000);
+    }
+
+    _forceDismissGuide() {
+        if (this._dgAutoDismiss) { clearTimeout(this._dgAutoDismiss); this._dgAutoDismiss = null; }
+        const el = document.getElementById('dockingGuide');
+        if (!el || el.style.display === 'none') return;
+        el.classList.remove('dg-complete');
+        const waitHint = document.getElementById('dgWaitHint');
+        const completeHint = document.getElementById('dgCompleteHint');
+        const resumeBtn = document.getElementById('dgResumeBtn');
+        if (waitHint) waitHint.style.display = '';
+        if (completeHint) completeHint.style.display = 'none';
+        if (resumeBtn) resumeBtn.style.display = 'none';
         el.classList.add('dg-exit');
         setTimeout(() => { el.style.display = 'none'; el.classList.remove('dg-exit'); }, 380);
     }
@@ -1520,6 +1563,17 @@ class PathoHunt3D {
     async onVictory(result) {
         this.isGameOver = true;
         this.wonMolecule = { smiles: result.best_smiles, tanimoto: result.best_props?.tanimoto || 0 };
+        // Hide winning badge now that game is over
+        const wb = document.getElementById('winningBadge');
+        if (wb) wb.style.display = 'none';
+        // Flash the screen green before showing victory
+        const flash = document.getElementById('victoryFlash');
+        if (flash) {
+            flash.style.transition = 'opacity 0.15s ease-in';
+            flash.style.opacity = '0.45';
+            setTimeout(() => { flash.style.transition = 'opacity 0.6s ease-out'; flash.style.opacity = '0'; }, 200);
+        }
+        await new Promise(r => setTimeout(r, 320));
         document.getElementById('screen-victory').style.display = 'flex';
         document.getElementById('win-smiles').innerText = result.best_smiles || '–';
 
