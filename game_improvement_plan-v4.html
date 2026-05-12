@@ -298,6 +298,293 @@
     .mock-docking-guide { display: none; }
     .judge-header { flex-direction: column; text-align: center; }
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     HYPERCASUAL REDESIGN — Bright sky-blue world (v2 mockup)
+  ═══════════════════════════════════════════════════════════ */
+  #mock-hc-wrapper {
+    background: linear-gradient(180deg, #29B5D4 0%, #4ECEE8 38%, #7ADFF2 100%);
+    border-radius: 20px;
+    position: relative;
+    min-height: 700px;
+    overflow: hidden;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    box-shadow: 0 4px 32px rgba(41,181,212,0.3), 0 0 0 3px rgba(255,255,255,0.5);
+  }
+  /* Soft cloud atmosphere */
+  #mock-hc-wrapper::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 220px 100px at 18% 25%, rgba(255,255,255,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 160px 80px at 78% 18%, rgba(255,255,255,0.14) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── Top HUD ── */
+  .hc-hud-top {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 20;
+  }
+  .hc-lives {
+    background: rgba(255,255,255,0.93);
+    border-radius: 24px; padding: 7px 18px;
+    font-size: 15px; font-weight: 900; color: #e05050;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    display: flex; align-items: center; gap: 5px; letter-spacing: 1px;
+  }
+  .hc-score-box {
+    background: rgba(255,255,255,0.97);
+    border-radius: 18px; padding: 8px 28px;
+    text-align: center; min-width: 190px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.13);
+  }
+  .hc-score-label { font-size: 8px; font-weight: 800; letter-spacing: 2px; color: #94a3b8; }
+  .hc-score-num { font-size: 2.1rem; font-weight: 900; color: #22c55e; line-height: 1.1; }
+  .hc-score-sub  { font-size: 9px; font-weight: 700; color: #22c55e; margin-top: 1px; }
+  .hc-counters {
+    background: rgba(255,255,255,0.93);
+    border-radius: 24px; padding: 7px 20px;
+    display: flex; gap: 14px; align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  }
+  .hc-ok  { font-size: 15px; font-weight: 900; color: #22c55e; }
+  .hc-bad { font-size: 15px; font-weight: 900; color: #ef4444; }
+
+  /* ── Winning badge ── */
+  .hc-winning-badge {
+    position: absolute; top: 76px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border-radius: 30px; padding: 6px 22px;
+    font-size: 11px; font-weight: 900; letter-spacing: 1.5px; color: #fff;
+    box-shadow: 0 4px 20px rgba(34,197,94,0.45);
+    animation: hcWinPulse 1.8s ease-in-out infinite; z-index: 10;
+  }
+  @keyframes hcWinPulse {
+    0%,100%{transform:translateX(-50%) scale(1)}
+    50%{transform:translateX(-50%) scale(1.04)}
+  }
+
+  /* ── Timer pill ── */
+  .hc-timer-pill {
+    position: absolute; top: 76px; right: 20px;
+    background: rgba(255,255,255,0.93);
+    border-radius: 24px; padding: 6px 16px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 10;
+  }
+  .hc-timer-val { font-size: 13px; font-weight: 900; color: #0ea5e9; letter-spacing: 2px; }
+  .hc-timer-btn { background: #dbeafe; border: none; color: #1d4ed8; font-size: 8px; font-weight: 800; padding: 3px 9px; border-radius: 10px; cursor: pointer; letter-spacing: 1px; }
+
+  /* ── World area ── */
+  .hc-world {
+    position: absolute; top: 130px; left: 0; right: 0; bottom: 218px;
+    display: flex; align-items: stretch;
+  }
+  .hc-lane {
+    flex: 1; position: relative;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* Perspective runway */
+  .hc-runway {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 280px; height: 100%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.88) 100%);
+    clip-path: polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%);
+  }
+  .hc-runway::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      180deg, transparent 0px, transparent 26px,
+      rgba(180,210,230,0.35) 26px, rgba(180,210,230,0.35) 30px
+    );
+    clip-path: polygon(34% 0%, 66% 0%, 100% 100%, 0% 100%);
+  }
+
+  /* ── 3D Molecule blocks ── */
+  .hc-blocks-row {
+    position: absolute; bottom: 135px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 14px; z-index: 5;
+  }
+  .hc-mol-block {
+    width: 90px; height: 90px; border-radius: 14px;
+    position: relative; cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .hc-mol-block::before {
+    content: '';
+    position: absolute; top: 7px; left: 9px; right: 9px; height: 35%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.38) 0%, transparent 100%);
+    border-radius: 8px 8px 18px 18px; pointer-events: none; z-index: 2;
+  }
+  .hc-mol-block.col-green {
+    background: linear-gradient(145deg, #72d468, #3eb041);
+    box-shadow: 0 8px 0 #287d2e, 0 12px 24px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .hc-mol-block.col-blue {
+    background: linear-gradient(145deg, #62aaf6, #3d84f5);
+    box-shadow: 0 8px 0 #1e5abf, 0 12px 24px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .hc-mol-block.col-orange {
+    background: linear-gradient(145deg, #ffb060, #f97316);
+    box-shadow: 0 8px 0 #bf5510, 0 12px 24px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .hc-mol-block.selected-block {
+    transform: scale(1.08) translateY(-4px);
+    outline: 3px solid #fff; outline-offset: 4px;
+  }
+  .hc-mol-block.col-green.selected-block {
+    box-shadow: 0 10px 0 #287d2e, 0 18px 36px rgba(34,197,94,0.35), 0 0 0 6px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .hc-mol-block-inner {
+    padding: 9px 10px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; position: relative; z-index: 1;
+  }
+  .hc-mol-name  { font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.95); text-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+  .hc-mol-score { font-size: 22px; font-weight: 900; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.25); line-height: 1; }
+  .hc-mol-delta { font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.88); }
+  .hc-mol-tag   { display: inline-block; font-size: 7px; font-weight: 800; background: rgba(255,255,255,0.28); border-radius: 8px; padding: 1px 5px; color: #fff; }
+
+  /* ── Character ── */
+  .hc-character {
+    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+    font-size: 34px; z-index: 6;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.22));
+    animation: hcWalk .9s ease-in-out infinite alternate;
+  }
+  @keyframes hcWalk {
+    from { transform: translateX(-50%) translateY(0); }
+    to   { transform: translateX(-50%) translateY(-5px); }
+  }
+
+  /* ── Boss / virus target ── */
+  .hc-boss {
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 2px; z-index: 5;
+  }
+  .hc-boss-emoji { font-size: 46px; animation: hcBob 3s ease-in-out infinite; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.18)); }
+  @keyframes hcBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .hc-boss-name { background: rgba(255,255,255,0.94); border-radius: 20px; padding: 3px 14px; font-size: 9px; font-weight: 900; color: #ef4444; letter-spacing: 1px; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+  /* Binding ring around boss */
+  .hc-ring-wrap {
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    width: 96px; height: 96px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .hc-ring-svg   { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .hc-ring-bg    { fill: none; stroke: rgba(255,255,255,0.25); stroke-width: 6; }
+  .hc-ring-center { font-size: 13px; font-weight: 900; color: #fff; text-align: center; text-shadow: 0 1px 4px rgba(0,0,0,0.25); position: relative; z-index: 2; line-height: 1.2; }
+
+  /* ── Notification log ── */
+  .hc-log {
+    position: absolute; bottom: 8px; left: 14px; width: 225px; z-index: 10;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .hc-log-entry {
+    background: rgba(255,255,255,0.92); border-radius: 20px;
+    padding: 5px 12px; font-size: 10px; font-weight: 700; color: #475569;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.09);
+  }
+  .hc-log-entry.hc-success { background: #dcfce7; color: #16a34a; }
+  .hc-log-entry.hc-warn    { background: #fff7ed; color: #ea580c; }
+
+  /* ── Right: Docking guide (white card) ── */
+  .hc-dock-panel {
+    width: 258px; min-width: 258px;
+    background: rgba(255,255,255,0.97);
+    border-radius: 18px; padding: 16px;
+    margin: 14px 18px 14px 0;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.13);
+    display: flex; flex-direction: column; gap: 9px;
+    overflow-y: auto; z-index: 10;
+  }
+  .hc-dock-title { font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #0ea5e9; }
+  .hc-dock-phases { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .hc-phase {
+    font-size: 9px; font-weight: 800; padding: 4px 10px; border-radius: 20px;
+  }
+  .hc-phase.done    { background: #dcfce7; color: #16a34a; }
+  .hc-phase.active  { background: #dbeafe; color: #1d4ed8; animation: hcPhasePulse .9s ease-in-out infinite alternate; }
+  .hc-phase.pending { background: #f1f5f9; color: #94a3b8; }
+  @keyframes hcPhasePulse { from{box-shadow:none} to{box-shadow:0 0 8px rgba(29,78,216,0.3)} }
+  .hc-dock-arrow { font-size: 8px; color: #cbd5e1; }
+  .hc-fact-label { font-size: 8px; font-weight: 800; letter-spacing: 2px; color: #f59e0b; }
+  .hc-fact-title { font-size: 13px; font-weight: 800; color: #1e293b; }
+  .hc-fact-body  { font-size: 11px; color: #64748b; line-height: 1.55; }
+  .hc-key-term   { background: #f5f3ff; border-radius: 10px; padding: 8px 12px; }
+  .hc-key-label  { font-size: 8px; font-weight: 800; letter-spacing: 2px; color: #7c3aed; display: block; margin-bottom: 2px; }
+  .hc-key-name   { font-size: 11px; font-weight: 800; color: #7c3aed; }
+  .hc-key-def    { font-size: 10px; color: #64748b; line-height: 1.45; }
+  .hc-novelty    { background: #f0fdf4; border-radius: 10px; padding: 7px 10px; font-size: 10px; font-weight: 700; color: #16a34a; }
+  .hc-dock-progress { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+  .hc-dock-prog-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #0ea5e9, #22c55e); border-radius: 3px; }
+  .hc-dock-complete { font-size: 10px; font-weight: 700; color: #16a34a; text-align: center; }
+  .hc-resume-btn {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none; color: #fff; font-size: 11px; font-weight: 900; letter-spacing: 1px;
+    padding: 10px; border-radius: 11px; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(34,197,94,0.35);
+  }
+
+  /* ── Bottom molecule deck ── */
+  .hc-deck {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(255,255,255,0.98);
+    border-radius: 0 0 20px 20px;
+    padding: 12px 20px 16px;
+    box-shadow: 0 -2px 20px rgba(0,0,0,0.08);
+    z-index: 15; height: 218px;
+  }
+  .hc-deck-hdr {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 9px; font-weight: 800; letter-spacing: 2px;
+    color: #94a3b8; margin-bottom: 9px;
+  }
+  .hc-deck-cards { display: flex; gap: 10px; }
+  .hc-card {
+    flex: 1; border-radius: 14px; padding: 9px 12px;
+    cursor: pointer; border: 2px solid transparent; transition: transform .15s, box-shadow .15s;
+  }
+  .hc-card:hover { transform: translateY(-2px); }
+  .hc-card.green-card  { background: #f0fdf4; border-color: #86efac; }
+  .hc-card.yellow-card { background: #fefce8; border-color: #fde68a; }
+  .hc-card.red-card    { background: #fff7f7; border-color: #fecaca; }
+  .hc-card.hc-selected { box-shadow: 0 4px 18px rgba(34,197,94,0.28); transform: translateY(-2px); border-color: #22c55e; }
+  .hc-card-key   { font-size: 8px; font-weight: 800; letter-spacing: 1px; color: #94a3b8; }
+  .hc-card-name  { font-size: 13px; font-weight: 900; color: #1e293b; margin: 2px 0; }
+  .hc-card-smiles{ font-size: 8px; color: #94a3b8; font-family: monospace; margin-bottom: 5px; }
+  .hc-card-bar   { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-bottom: 3px; }
+  .hc-card-fill  { height: 100%; border-radius: 3px; }
+  .hcf-g { background: linear-gradient(90deg, #22c55e, #86efac); }
+  .hcf-y { background: linear-gradient(90deg, #eab308, #fde68a); }
+  .hcf-r { background: linear-gradient(90deg, #ef4444, #fca5a5); }
+  .hc-card-pct   { font-size: 12px; font-weight: 900; }
+  .hc-card-tags  { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+  .hc-tag        { font-size: 7px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+  .hct-novel { background: #ede9fe; color: #7c3aed; }
+  .hct-best  { background: #dcfce7; color: #16a34a; }
+  .hct-synth { background: #dbeafe; color: #1d4ed8; }
+
+  /* Journey timeline */
+  .hc-journey {
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9;
+  }
+  .hc-journey-label { font-size: 8px; font-weight: 800; letter-spacing: 1px; color: #94a3b8; white-space: nowrap; }
+  .hc-dot { width: 11px; height: 11px; border-radius: 50%; cursor: pointer; transition: transform .15s; }
+  .hc-dot:hover { transform: scale(1.3); }
+  .hc-dot.best  { width: 15px; height: 15px; }
+  .hc-jline     { width: 14px; height: 2px; background: #e2e8f0; border-radius: 1px; }
+  .hc-journey-best { font-size: 8px; color: #16a34a; font-weight: 700; margin-left: 2px; }
+
+  @media (max-width: 720px) {
+    .hc-dock-panel { display: none; }
+    .hc-timer-pill { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -891,206 +1178,206 @@
 </div>
 
 <div class="tab-content" id="tab-mockgame">
-  <h2 style="margin-bottom:8px;">Mock Game Screen — Proposed Improvements</h2>
-  <p style="margin-bottom:8px;">Static mockup showing: semantic colour palette (navy + 7 accents), baseline strip, timer with +5 MIN, binding affinity ring, improved docking guide, molecule journey. Dark navy background is <strong>intentional and research-backed for the 14–18 age target</strong> — see Color tab.</p>
-  <div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:#94a3b8;margin-bottom:16px;">
-    ⚠️ If the target age is <strong>10–13</strong>, the background should shift to a medium blue-indigo (not black, not bright sky blue). If <strong>14+</strong>, this dark navy IS the right call per verified research on what that age group prefers.
+  <h2 style="margin-bottom:8px;">Mock Game Screen — Hypercasual Redesign</h2>
+  <p style="margin-bottom:8px;color:#94a3b8;">Redesigned mockup per UX expert guidance and CTML principles. <strong style="color:#e2e8f0;">Sky-blue world</strong>, bright 3D molecule blocks, clean white HUD — designed for ages 10–16.</p>
+  <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:#94a3b8;margin-bottom:16px;">
+    ✅ Follows CTML: low-saturation background, bright focal elements, single primary task, minimal HUD, positive reinforcement, calm world with readable feedback — no dark navy, no neon glows.
   </div>
 
-  <div id="mock-game-wrapper">
+  <div id="mock-hc-wrapper">
 
-    <!-- HUD TOP -->
-    <div class="mock-hud-top">
-      <div class="mock-bars">
-        <!-- Boss bar -->
-        <div class="mock-bar-row">
-          <div class="mock-bar-label">
-            <span style="color:#ef4444;font-size:10px;font-weight:800;letter-spacing:1px;">COVID19_MPRO &nbsp; BINDING RESISTANCE</span>
-            <span style="color:#ef4444;font-size:10px;font-weight:800;">35% remaining</span>
-          </div>
-          <div class="mock-bar-bg"><div class="mock-bar-fill fill-boss"></div></div>
-        </div>
-        <!-- Player bar -->
-        <div class="mock-bar-row">
-          <div class="mock-bar-label">
-            <span style="color:#22d3ee;font-size:10px;font-weight:800;letter-spacing:1px;">QUANTUM SHIELD</span>
-            <span style="color:#22d3ee;font-size:10px;font-weight:800;">670 / 1000</span>
-          </div>
-          <div class="mock-bar-bg"><div class="mock-bar-fill fill-player"></div></div>
-        </div>
-        <!-- Score bar -->
-        <div class="mock-bar-row">
-          <div class="mock-bar-label">
-            <span style="color:#fbbf24;font-size:10px;font-weight:800;letter-spacing:1px;">BEST COMPOSITE SCORE</span>
-            <span style="color:#fbbf24;font-size:10px;font-weight:800;">71% ↑</span>
-          </div>
-          <div class="mock-bar-bg" style="position:relative;">
-            <div class="mock-bar-fill fill-score"></div>
-            <div class="mock-win-marker" title="Win Threshold: 75%"></div>
-          </div>
-        </div>
+    <!-- TOP HUD -->
+    <div class="hc-hud-top">
+      <div class="hc-lives">❤️ ×3</div>
+      <div class="hc-score-box">
+        <div class="hc-score-label">BINDING SCORE</div>
+        <div class="hc-score-num">71%</div>
+        <div class="hc-score-sub">Known Drug: 60% &nbsp;·&nbsp; +11% better!</div>
       </div>
-      <div class="mock-stats">
-        <div>ARENA: <span class="stat-val">BIO_JUNGLE_7</span></div>
-        <div>ATTACKS: <span class="stat-val">4</span></div>
-        <div style="color:#fbbf24;">⭐ <span class="stat-val">120 RP</span></div>
-        <div style="margin-top:5px;display:flex;align-items:center;gap:6px;">
-          <span style="font-size:13px;font-weight:900;letter-spacing:2px;color:#f6ad55;">⏱ 06:27</span>
-          <button style="font-size:8px;font-weight:800;padding:1px 6px;border-radius:8px;border:1px solid rgba(246,173,85,0.4);background:rgba(246,173,85,0.08);color:#f6ad55;cursor:pointer;">+5 MIN</button>
-        </div>
-        <div style="font-size:8px;color:#1e293b;margin-top:2px;">💾 AUTO-SAVED</div>
+      <div class="hc-counters">
+        <span class="hc-ok">✓ 3</span>
+        <span class="hc-bad">✗ 1</span>
       </div>
     </div>
 
     <!-- WINNING BADGE -->
-    <div class="mock-winning-badge">🏆 WINNING!</div>
+    <div class="hc-winning-badge">🏆 WINNING — Beat the known drug!</div>
 
-    <!-- BASELINE STRIP — KEY NEW ADDITION -->
-    <div class="mock-baseline-strip">
-      <span class="baseline-known">⚗️ Known Drug: <strong>60%</strong></span>
-      <span class="baseline-sep">|</span>
-      <span class="baseline-yours">Your Best: <strong>71%</strong></span>
-      <span class="baseline-delta">+11% 🎉 Above Known Drug</span>
+    <!-- TIMER PILL -->
+    <div class="hc-timer-pill">
+      <span class="hc-timer-val">⏱ 06:27</span>
+      <button class="hc-timer-btn">+5 MIN</button>
     </div>
 
-    <!-- BOSS AREA with Binding Affinity Ring (replaces HP metaphor) -->
-    <div class="mock-boss-area">
-      <div class="mock-binding-ring">
-        <svg class="ring-svg" viewBox="0 0 120 120">
-          <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
-          <!-- 35% remaining resistance = 65% binding achieved, stroke progress = 65% of circumference = 0.65 * 2π * 52 ≈ 212 -->
-          <circle class="ring-fill" cx="60" cy="60" r="52"
-            stroke="url(#ringGrad)"
-            stroke-dasharray="327"
-            stroke-dashoffset="114">
-          </circle>
-          <defs>
-            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#4ade80"/>
-              <stop offset="100%" stop-color="#22d3ee"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <div class="ring-label">
-          <span class="ring-pct">65%</span>
-          <span style="font-size:8px;color:#475569;letter-spacing:1px;">BINDING<br>ACHIEVED</span>
+    <!-- WORLD AREA: lane + docking panel -->
+    <div class="hc-world">
+
+      <!-- Left: runner lane -->
+      <div class="hc-lane">
+
+        <!-- Perspective runway -->
+        <div class="hc-runway"></div>
+
+        <!-- Virus target with binding ring -->
+        <div class="hc-boss">
+          <div class="hc-ring-wrap">
+            <svg class="hc-ring-svg" viewBox="0 0 96 96">
+              <circle class="hc-ring-bg" cx="48" cy="48" r="40"/>
+              <circle cx="48" cy="48" r="40"
+                fill="none" stroke="url(#hcRingGrad)"
+                stroke-width="6" stroke-linecap="round"
+                stroke-dasharray="251" stroke-dashoffset="88"/>
+              <defs>
+                <linearGradient id="hcRingGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#22c55e"/>
+                  <stop offset="100%" stop-color="#0ea5e9"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="hc-ring-center">65%<br/><span style="font-size:7px;opacity:.75;font-weight:700;">BLOCKED</span></div>
+          </div>
+          <div class="hc-boss-emoji" style="margin-top:2px;">🦠</div>
+          <div class="hc-boss-name">COVID-19 MPRO</div>
         </div>
-      </div>
-      <div class="mock-boss-emoji">🦠</div>
-      <div class="mock-boss-name">COVID-19 MPRO</div>
-      <div style="font-size:9px;color:#475569;letter-spacing:1px;margin-top:4px;">ACTIVE SITE: 65% BLOCKED</div>
-    </div>
 
-    <!-- COMBAT LOG -->
-    <div class="mock-log">
-      <div class="mock-log-entry success">✓ MX-4203: 71% binding — NEW BEST!</div>
-      <div class="mock-log-entry">▸ MX-3491: 65% binding at active site</div>
-      <div class="mock-log-entry warn">▸ MX-2807: 28% — low pocket complementarity</div>
-      <div class="mock-log-entry">▸ SELECTED: MX-4203</div>
-    </div>
-
-    <!-- DOCKING GUIDE (post-docking state) -->
-    <div class="mock-docking-guide">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-size:18px;">🔬</span>
-        <div>
-          <div style="font-size:10px;font-weight:900;letter-spacing:2px;color:#22d3ee;">DOCKING COMPLETE</div>
-          <div style="font-size:9px;color:#475569;">Molecule: <span style="color:#94a3b8;">MX-4203</span></div>
+        <!-- 3D molecule blocks -->
+        <div class="hc-blocks-row">
+          <div class="hc-mol-block col-green selected-block">
+            <div class="hc-mol-block-inner">
+              <div class="hc-mol-name">MX-4203</div>
+              <div class="hc-mol-score">71%</div>
+              <div><span class="hc-mol-delta">+11% above baseline</span></div>
+              <div><span class="hc-mol-tag">NOVEL</span> <span class="hc-mol-tag">BEST</span></div>
+            </div>
+          </div>
+          <div class="hc-mol-block col-blue">
+            <div class="hc-mol-block-inner">
+              <div class="hc-mol-name">MX-3491</div>
+              <div class="hc-mol-score">65%</div>
+              <div><span class="hc-mol-delta">+5% above baseline</span></div>
+              <div><span class="hc-mol-tag">NOVEL</span></div>
+            </div>
+          </div>
+          <div class="hc-mol-block col-orange">
+            <div class="hc-mol-block-inner">
+              <div class="hc-mol-name">MX-5102</div>
+              <div class="hc-mol-score">48%</div>
+              <div><span class="hc-mol-delta">-12% below baseline</span></div>
+              <div></div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="dg-phase-row">
-        <span class="dg-step done">🧬 Membrane</span>
-        <span class="dg-arrow">▶</span>
-        <span class="dg-step done">🔗 Binding</span>
-        <span class="dg-arrow">▶</span>
-        <span class="dg-step done">⚗️ Docking</span>
-      </div>
-      <div style="height:1px;background:rgba(255,255,255,0.07);margin:8px 0;"></div>
-      <div class="dg-fact-hdr">💡 DRUG DISCOVERY INSIGHT</div>
-      <div class="dg-fact-title">The Active Site Pocket</div>
-      <div class="dg-fact-body">The pathogen's protein has a precise 3D pocket lined with amino acids. Your molecule must complement its shape and charge to lock in and block the enzyme.</div>
-      <div class="dg-key-term">
-        <span class="dg-key-label">KEY TERM</span>
-        <div class="dg-key-term-name">Active Site</div>
-        <div class="dg-key-term-def">The specific region of a protein where a drug binds. Blocking it can halt the pathogen's critical function.</div>
-      </div>
-      <!-- NEW: novelty result inline -->
-      <div style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:6px;padding:6px 10px;margin-top:8px;font-size:10px;">
-        <span style="color:#a78bfa;font-weight:800;">🔍 NOVELTY CHECK:</span>
-        <span style="color:#4ade80;margin-left:6px;">✓ Novel — not found in ChEMBL!</span>
-      </div>
-      <div class="dg-progress"><div class="dg-prog-fill"></div></div>
-      <div class="dg-complete-line">✅ Docking Complete — take your time reading!</div>
-      <button class="dg-resume-btn">▶ Resume Game</button>
-    </div>
 
-    <!-- MOLECULE DECK -->
-    <div class="mock-deck">
-      <div class="mock-deck-header">
+        <!-- Notification log (bright pills) -->
+        <div class="hc-log">
+          <div class="hc-log-entry hc-success">✓ MX-4203: 71% — NEW BEST! +11% above known drug</div>
+          <div class="hc-log-entry">▸ MX-3491: 65% binding at active site</div>
+          <div class="hc-log-entry hc-warn">▸ MX-2807: 28% — low pocket fit. Still learning!</div>
+        </div>
+
+        <!-- Scientist agent -->
+        <div class="hc-character">🧬</div>
+
+      </div><!-- end hc-lane -->
+
+      <!-- Right: Docking guide (white card) -->
+      <div class="hc-dock-panel">
+        <div style="display:flex;align-items:center;gap:9px;">
+          <span style="font-size:22px;">🔬</span>
+          <div>
+            <div class="hc-dock-title">DOCKING COMPLETE</div>
+            <div style="font-size:9px;color:#94a3b8;">Molecule: <strong style="color:#1e293b;">MX-4203</strong></div>
+          </div>
+        </div>
+        <div class="hc-dock-phases">
+          <span class="hc-phase done">🧬 Membrane</span>
+          <span class="hc-dock-arrow">▶</span>
+          <span class="hc-phase done">🔗 Binding</span>
+          <span class="hc-dock-arrow">▶</span>
+          <span class="hc-phase done">⚗️ Docking</span>
+        </div>
+        <div style="height:1px;background:#f1f5f9;"></div>
+        <div class="hc-fact-label">💡 DRUG DISCOVERY INSIGHT</div>
+        <div class="hc-fact-title">The Active Site Pocket</div>
+        <div class="hc-fact-body">The pathogen protein has a precise 3D pocket. Your molecule must complement its shape to lock in — like a key fitting a lock — and block the enzyme.</div>
+        <div class="hc-key-term">
+          <span class="hc-key-label">KEY TERM</span>
+          <div class="hc-key-name">Active Site</div>
+          <div class="hc-key-def">The specific region of a protein where a drug binds. Blocking it halts the pathogen's critical function.</div>
+        </div>
+        <div class="hc-novelty">🔍 NOVELTY CHECK: ✓ Novel — not found in ChEMBL!</div>
+        <div class="hc-dock-progress"><div class="hc-dock-prog-fill"></div></div>
+        <div class="hc-dock-complete">✅ Docking complete — take your time reading!</div>
+        <button class="hc-resume-btn">▶ Resume Game</button>
+      </div>
+
+    </div><!-- end hc-world -->
+
+    <!-- BOTTOM MOLECULE DECK -->
+    <div class="hc-deck">
+      <div class="hc-deck-hdr">
         <span>⚗️ SELECT MOLECULE TO FIRE</span>
-        <span style="color:#334155;">// SPACE or CLICK ARENA TO FIRE &nbsp;·&nbsp; ← ↑ ↓ → MOVE SHIP //</span>
+        <span>SPACE or CLICK TO FIRE &nbsp;·&nbsp; ← ↑ ↓ → MOVE</span>
       </div>
-      <div class="mock-deck-cards">
-        <!-- Card 1: Selected, high score -->
-        <div class="mock-mol-card selected">
-          <div class="mock-card-key">[1] SELECTED</div>
-          <div class="mock-card-name">MX-4203</div>
-          <div class="mock-card-smiles">CC1CC(NC(=O)C(F)(F)Cl…</div>
-          <div class="mock-card-bar-bg"><div class="mock-card-bar-fill fill-g" style="width:71%"></div></div>
-          <div class="mock-card-pct c-green">71% <small style="color:#4ade80;font-size:9px;">+11% ↑</small></div>
-          <div class="mock-card-tags">
-            <span class="mock-tag tag-novel">NOVEL</span>
-            <span class="mock-tag tag-best">NEW BEST</span>
-            <span class="mock-tag tag-synth">Easy Synthesis</span>
+      <div class="hc-deck-cards">
+        <!-- Card 1: selected, best score -->
+        <div class="hc-card green-card hc-selected">
+          <div class="hc-card-key">[1] SELECTED</div>
+          <div class="hc-card-name">MX-4203</div>
+          <div class="hc-card-smiles">CC1CC(NC(=O)C(F)(F)Cl…</div>
+          <div class="hc-card-bar"><div class="hc-card-fill hcf-g" style="width:71%"></div></div>
+          <div class="hc-card-pct" style="color:#16a34a;">71% <small style="font-size:9px;color:#22c55e;">+11% ↑</small></div>
+          <div class="hc-card-tags">
+            <span class="hc-tag hct-novel">NOVEL</span>
+            <span class="hc-tag hct-best">NEW BEST</span>
+            <span class="hc-tag hct-synth">Easy Synthesis</span>
           </div>
         </div>
-        <!-- Card 2: Medium score -->
-        <div class="mock-mol-card ok">
-          <div class="mock-card-key">[2]</div>
-          <div class="mock-card-name">MX-3491</div>
-          <div class="mock-card-smiles">O=C(Nc1ccc(F)cc1)C1CC…</div>
-          <div class="mock-card-bar-bg"><div class="mock-card-bar-fill fill-a" style="width:65%"></div></div>
-          <div class="mock-card-pct c-gold">65% <small style="color:#f97316;font-size:9px;">+5% ↑</small></div>
-          <div class="mock-card-tags">
-            <span class="mock-tag tag-novel">NOVEL</span>
+        <!-- Card 2: medium score -->
+        <div class="hc-card yellow-card">
+          <div class="hc-card-key">[2]</div>
+          <div class="hc-card-name">MX-3491</div>
+          <div class="hc-card-smiles">O=C(Nc1ccc(F)cc1)C1CC…</div>
+          <div class="hc-card-bar"><div class="hc-card-fill hcf-y" style="width:65%"></div></div>
+          <div class="hc-card-pct" style="color:#ca8a04;">65% <small style="font-size:9px;color:#eab308;">+5% ↑</small></div>
+          <div class="hc-card-tags">
+            <span class="hc-tag hct-novel">NOVEL</span>
           </div>
         </div>
-        <!-- Card 3: Lower score -->
-        <div class="mock-mol-card">
-          <div class="mock-card-key">[3]</div>
-          <div class="mock-card-name">MX-5102</div>
-          <div class="mock-card-smiles">CC(C)Cc1ccc(C(C)C(=O)…</div>
-          <div class="mock-card-bar-bg"><div class="mock-card-bar-fill fill-r" style="width:48%"></div></div>
-          <div class="mock-card-pct c-orange">48% <small style="color:#f97316;font-size:9px;">-12% ↓</small></div>
-          <div class="mock-card-tags"></div>
+        <!-- Card 3: low score -->
+        <div class="hc-card red-card">
+          <div class="hc-card-key">[3]</div>
+          <div class="hc-card-name">MX-5102</div>
+          <div class="hc-card-smiles">CC(C)Cc1ccc(C(C)C(=O)…</div>
+          <div class="hc-card-bar"><div class="hc-card-fill hcf-r" style="width:48%"></div></div>
+          <div class="hc-card-pct" style="color:#dc2626;">48% <small style="font-size:9px;color:#ef4444;">-12% ↓</small></div>
+          <div class="hc-card-tags"></div>
         </div>
       </div>
-      <!-- Molecule Journey Timeline (new feature proposal) -->
-      <div style="margin-top:10px;display:flex;align-items:center;gap:6px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);">
-        <span style="font-size:9px;color:#1e293b;font-weight:700;letter-spacing:1px;white-space:nowrap;">JOURNEY ▸</span>
-        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-          <div title="MX-2807: 28%" style="width:10px;height:10px;border-radius:50%;background:#ef4444;border:1px solid rgba(255,255,255,0.15);cursor:pointer;"></div>
-          <div style="width:14px;height:1px;background:#1e293b;"></div>
-          <div title="MX-3491: 65%" style="width:10px;height:10px;border-radius:50%;background:#fbbf24;border:1px solid rgba(255,255,255,0.15);cursor:pointer;"></div>
-          <div style="width:14px;height:1px;background:#1e293b;"></div>
-          <div title="MX-4203: 71% ← NEW BEST" style="width:14px;height:14px;border-radius:50%;background:#4ade80;border:2px solid rgba(74,222,128,0.7);cursor:pointer;box-shadow:0 0 6px rgba(74,222,128,0.4);"></div>
-          <span style="font-size:9px;color:#334155;margin-left:4px;">← Current Best</span>
-        </div>
+      <!-- Molecule journey timeline -->
+      <div class="hc-journey">
+        <span class="hc-journey-label">JOURNEY ▸</span>
+        <div class="hc-dot" style="background:#ef4444;" title="MX-2807: 28%"></div>
+        <div class="hc-jline"></div>
+        <div class="hc-dot" style="background:#eab308;" title="MX-3491: 65%"></div>
+        <div class="hc-jline"></div>
+        <div class="hc-dot best" style="background:#22c55e;border:2px solid #16a34a;box-shadow:0 0 8px rgba(34,197,94,0.5);" title="MX-4203: 71% ← BEST"></div>
+        <span class="hc-journey-best">← Current Best</span>
       </div>
     </div>
 
-  </div><!-- end mock-game-wrapper -->
+  </div><!-- end mock-hc-wrapper -->
 
   <div style="margin-top:24px;" class="card">
-    <div class="card-title">Key Differences from Current Game (highlighted above)</div>
+    <div class="card-title">Design System Changes vs Previous Dark Mockup</div>
     <ol style="color:#64748b;font-size:13px;padding-left:20px;display:flex;flex-direction:column;gap:6px;margin-top:8px;">
-      <li><strong style="color:#e2e8f0">Baseline Strip (NEW):</strong> "Known Drug: 60% | Your Best: 71% (+11% 🎉)" — always visible, orients every action.</li>
-      <li><strong style="color:#e2e8f0">Binding Affinity Ring (REPLACES HP bar):</strong> Shows % of active site blocked — science-accurate metaphor instead of combat HP.</li>
-      <li><strong style="color:#e2e8f0">Cards show delta score:</strong> "+11% ↑" above known baseline, coloured tags for novelty/best/synthesizability.</li>
-      <li><strong style="color:#e2e8f0">Novelty check inline in docking guide:</strong> "✓ Novel — not found in ChEMBL!" visible during docking, not just at victory.</li>
-      <li><strong style="color:#e2e8f0">Molecule Journey timeline:</strong> Coloured dots showing optimization path — red → amber → green shows scientific progress.</li>
-      <li><strong style="color:#e2e8f0">Navy background with semantic colours:</strong> Each bar/element has distinct gradient; information density increases.</li>
-      <li><strong style="color:#e2e8f0">Combat log uses science language:</strong> "71% binding — NEW BEST!" not "HIT +23 damage".</li>
+      <li><strong style="color:#e2e8f0">Sky-blue world (replaces dark navy):</strong> Bright, calm background matched to 10–16 age preference per UX expert. Reduces visual fatigue, keeps focus on the molecule blocks.</li>
+      <li><strong style="color:#e2e8f0">3D glossy molecule blocks (NEW):</strong> Colorful glass-effect blocks on a perspective lane — immediate visual grammar: green = great, blue = good, orange = low. No text required.</li>
+      <li><strong style="color:#e2e8f0">White HUD pills (replaces neon overlays):</strong> Clean white panels for lives ❤️, score, and counters — high contrast, zero glare, one metric each.</li>
+      <li><strong style="color:#e2e8f0">White docking guide card (replaces dark frosted overlay):</strong> Bright, readable panel with clean typography — information stays calm during the pause moment.</li>
+      <li><strong style="color:#e2e8f0">Light-tinted molecule cards (replaces dark translucent boxes):</strong> Green/yellow/red tinted cards — scores are immediately readable, colour signals quality at a glance.</li>
+      <li><strong style="color:#e2e8f0">Positive reinforcement only:</strong> "WINNING — Beat the known drug!" badge, journey dots showing progress, log says "still learning!" not "EVADED!".</li>
+      <li><strong style="color:#e2e8f0">All educational content preserved:</strong> Binding score vs known drug baseline, novelty check, docking phases, key terms, molecule journey — same information, friendlier presentation.</li>
     </ol>
   </div>
 </div>
