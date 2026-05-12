@@ -849,7 +849,9 @@ class PathoHunt3D {
     }
 
     onSpacebarFire() {
-        if (this.isGameOver || this.attackLocked || !this.gameStarted || !this.fireReady) return;
+        if (this.isGameOver || !this.gameStarted) return;
+        if (this.attackLocked) { this.showLockedWarning(); return; }
+        if (!this.fireReady) return;
         this.fireReady = false;
         setTimeout(() => { this.fireReady = true; }, this.fireCooldown);
         this.launchAttack();
@@ -891,11 +893,41 @@ class PathoHunt3D {
     }
 
     onMouseUp() {
-        if (this.isAiming && !this.isGameOver && !this.attackLocked && this.gameStarted) {
-            this.launchAttack();
+        if (this.isAiming && !this.isGameOver && this.gameStarted) {
+            if (this.attackLocked) this.showLockedWarning();
+            else this.launchAttack();
         }
         this.isAiming = false;
         document.getElementById('crosshair-ui')?.classList.remove('aiming');
+    }
+
+    showLockedWarning() {
+        // Debounce — don't spam if player holds space or clicks repeatedly
+        const now = Date.now();
+        if (this._lastLockedWarn && now - this._lastLockedWarn < 1200) return;
+        this._lastLockedWarn = now;
+
+        const msgs = [
+            '⚠️ Missile still in flight — wait for impact!',
+            '⏳ Hold on! Your molecule is still analysing.',
+            '🔬 Previous shot in progress — let it finish!',
+            '💥 Damage calculating — stand by!',
+        ];
+        const text = msgs[Math.floor(Math.random() * msgs.length)];
+
+        // Float it near the crosshair / center-top of arena
+        const div = document.createElement('div');
+        div.className = 'locked-warn';
+        div.textContent = text;
+        this.container.appendChild(div);
+        setTimeout(() => div.remove(), 1600);
+
+        // Also pulse the analyzing badge so player notices it
+        const badge = document.getElementById('analyzingOverlay');
+        if (badge && badge.style.display !== 'none') {
+            badge.classList.add('badge-pulse');
+            setTimeout(() => badge.classList.remove('badge-pulse'), 600);
+        }
     }
 
     async launchAttack() {

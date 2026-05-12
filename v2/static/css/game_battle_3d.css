@@ -843,6 +843,41 @@ kbd {
 }
 .patient-outcome-box strong { color: #fff; }
 
+/* Locked-while-firing warning toast */
+.locked-warn {
+    position: absolute;
+    top: 28%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 60;
+    pointer-events: none;
+    font-size: 13px;
+    font-weight: 700;
+    color: #f6ad55;
+    background: rgba(0,0,0,0.75);
+    border: 1px solid rgba(246,173,85,0.45);
+    border-radius: 8px;
+    padding: 7px 18px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    animation: lockedWarnAnim 1.6s ease-out forwards;
+}
+@keyframes lockedWarnAnim {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+    15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}
+
+/* Pulse the analyzing badge when player tries to fire while locked */
+.analyzing-overlay.badge-pulse {
+    animation: badgePulse 0.3s ease-out 2;
+}
+@keyframes badgePulse {
+    0%,100% { border-color: rgba(0,242,255,0.35); }
+    50%     { border-color: #f6ad55; box-shadow: 0 0 10px rgba(246,173,85,0.5); }
+}
+
 /* Outbreak timer pulse */
 @keyframes outbreakPulse {
     0%,100% { opacity: 1; }
