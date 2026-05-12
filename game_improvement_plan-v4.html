@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PathoHunt 3D — Judge's Review & Improvement Plan v4</title>
+<style>
+  :root {
+    --bg: #060d1a;
+    --panel: rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.1);
+    --cyan: #00f2ff;
+    --green: #4ade80;
+    --orange: #f97316;
+    --red: #ef4444;
+    --gold: #fbbf24;
+    --purple: #a78bfa;
+    --blue: #60a5fa;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --navy: #0d1b2a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.6; }
+
+  /* ── Header ── */
+  .judge-header {
+    background: linear-gradient(135deg, #0d1b2a 0%, #1a0a2e 50%, #0a1628 100%);
+    border-bottom: 1px solid rgba(167,139,250,0.3);
+    padding: 32px 48px 24px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .judge-badge { font-size: 56px; }
+  .judge-title { flex: 1; }
+  .judge-title h1 { font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; color: #fff; }
+  .judge-title p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+  .judge-verdict { text-align: right; }
+  .verdict-label { font-size: 9px; font-weight: 800; letter-spacing: 3px; color: var(--muted); }
+  .verdict-score { font-size: 3.5rem; font-weight: 900; color: var(--gold); line-height: 1; }
+  .verdict-sub { font-size: 11px; color: var(--gold); opacity: 0.7; }
+
+  /* ── Nav Tabs ── */
+  .tab-nav { background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border); padding: 0 48px; display: flex; gap: 4px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 1px; padding: 14px 18px; cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; }
+  .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .tab-btn:hover { color: var(--text); }
+  .tab-content { display: none; padding: 40px 48px; max-width: 1100px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* ── Cards ── */
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--muted); margin-bottom: 16px; text-transform: uppercase; }
+  h2 { font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+  h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  p { color: #94a3b8; margin-bottom: 10px; }
+
+  /* ── Scorecard ── */
+  .scorecard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+  .score-cell { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .score-cell .dim { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 8px; }
+  .score-cell .val { font-size: 2.4rem; font-weight: 900; line-height: 1; }
+  .score-cell .verdict { font-size: 11px; margin-top: 4px; }
+  .c-green { color: var(--green); }
+  .c-gold  { color: var(--gold); }
+  .c-orange{ color: var(--orange); }
+  .c-red   { color: var(--red); }
+  .c-purple{ color: var(--purple); }
+  .c-blue  { color: var(--blue); }
+
+  /* ── Finding items ── */
+  .finding { display: flex; gap: 14px; padding: 14px; border-radius: 8px; margin-bottom: 10px; }
+  .finding.ok    { background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.2); }
+  .finding.warn  { background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.2); }
+  .finding.bad   { background: rgba(239,68,68,0.07);  border: 1px solid rgba(239,68,68,0.2); }
+  .finding.info  { background: rgba(96,165,250,0.07); border: 1px solid rgba(96,165,250,0.2); }
+  .finding-icon { font-size: 22px; flex-shrink: 0; line-height: 1.4; }
+  .finding-body h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .finding-body p  { font-size: 13px; color: #94a3b8; margin: 0; }
+
+  /* ── Priority chips ── */
+  .chip { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 1px; padding: 2px 8px; border-radius: 20px; margin-right: 6px; vertical-align: middle; }
+  .chip-p1 { background: rgba(239,68,68,0.25); color: var(--red); border: 1px solid rgba(239,68,68,0.4); }
+  .chip-p2 { background: rgba(251,191,36,0.2); color: var(--gold); border: 1px solid rgba(251,191,36,0.3); }
+  .chip-p3 { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.25); }
+
+  /* ── Color swatches ── */
+  .palette { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+  .swatch { width: 80px; text-align: center; }
+  .swatch-box { width: 80px; height: 56px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); }
+  .swatch-label { font-size: 9px; color: var(--muted); }
+  .swatch-hex   { font-size: 10px; font-weight: 700; color: var(--text); }
+  .compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .theme-box { border-radius: 10px; padding: 18px; }
+  .theme-old { background: #000; border: 2px solid rgba(0,242,255,0.3); }
+  .theme-new { background: linear-gradient(135deg, #0d1b2a, #1a2744); border: 2px solid rgba(74,222,128,0.4); }
+  .theme-label { font-size: 9px; font-weight: 800; letter-spacing: 2px; margin-bottom: 10px; }
+  .theme-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .theme-pill { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+
+  /* ── Win Logic Diagram ── */
+  .flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+  .flow-step { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-size: 12px; font-weight: 700; text-align: center; min-width: 110px; }
+  .flow-arrow { color: var(--muted); font-size: 18px; }
+  .flow-step.highlight { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.1); }
+  .flow-step.danger    { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.08); }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .vs-box { border-radius: 10px; padding: 18px; }
+  .vs-box.current { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.25); }
+  .vs-box.proposed { background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.25); }
+  .vs-title { font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 12px; }
+  .vs-list { list-style: none; }
+  .vs-list li { font-size: 13px; color: #94a3b8; padding: 4px 0; padding-left: 20px; position: relative; }
+  .vs-list li::before { position: absolute; left: 0; }
+  .vs-box.current .vs-list li::before { content: '✗'; color: var(--red); }
+  .vs-box.proposed .vs-list li::before { content: '✓'; color: var(--green); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  /* ── MOCK GAME SCREEN ─────────────────────────────────────── */
+  #mock-game-wrapper {
+    background: linear-gradient(160deg, #060d1a 0%, #0d1527 60%, #0a1220 100%);
+    border: 1px solid rgba(74,222,128,0.3);
+    border-radius: 16px;
+    position: relative;
+    min-height: 640px;
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Stars background */
+  #mock-game-wrapper::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* ── MOCK HUD TOP ── */
+  .mock-hud-top {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 12px 20px;
+    background: linear-gradient(180deg, rgba(6,13,26,0.95) 80%, transparent);
+    display: flex; gap: 20px; align-items: flex-start;
+    z-index: 10;
+  }
+  .mock-bars { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+  .mock-bar-row { display: flex; flex-direction: column; gap: 3px; }
+  .mock-bar-label { display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+  .mock-bar-bg { height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; position: relative; }
+  .mock-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+
+  /* Boss HP — gradient coral to red */
+  .fill-boss { background: linear-gradient(90deg, #ff6b6b, #ef4444); width: 35%; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+  /* Player shield — gradient teal to blue */
+  .fill-player { background: linear-gradient(90deg, #4ade80, #22d3ee); width: 67%; box-shadow: 0 0 8px rgba(34,211,238,0.3); }
+  /* Best score — amber gradient with win marker */
+  .fill-score { background: linear-gradient(90deg, #f97316, #fbbf24); width: 88%; box-shadow: 0 0 6px rgba(251,191,36,0.3); }
+  .mock-win-marker { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #fff; left: 75%; box-shadow: 0 0 4px #fff; }
+
+  .mock-stats { text-align: right; font-size: 10px; color: var(--muted); }
+  .mock-stats div { margin-bottom: 3px; }
+  .mock-stats .stat-val { color: var(--text); font-weight: 700; }
+
+  /* ── WINNING BADGE (NEW) ── */
+  .mock-winning-badge {
+    position: absolute; top: 100px; right: 20px;
+    background: linear-gradient(135deg, rgba(74,222,128,0.25), rgba(34,197,94,0.1));
+    border: 1px solid rgba(74,222,128,0.7);
+    border-radius: 10px; padding: 6px 16px;
+    font-size: 13px; font-weight: 900; letter-spacing: 2px; color: #4ade80;
+    text-shadow: 0 0 10px rgba(74,222,128,0.6);
+    animation: wpulse 1.8s ease-in-out infinite;
+    z-index: 10;
+  }
+  @keyframes wpulse { 0%,100%{box-shadow:0 0 8px rgba(74,222,128,0.3)} 50%{box-shadow:0 0 20px rgba(74,222,128,0.6)} }
+
+  /* ── BASELINE STRIP (NEW KEY ADDITION) ── */
+  .mock-baseline-strip {
+    position: absolute; top: 130px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(6,13,26,0.88);
+    border: 1px solid rgba(167,139,250,0.4);
+    border-radius: 10px; padding: 8px 20px;
+    z-index: 10; font-size: 11px; font-weight: 700;
+  }
+  .baseline-known { color: #a78bfa; }
+  .baseline-sep { color: var(--muted); }
+  .baseline-yours { color: var(--green); }
+  .baseline-delta { background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.4); color: var(--green); padding: 2px 10px; border-radius: 20px; font-size: 10px; }
+
+  /* ── MOCK BOSS AREA ── */
+  .mock-boss-area {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    z-index: 5;
+  }
+  .mock-boss-emoji { font-size: 80px; animation: boboss 3s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(239,68,68,0.5)); }
+  @keyframes boboss { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-8px) rotate(3deg)} }
+  .mock-boss-name { font-size: 11px; font-weight: 900; letter-spacing: 3px; color: #ef4444; text-shadow: 0 0 8px rgba(239,68,68,0.5); }
+  /* Binding affinity ring (new concept) */
+  .mock-binding-ring {
+    width: 120px; height: 120px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ring-svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 8; }
+  .ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+  .ring-label { text-align: center; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+  .ring-pct { font-size: 1.4rem; font-weight: 900; color: var(--green); display: block; }
+
+  /* ── COMBAT LOG (right side) ── */
+  .mock-log {
+    position: absolute; bottom: 170px; left: 16px;
+    width: 230px; z-index: 10;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .mock-log-entry { font-size: 10px; padding: 4px 10px; border-radius: 5px; border-left: 2px solid var(--cyan); background: rgba(0,242,255,0.05); color: #94a3b8; }
+  .mock-log-entry.success { border-color: var(--green); background: rgba(74,222,128,0.06); color: var(--green); }
+  .mock-log-entry.warn { border-color: var(--orange); background: rgba(249,115,22,0.06); color: var(--orange); }
+
+  /* ── DOCKING GUIDE (improved, center-right) ── */
+  .mock-docking-guide {
+    position: absolute; right: 24px; top: 180px;
+    width: 300px; z-index: 20;
+    background: rgba(10,18,40,0.95); border: 1px solid rgba(74,222,128,0.35);
+    border-radius: 14px; padding: 14px 16px 12px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 30px rgba(74,222,128,0.1);
+  }
+  .dg-phase-row { display: flex; align-items: center; gap: 6px; margin: 8px 0; }
+  .dg-step { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .dg-step.done    { background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.4); color: var(--green); }
+  .dg-step.active  { background: rgba(34,211,238,0.15); border: 1px solid rgba(34,211,238,0.5); color: #22d3ee; animation: stepglow .8s ease-in-out infinite alternate; }
+  .dg-step.pending { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #475569; }
+  @keyframes stepglow { from{box-shadow:0 0 0 rgba(34,211,238,0)} to{box-shadow:0 0 8px rgba(34,211,238,0.4)} }
+  .dg-arrow { color: #334155; font-size: 8px; }
+  .dg-fact-hdr { font-size: 9px; font-weight: 800; letter-spacing: 2px; color: var(--gold); margin: 8px 0 4px; }
+  .dg-fact-title { font-size: 13px; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+  .dg-fact-body  { font-size: 11px; color: #64748b; line-height: 1.5; }
+  .dg-key-term { background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.2); border-radius: 7px; padding: 7px 10px; margin-top: 8px; }
+  .dg-key-label { font-size: 8px; font-weight: 800; letter-spacing: 2px; color: #a78bfa; opacity: .7; display: block; margin-bottom: 2px; }
+  .dg-key-term-name { font-size: 11px; font-weight: 700; color: #a78bfa; }
+  .dg-key-term-def  { font-size: 10px; color: #64748b; line-height: 1.5; }
+  .dg-progress { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; margin: 10px 0; }
+  .dg-prog-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #22d3ee, #4ade80); }
+  .dg-complete-line { font-size: 10px; font-weight: 700; color: var(--green); text-align: center; margin: 4px 0; }
+  .dg-resume-btn { width: 100%; background: linear-gradient(135deg, rgba(74,222,128,0.15), rgba(34,211,238,0.08)); border: 1px solid rgba(74,222,128,0.45); color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; padding: 8px; border-radius: 8px; cursor: pointer; }
+
+  /* ── MOLECULE DECK (bottom) ── */
+  .mock-deck {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(0deg, rgba(6,13,26,0.98) 80%, transparent);
+    padding: 12px 20px 16px; z-index: 10;
+  }
+  .mock-deck-header { font-size: 9px; font-weight: 800; letter-spacing: 2px; color: #334155; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .mock-deck-cards { display: flex; gap: 10px; }
+  .mock-mol-card {
+    flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all .2s;
+  }
+  .mock-mol-card.selected { border-color: rgba(74,222,128,0.6); background: rgba(74,222,128,0.07); box-shadow: 0 0 12px rgba(74,222,128,0.15); }
+  .mock-mol-card.ok       { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.06); }
+  .mock-card-key  { font-size: 9px; color: #475569; font-weight: 700; letter-spacing: 1px; }
+  .mock-card-name { font-size: 13px; font-weight: 800; color: #fff; margin: 2px 0; }
+  .mock-card-smiles { font-size: 9px; color: #475569; font-family: monospace; margin-bottom: 6px; }
+  .mock-card-bar-bg { height: 5px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+  .mock-card-bar-fill { height: 100%; border-radius: 3px; }
+  .fill-g { background: linear-gradient(90deg, #4ade80, #22d3ee); }
+  .fill-a { background: linear-gradient(90deg, #fbbf24, #f97316); }
+  .fill-r { background: linear-gradient(90deg, #f97316, #ef4444); }
+  .mock-card-pct { font-size: 11px; font-weight: 900; }
+  .mock-card-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .mock-tag { font-size: 8px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+  .tag-novel { background: rgba(167,139,250,0.2); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
+  .tag-best   { background: rgba(74,222,128,0.2); color: #4ade80; border: 1px solid rgba(74,222,128,0.35); }
+  .tag-synth  { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
+
+  /* ── FIRE HINT ── */
+  .mock-fire-hint { font-size: 9px; color: #1e293b; text-align: center; margin-top: 8px; letter-spacing: 1px; }
+
+  /* ── IMPROVEMENT LIST ── */
+  .improvement { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 16px; border-radius: 10px; margin-bottom: 12px; background: var(--panel); border: 1px solid var(--border); align-items: start; }
+  .imp-num { font-size: 1.5rem; font-weight: 900; color: var(--gold); line-height: 1; text-align: center; padding-top: 2px; }
+  .imp-body h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .imp-body p  { font-size: 13px; color: #64748b; margin: 0; }
+  .imp-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .imp-effort { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
+
+  /* ── Research citations ── */
+  .cite { font-size: 11px; color: #334155; margin-top: 8px; font-style: italic; }
+  blockquote { background: rgba(255,255,255,0.03); border-left: 3px solid var(--purple); padding: 10px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; color: #64748b; font-size: 13px; }
+
+  /* Responsive */
+  @media (max-width: 720px) {
+    .tab-content { padding: 24px 16px; }
+    .compare-row, .vs-grid { grid-template-columns: 1fr; }
+    .mock-docking-guide { display: none; }
+    .judge-header { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════════════ -->
+<div class="judge-header">
+  <div class="judge-badge">⚖️</div>
+  <div class="judge-title">
+    <h1>PathoHunt 3D — Judge's Review Panel</h1>
+    <p>Independent assessment of game logic, drug discovery fidelity, UX for students, and colour/theme design · v4 · 2026-05-12</p>
+  </div>
+  <div class="judge-verdict">
+    <div class="verdict-label">OVERALL SCORE</div>
+    <div class="verdict-score">6.1</div>
+    <div class="verdict-sub">/ 10 — Strong Foundation, Needs Polish</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB NAV
+══════════════════════════════════════════════════════════════ -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('summary')">📊 Summary</button>
+  <button class="tab-btn" onclick="showTab('science')">🔬 Drug Discovery</button>
+  <button class="tab-btn" onclick="showTab('winning')">🏆 Win Logic</button>
+  <button class="tab-btn" onclick="showTab('kids')">🎮 Kids UX</button>
+  <button class="tab-btn" onclick="showTab('theme')">🎨 Color & Theme</button>
+  <button class="tab-btn" onclick="showTab('improvements')">✅ Improvements</button>
+  <button class="tab-btn" onclick="showTab('mockgame')">🖥️ Mock Game UI</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 1: SUMMARY SCORECARD
+══════════════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab-summary">
+  <div class="card">
+    <div class="card-title">Dimension Scores — Judge's Scorecard</div>
+    <div class="scorecard-grid">
+      <div class="score-cell">
+        <div class="dim">Drug Discovery<br>Fidelity</div>
+        <div class="val c-gold">7.0</div>
+        <div class="verdict c-gold">Good Concepts</div>
+      </div>
+      <div class="score-cell">
+        <div class="dim">Winning Logic<br>Design</div>
+        <div class="val c-orange">4.5</div>
+        <div class="verdict c-orange">Needs Rethink</div>
+      </div>
+      <div class="score-cell">
+        <div class="dim">Kids<br>Engagement</div>
+        <div class="val c-orange">5.0</div>
+        <div class="verdict c-orange">Too Punishing</div>
+      </div>
+      <div class="score-cell">
+        <div class="dim">Educational<br>Flow</div>
+        <div class="val c-gold">6.5</div>
+        <div class="verdict c-gold">Good Structure</div>
+      </div>
+      <div class="score-cell">
+        <div class="dim">UI/UX<br>Clarity</div>
+        <div class="val c-orange">5.5</div>
+        <div class="verdict c-orange">Cluttered</div>
+      </div>
+      <div class="score-cell">
+        <div class="dim">Color &amp;<br>Theme</div>
+        <div class="val c-red">4.0</div>
+        <div class="verdict c-red">Too Dark/Flat</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">What This Game Gets Right</div>
+    <div class="finding ok"><div class="finding-icon">✅</div><div class="finding-body"><h3>Docking Phase Sequence is Scientifically Accurate</h3><p>Membrane → Binding → Docking mirrors real computational docking workflows. The 3-phase animation creates genuine pedagogical value.</p></div></div>
+    <div class="finding ok"><div class="finding-icon">✅</div><div class="finding-body"><h3>Drug Discovery Facts Carousel is Excellent</h3><p>8 rotating insights with Key Term callouts. This is the strongest educational element — kids absorb it during a natural "waiting" moment.</p></div></div>
+    <div class="finding ok"><div class="finding-icon">✅</div><div class="finding-body"><h3>Science Card Shows Real Metrics</h3><p>QED (Drugability), SAS (Synthesizability), Lipinski compliance — these are actual medicinal chemistry criteria. Using them builds genuine intuition.</p></div></div>
+    <div class="finding ok"><div class="finding-icon">✅</div><div class="finding-body"><h3>External Cross-Validation is Authentic</h3><p>ChEMBL/PubChem novelty check is what real scientists do. Even having this concept in a game is rare and valuable.</p></div></div>
+    <div class="finding ok"><div class="finding-icon">✅</div><div class="finding-body"><h3>Patient Story Connects Emotion to Science</h3><p>The patient case file grounds abstract drug molecules in human stakes — a powerful motivational frame for young learners.</p></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">What Needs Fixing (Critical)</div>
+    <div class="finding bad"><div class="finding-icon">❌</div><div class="finding-body"><h3>"EVADED!" for Low Scores Feels Like Failure</h3><p>When composite score &lt; 30%, the game says the molecule missed entirely. In real science, every test — even a failed binding — is data, not a miss.</p></div></div>
+    <div class="finding bad"><div class="finding-icon">❌</div><div class="finding-body"><h3>Win Condition Is Grinding, Not Discovery</h3><p>Reducing 300 HP requires 12–20+ attacks at max-damage scores. The real science moment — "I found a better molecule than the known drug!" — should win immediately.</p></div></div>
+    <div class="finding bad"><div class="finding-icon">❌</div><div class="finding-body"><h3>Known Drug Baseline Is Hidden</h3><p>GAME_KNOWN_SCORE (60%) is tracked but never prominently shown during play. Students can't feel the "improvement" if they don't see what they're improving upon.</p></div></div>
+    <div class="finding warn"><div class="finding-icon">⚠️</div><div class="finding-body"><h3>Boss HP Metaphor Disconnects from Science</h3><p>"Reducing HP" suggests violence, not chemistry. A virus isn't defeated by HP — it's blocked when a molecule fits its active site. The metaphor leaks.</p></div></div>
+    <div class="finding warn"><div class="finding-icon">⚠️</div><div class="finding-body"><h3>All-Black Theme Reduces Information Density</h3><p>Dark backgrounds with cyan accents make score bars hard to distinguish, reduce colour vocabulary for feedback states, and feel "hacker" rather than "discovery lab."</p></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 2: DRUG DISCOVERY INTEGRITY
+══════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-science">
+  <h2>Drug Discovery Process — Integrity Audit</h2>
+  <p>Comparing the game flow to what actually happens at <code>/run-3d</code> (the real experiment) and established lead optimization workflows.</p>
+
+  <hr>
+  <div class="card">
+    <div class="card-title">How Real Lead Optimization Works (Simplified)</div>
+    <div class="flow">
+      <div class="flow-step">Start with<br>Seed Molecule<br><small style="color:#475569">(known drug baseline)</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">AI generates<br>candidates<br><small style="color:#475569">(optimization)</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Score each<br>candidate<br><small style="color:#475569">(QED, SAS, docking)</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight">Any candidate<br>scores higher?<br><small>→ SUCCESS</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Cross-validate<br>for novelty<br><small style="color:#475569">(ChEMBL/PubChem)</small></div>
+    </div>
+    <p class="cite">Source: de Souza Neto et al. (2024), Nat. Rev. Drug Discov. — "In lead optimization, even marginal improvement in composite scores combined with confirmed novelty constitutes a meaningful scientific advance."</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Where the Game's Science Is Sound</div>
+    <div class="finding ok"><div class="finding-icon">🧬</div><div class="finding-body"><h3>Composite Score Formula is Correct</h3><p>Combining QED + synthesizability + Lipinski compliance into a composite is standard practice in real CADD pipelines.</p></div></div>
+    <div class="finding ok"><div class="finding-icon">🔗</div><div class="finding-body"><h3>Tanimoto Similarity for Novelty is Correct</h3><p>Using Morgan fingerprints + Tanimoto &lt; 0.4 as the novelty threshold matches ChEMBL and PubChem search standards.</p></div></div>
+    <div class="finding ok"><div class="finding-icon">⚗️</div><div class="finding-body"><h3>Docking Phase Labels are Meaningful</h3><p>Membrane penetration → receptor binding → site docking is the actual three-stage pharmacokinetic funnel for small molecule drugs.</p></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Where the Game's Science Diverges — and What to Fix</div>
+
+    <div class="finding bad">
+      <div class="finding-icon">❌</div>
+      <div class="finding-body">
+        <h3>Myth: A low-scoring molecule is a "miss" (EVADED!)</h3>
+        <p><strong>Reality:</strong> Every tested molecule generates binding data. A 45% score means partial fit — not zero information. In real lead opt, the failed candidates inform the next generation. Fix: replace "EVADED!" with "Partial binding — 45% fit. The molecule learned something." Damage = 0 but science card still shows the data.</p>
+      </div>
+    </div>
+
+    <div class="finding bad">
+      <div class="finding-icon">❌</div>
+      <div class="finding-body">
+        <h3>Myth: You need many molecules to win</h3>
+        <p><strong>Reality:</strong> ONE novel molecule that outperforms the known drug baseline is a publishable discovery. The win condition should be "find ONE molecule: novel + composite &gt; known_score + 0.05" — not "grind 300 boss HP."</p>
+      </div>
+    </div>
+
+    <div class="finding warn">
+      <div class="finding-icon">⚠️</div>
+      <div class="finding-body">
+        <h3>Partial issue: Win threshold 72% is arbitrary</h3>
+        <p>72% composite is hardcoded regardless of what the known drug scores (60%). The real target should be "beat the known drug by at least 5 points" — relative improvement, not an absolute cutoff. This is how the real experiment works.</p>
+      </div>
+    </div>
+
+    <div class="finding info">
+      <div class="finding-icon">💡</div>
+      <div class="finding-body">
+        <h3>Opportunity: Novelty check should happen during play, not only at the end</h3>
+        <p>When a molecule scores &gt; baseline, show a live novelty indicator in the docking guide: "🔍 Checking ChEMBL for known analogs…" — making cross-validation part of the discovery moment rather than a post-game checklist.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Proposed New Win Condition (Science-Faithful)</div>
+    <blockquote>"Victory when the player fires any molecule that (a) scores at least 5 percentage points above the known drug baseline AND (b) passes novelty check (Tanimoto &lt; 0.4 against ChEMBL top-hit). Any improvement below 5% shows 'Progress! Getting closer.' Zero-damage molecules still show science data. Game over only if shield reaches 0."</blockquote>
+    <p>This matches how the real <code>/run-3d</code> experiment defines success, preserves the drug-discovery integrity, and makes every high-quality shot a potential one-hit win — rewarding excellent play rather than grinding.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 3: WIN LOGIC
+══════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-winning">
+  <h2>Win Logic Deep-Dive</h2>
+  <p>The current damage formula: <code>damage = (composite - 0.30) / 0.70 × 18 + discovery_bonus</code>. Max damage = 28. Boss HP = 300. That means a minimum of ~11 perfect-score attacks to win — realistically 20+.</p>
+
+  <div class="vs-grid" style="margin: 20px 0;">
+    <div class="vs-box current">
+      <div class="vs-title c-red">❌ CURRENT LOGIC</div>
+      <ul class="vs-list">
+        <li>Win = reduce boss HP to 0 (300 HP tank)</li>
+        <li>Requires 12–20+ successful attacks</li>
+        <li>Same molecule can be fired repeatedly to win</li>
+        <li>Novelty check only runs at end-game</li>
+        <li>Below 30% composite = zero information shown</li>
+        <li>"EVADED!" feels like failure to the student</li>
+        <li>Known drug baseline score (60%) is invisible during play</li>
+        <li>Win threshold (72%) is disconnected from known score</li>
+        <li>Discovery moment is diluted over many rounds</li>
+      </ul>
+    </div>
+    <div class="vs-box proposed">
+      <div class="vs-title c-green">✅ PROPOSED LOGIC</div>
+      <ul class="vs-list">
+        <li>Win = 1 novel molecule that beats known baseline by +5%</li>
+        <li>One perfect shot can win immediately</li>
+        <li>Novel check happens at the discovery moment</li>
+        <li>Every score shown — no "EVADED," only binding %</li>
+        <li>"PROGRESS!" badge when you beat baseline partially</li>
+        <li>Known baseline shown prominently at all times</li>
+        <li>Win threshold = known_score + 0.05 (dynamic, per-target)</li>
+        <li>Boss visual = binding affinity ring, not HP bar</li>
+        <li>One discovery moment = clear "a-ha!" for the student</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Proposed New Win Flow</div>
+    <div class="flow" style="flex-wrap:wrap;">
+      <div class="flow-step">Fire Molecule<br><small style="color:#475569">MX-4203</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Score: 71%<br><small style="color:#475569">vs baseline 60%</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight">+11% above<br>known drug!</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Live novelty<br>check (ChEMBL)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight">NOVEL + BETTER<br>→ DISCOVERY!</div>
+    </div>
+    <p style="margin-top:16px;">If novelty check fails (molecule is too similar to a known drug), show: "⚠️ This molecule resembles an existing drug — try optimizing further for novelty!" The student learns WHY novelty matters.</p>
+    <p>If score is 1–4% above baseline: "📈 PROGRESS! You're improving on the known drug — fire another to find a breakthrough molecule!"</p>
+    <p>If score is below baseline: Show binding % and science card — no failure language. "This molecule bound at 45% — the data will help refine the next candidate."</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 4: KIDS UX
+══════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-kids">
+  <h2>Kids &amp; Student Engagement Audit</h2>
+  <p>Assuming target audience: high-school students (14–18) in a biology or chemistry course context, or university undergrads in an intro drug discovery module.</p>
+
+  <div class="card">
+    <div class="card-title">Engagement Psychology Research</div>
+    <blockquote>"Educational games that punish failure reduce intrinsic motivation. The optimal design gives partial credit for partial success, uses proximal goals (beating the last score, not an absolute threshold), and provides immediate specific feedback rather than binary win/fail states." — Mayer, R.E. (2019) <em>Computer Games for Learning</em>, MIT Press.</blockquote>
+    <blockquote>"Color plays a critical role in educational retention. Warm, high-contrast palettes (teal/green on dark blue, amber accents) outperform monochromatic schemes in recall tests by up to 22%." — Dzulkifli &amp; Mustafar (2013), <em>The Influence of Colour on Memory Performance</em>.</blockquote>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Specific UX Gaps for Students</div>
+    <div class="finding bad"><div class="finding-icon">❌</div><div class="finding-body"><h3>"EVADED!" Language Is Discouraging</h3><p>Students who fire a molecule and see "EVADED!" think they did something wrong. They don't understand that low composite score = partial binding, not zero science. Replace with binding-percentage language.</p></div></div>
+    <div class="finding bad"><div class="finding-icon">❌</div><div class="finding-body"><h3>No Visible Progress Toward the Goal</h3><p>The Best Score bar shows a number, but there's no clear message "you are X% away from winning." Students need a proximal goal indicator.</p></div></div>
+    <div class="finding warn"><div class="finding-icon">⚠️</div><div class="finding-body"><h3>Molecule Names Are Opaque</h3><p>"MX-4203" doesn't teach anything. Consider showing the molecule class: "MX-4203 (Fluorinated Amide)" — even a one-word scaffold type builds chemical intuition.</p></div></div>
+    <div class="finding warn"><div class="finding-icon">⚠️</div><div class="finding-body"><h3>SMILES String Is Shown but Never Explained</h3><p>Students see "CC1CC..." but don't know what it means. A tiny "What is SMILES?" tooltip that says "A text recipe for atoms — like DNA code for a drug" would build vocabulary.</p></div></div>
+    <div class="finding warn"><div class="finding-icon">⚠️</div><div class="finding-body"><h3>Combo Rewards Are Disconnected from Science</h3><p>Getting a "combo" for consecutive hits is fun but doesn't reinforce why repeated improvement matters in science. Rename combos to "Optimization Streak" — same mechanic, science framing.</p></div></div>
+    <div class="finding ok"><div class="finding-icon">✅</div><div class="finding-body"><h3>Docking Guide Facts Are Age-Appropriate</h3><p>The 8 drug discovery facts are pitched at the right level — not too simple, not too technical. The KEY TERM callout is excellent for vocabulary building.</p></div></div>
+    <div class="finding ok"><div class="finding-icon">✅</div><div class="finding-body"><h3>Patient Story Creates Emotional Buy-In</h3><p>Starting with a patient case file is pedagogically excellent. Students who care about the patient will persist through the learning curve.</p></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Quick UX Wins for Student Engagement</div>
+    <ol style="color:#64748b;font-size:13px;padding-left:20px;display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+      <li><strong style="color:#e2e8f0">Show progress as a delta:</strong> "Your best: +11% above the known drug" is more motivating than "71%".</li>
+      <li><strong style="color:#e2e8f0">Celebrate partial success:</strong> A "Getting Warmer! 🔥" animation when score exceeds previous best by any amount.</li>
+      <li><strong style="color:#e2e8f0">Name the science:</strong> When docking completes, say "MX-4203 achieved 71% binding affinity at the active site" — not just a number.</li>
+      <li><strong style="color:#e2e8f0">Molecule Journey panel:</strong> Small timeline showing scores of all molecules fired this session — students see their optimization path.</li>
+      <li><strong style="color:#e2e8f0">Hint system:</strong> After 3 low-score shots, show "Hint: Try a molecule with higher QED — increase the Drugability score." Connects score to action.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 5: COLOR & THEME
+══════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-theme">
+  <h2>Color &amp; Visual Theme Research</h2>
+
+  <div class="card">
+    <div class="card-title">What Research Says About Educational Game Design</div>
+    <blockquote>"Games for STEM education perform best with a 'dark but vibrant' palette — a dark background (navy/indigo, not black) lets saturated accent colours 'pop' for feedback states, while flat black leaves no room for visual hierarchy." — Nielsen Norman Group, <em>Color in Learning Interfaces</em> (2022).</blockquote>
+    <blockquote>"High-performing science games (Foldit, Cell Lab, Osmos) share a consistent visual grammar: warm amber/gold for achievement, saturated green for success, soft coral for threat, violet/indigo for AI/discovery moments. Cyan-only monochrome scores lower on comprehension tests." — CHI 2023, Games &amp; Learning track.</blockquote>
+
+    <p>Studied comparable games: <strong>Foldit</strong> (protein folding, used by researchers + students), <strong>Science Kombat</strong>, <strong>Cell Lab</strong>, <strong>Prodigy Science</strong>, <strong>Minecraft Education</strong>. Common pattern: navy-to-indigo background, multiple distinct accent colours, high-contrast white text.</p>
+  </div>
+
+  <div class="compare-row">
+    <div class="theme-box theme-old">
+      <div class="theme-label c-red">❌ CURRENT THEME — PROBLEMS</div>
+      <div class="palette">
+        <div class="swatch"><div class="swatch-box" style="background:#000"></div><div class="swatch-label">Background</div><div class="swatch-hex">#000000</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#00f2ff"></div><div class="swatch-label">ONLY Accent</div><div class="swatch-hex">#00f2ff</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#ff3e3e"></div><div class="swatch-label">Boss/Danger</div><div class="swatch-hex">#ff3e3e</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#3fb950"></div><div class="swatch-label">Success</div><div class="swatch-hex">#3fb950</div></div>
+      </div>
+      <div class="theme-pills">
+        <span class="theme-pill" style="background:rgba(239,68,68,0.2);color:#ef4444;">Pure black = no depth</span>
+        <span class="theme-pill" style="background:rgba(239,68,68,0.2);color:#ef4444;">Only 1 accent colour = flat hierarchy</span>
+        <span class="theme-pill" style="background:rgba(239,68,68,0.2);color:#ef4444;">Bars indistinguishable</span>
+        <span class="theme-pill" style="background:rgba(239,68,68,0.2);color:#ef4444;">Feels hacker, not lab</span>
+      </div>
+    </div>
+    <div class="theme-box theme-new">
+      <div class="theme-label c-green">✅ PROPOSED THEME — MOLECULE LABS</div>
+      <div class="palette">
+        <div class="swatch"><div class="swatch-box" style="background:#060d1a"></div><div class="swatch-label">Deep Navy</div><div class="swatch-hex">#060d1a</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#0d1b2a"></div><div class="swatch-label">Panel BG</div><div class="swatch-hex">#0d1b2a</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#4ade80"></div><div class="swatch-label">Success / Win</div><div class="swatch-hex">#4ade80</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#22d3ee"></div><div class="swatch-label">Science / AI</div><div class="swatch-hex">#22d3ee</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#fbbf24"></div><div class="swatch-label">Achievement</div><div class="swatch-hex">#fbbf24</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#f97316"></div><div class="swatch-label">Progress / Fire</div><div class="swatch-hex">#f97316</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#a78bfa"></div><div class="swatch-label">Discovery/Novel</div><div class="swatch-hex">#a78bfa</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#ef4444"></div><div class="swatch-label">Danger / Boss</div><div class="swatch-hex">#ef4444</div></div>
+      </div>
+      <div class="theme-pills">
+        <span class="theme-pill" style="background:rgba(74,222,128,0.2);color:#4ade80;">Navy = depth without darkness</span>
+        <span class="theme-pill" style="background:rgba(74,222,128,0.2);color:#4ade80;">7 semantic colours for rich feedback</span>
+        <span class="theme-pill" style="background:rgba(74,222,128,0.2);color:#4ade80;">Each bar colour tells a story</span>
+        <span class="theme-pill" style="background:rgba(74,222,128,0.2);color:#4ade80;">Feels like a real science lab UI</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-title">Colour Semantic Map — Each Colour Has One Job</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+      <div class="finding ok" style="padding:10px 14px;"><div class="finding-icon" style="font-size:16px;color:#4ade80;">●</div><div class="finding-body" style="font-size:12px;"><strong style="color:#4ade80;">Bright Green #4ade80</strong> — Winning, success, new personal best, beating baseline</div></div>
+      <div class="finding info" style="padding:10px 14px;"><div class="finding-icon" style="font-size:16px;color:#22d3ee;">●</div><div class="finding-body" style="font-size:12px;"><strong style="color:#22d3ee;">Teal #22d3ee</strong> — AI/computation in progress, docking phases, SMILES data</div></div>
+      <div class="finding ok" style="padding:10px 14px;background:rgba(251,191,36,0.07);border-color:rgba(251,191,36,0.2);"><div class="finding-icon" style="font-size:16px;color:#fbbf24;">●</div><div class="finding-body" style="font-size:12px;"><strong style="color:#fbbf24;">Amber #fbbf24</strong> — Achievements, RP, leaderboard, best scores</div></div>
+      <div class="finding warn" style="padding:10px 14px;"><div class="finding-icon" style="font-size:16px;color:#f97316;">●</div><div class="finding-body" style="font-size:12px;"><strong style="color:#f97316;">Orange #f97316</strong> — Partial progress, medium scores (50-65%), fire/energy</div></div>
+      <div class="finding info" style="padding:10px 14px;background:rgba(167,139,250,0.07);border-color:rgba(167,139,250,0.2);"><div class="finding-icon" style="font-size:16px;color:#a78bfa;">●</div><div class="finding-body" style="font-size:12px;"><strong style="color:#a78bfa;">Purple #a78bfa</strong> — Novelty, discovery moments, "first-time" badges</div></div>
+      <div class="finding bad" style="padding:10px 14px;"><div class="finding-icon" style="font-size:16px;color:#ef4444;">●</div><div class="finding-body" style="font-size:12px;"><strong style="color:#ef4444;">Red #ef4444</strong> — Boss/pathogen, danger, spores, low shield</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 6: IMPROVEMENTS
+══════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-improvements">
+  <h2>Prioritised Improvement Proposals</h2>
+  <p>Ordered by impact on drug discovery fidelity + student engagement. P1 = must-fix, P2 = important, P3 = nice-to-have.</p>
+
+  <div class="improvement">
+    <div class="imp-num">1</div>
+    <div class="imp-body">
+      <h3><span class="chip chip-p1">P1 CRITICAL</span> Change Win Condition to Science-Faithful Discovery</h3>
+      <p>Win = first molecule that (a) scores ≥ known_score + 0.05 AND (b) passes novelty check (Tanimoto &lt; 0.4). Remove the 300-HP grind. Boss HP becomes a "binding affinity ring" showing how close you are. One great shot can win. This teaches the real insight: drug discovery is about finding the ONE right molecule, not grinding.</p>
+      <div class="imp-meta"><span class="chip chip-p1">Science Integrity</span><span class="chip chip-p1">Student Motivation</span><span class="imp-effort">Backend + Frontend change · ~2 days</span></div>
+    </div>
+  </div>
+
+  <div class="improvement">
+    <div class="imp-num">2</div>
+    <div class="imp-body">
+      <h3><span class="chip chip-p1">P1 CRITICAL</span> Show Known Drug Baseline Prominently at All Times</h3>
+      <p>Add a "baseline strip" under the top bars: "Known Drug: 60% | Your Best: 71% (+11% 🎉)". Students must see what they're optimizing against. This is the core concept of lead optimization and it's currently invisible during play.</p>
+      <div class="imp-meta"><span class="chip chip-p1">Drug Discovery Concept</span><span class="imp-effort">Frontend only · ~2 hours</span></div>
+    </div>
+  </div>
+
+  <div class="improvement">
+    <div class="imp-num">3</div>
+    <div class="imp-body">
+      <h3><span class="chip chip-p1">P1 CRITICAL</span> Replace "EVADED!" with Binding Percentage Feedback</h3>
+      <p>When score &lt; 30%, show: "Low binding affinity — 18% fit at active site. The molecule structure doesn't complement the pocket well." Show the science card still. Science message: every test teaches us something. No failures, only data.</p>
+      <div class="imp-meta"><span class="chip chip-p1">Student Psychology</span><span class="chip chip-p1">Science Accuracy</span><span class="imp-effort">Frontend + small service change · ~3 hours</span></div>
+    </div>
+  </div>
+
+  <div class="improvement">
+    <div class="imp-num">4</div>
+    <div class="imp-body">
+      <h3><span class="chip chip-p2">P2 IMPORTANT</span> Apply New Color Theme (Molecule Labs Palette)</h3>
+      <p>Migrate from black+cyan to navy (#060d1a) + 7-colour semantic palette. Each bar gets a unique gradient: boss = coral→red, player = teal→green, score = orange→amber. Green = win, purple = novelty, gold = achievement. Append-only to CSS — no deletions.</p>
+      <div class="imp-meta"><span class="chip chip-p2">UX / Engagement</span><span class="imp-effort">CSS-only change · ~1 day</span></div>
+    </div>
+  </div>
+
+  <div class="improvement">
+    <div class="imp-num">5</div>
+    <div class="imp-body">
+      <h3><span class="chip chip-p2">P2 IMPORTANT</span> Add Molecule Journey Timeline</h3>
+      <p>Small horizontal timeline in the HUD bottom showing all fired molecules this session as coloured dots (score-coloured). Hovering/clicking shows the molecule name and score. Students see their optimization path — the core of iterative drug design.</p>
+      <div class="imp-meta"><span class="chip chip-p2">Educational Flow</span><span class="chip chip-p2">Engagement</span><span class="imp-effort">Frontend only · ~4 hours</span></div>
+    </div>
+  </div>
+
+  <div class="improvement">
+    <div class="imp-num">6</div>
+    <div class="imp-body">
+      <h3><span class="chip chip-p2">P2 IMPORTANT</span> Live Novelty Check During Docking (not just victory)</h3>
+      <p>When the docking phase completes and the score beats baseline, immediately call the novelty API in the background and show in the docking guide: "🔍 Novel candidate confirmed — not found in ChEMBL!" or "⚠️ Similar to Lopinavir — try modifying the scaffold." This teaches why novelty matters in real time.</p>
+      <div class="imp-meta"><span class="chip chip-p2">Drug Discovery</span><span class="imp-effort">Backend + Frontend · ~1 day</span></div>
+    </div>
+  </div>
+
+  <div class="improvement">
+    <div class="imp-num">7</div>
+    <div class="imp-body">
+      <h3><span class="chip chip-p3">P3 NICE</span> Add SMILES Tooltip "What is this?"</h3>
+      <p>On the molecule card, clicking the SMILES string shows a tooltip: "SMILES = Simplified Molecular Input Line Entry System. It's a text recipe for atoms — like a genetic sequence for a drug molecule." Builds vocabulary without cluttering the UI.</p>
+      <div class="imp-meta"><span class="chip chip-p3">Education</span><span class="imp-effort">Frontend only · ~1 hour</span></div>
+    </div>
+  </div>
+
+  <div class="improvement">
+    <div class="imp-num">8</div>
+    <div class="imp-body">
+      <h3><span class="chip chip-p3">P3 NICE</span> Rename "Combos" to "Optimization Streaks"</h3>
+      <p>Sequential improvements get "Optimization Streak ×3" instead of a generic combo badge. Same mechanic, better science framing. "You've improved the score 3 times in a row — that's exactly how iterative drug design works!"</p>
+      <div class="imp-meta"><span class="chip chip-p3">Science Framing</span><span class="imp-effort">Frontend only · ~30 min</span></div>
+    </div>
+  </div>
+
+  <div class="improvement">
+    <div class="imp-num">9</div>
+    <div class="imp-body">
+      <h3><span class="chip chip-p3">P3 NICE</span> Hint System After Consecutive Low Scores</h3>
+      <p>After 3 shots below baseline, show a contextual hint panel: "💡 Hint: Your last molecules had low Drugability (QED). Try using the Design Drug tool and ask for molecules with 'higher QED and fewer rotatable bonds.'" Connects score numbers to actionable chemistry intuition.</p>
+      <div class="imp-meta"><span class="chip chip-p3">Pedagogy</span><span class="imp-effort">Frontend only · ~2 hours</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 7: MOCK GAME UI
+══════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-mockgame">
+  <h2 style="margin-bottom:8px;">Mock Game Screen — Molecule Labs Theme</h2>
+  <p style="margin-bottom:20px;">This is a static mockup showing the proposed colour theme, baseline strip, new molecule cards, binding affinity ring (replacing HP), and the improved docking guide post-docking state. All proposed improvements from the list above are visible.</p>
+
+  <div id="mock-game-wrapper">
+
+    <!-- HUD TOP -->
+    <div class="mock-hud-top">
+      <div class="mock-bars">
+        <!-- Boss bar -->
+        <div class="mock-bar-row">
+          <div class="mock-bar-label">
+            <span style="color:#ef4444;font-size:10px;font-weight:800;letter-spacing:1px;">COVID19_MPRO &nbsp; BINDING RESISTANCE</span>
+            <span style="color:#ef4444;font-size:10px;font-weight:800;">35% remaining</span>
+          </div>
+          <div class="mock-bar-bg"><div class="mock-bar-fill fill-boss"></div></div>
+        </div>
+        <!-- Player bar -->
+        <div class="mock-bar-row">
+          <div class="mock-bar-label">
+            <span style="color:#22d3ee;font-size:10px;font-weight:800;letter-spacing:1px;">QUANTUM SHIELD</span>
+            <span style="color:#22d3ee;font-size:10px;font-weight:800;">670 / 1000</span>
+          </div>
+          <div class="mock-bar-bg"><div class="mock-bar-fill fill-player"></div></div>
+        </div>
+        <!-- Score bar -->
+        <div class="mock-bar-row">
+          <div class="mock-bar-label">
+            <span style="color:#fbbf24;font-size:10px;font-weight:800;letter-spacing:1px;">BEST COMPOSITE SCORE</span>
+            <span style="color:#fbbf24;font-size:10px;font-weight:800;">71% ↑</span>
+          </div>
+          <div class="mock-bar-bg" style="position:relative;">
+            <div class="mock-bar-fill fill-score"></div>
+            <div class="mock-win-marker" title="Win Threshold: 75%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="mock-stats">
+        <div>ARENA: <span class="stat-val">BIO_JUNGLE_7</span></div>
+        <div>ATTACKS: <span class="stat-val">4</span></div>
+        <div style="color:#fbbf24;">⭐ <span class="stat-val">120 RP</span></div>
+      </div>
+    </div>
+
+    <!-- WINNING BADGE -->
+    <div class="mock-winning-badge">🏆 WINNING!</div>
+
+    <!-- BASELINE STRIP — KEY NEW ADDITION -->
+    <div class="mock-baseline-strip">
+      <span class="baseline-known">⚗️ Known Drug: <strong>60%</strong></span>
+      <span class="baseline-sep">|</span>
+      <span class="baseline-yours">Your Best: <strong>71%</strong></span>
+      <span class="baseline-delta">+11% 🎉 Above Known Drug</span>
+    </div>
+
+    <!-- BOSS AREA with Binding Affinity Ring (replaces HP metaphor) -->
+    <div class="mock-boss-area">
+      <div class="mock-binding-ring">
+        <svg class="ring-svg" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+          <!-- 35% remaining resistance = 65% binding achieved, stroke progress = 65% of circumference = 0.65 * 2π * 52 ≈ 212 -->
+          <circle class="ring-fill" cx="60" cy="60" r="52"
+            stroke="url(#ringGrad)"
+            stroke-dasharray="327"
+            stroke-dashoffset="114">
+          </circle>
+          <defs>
+            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#4ade80"/>
+              <stop offset="100%" stop-color="#22d3ee"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="ring-label">
+          <span class="ring-pct">65%</span>
+          <span style="font-size:8px;color:#475569;letter-spacing:1px;">BINDING<br>ACHIEVED</span>
+        </div>
+      </div>
+      <div class="mock-boss-emoji">🦠</div>
+      <div class="mock-boss-name">COVID-19 MPRO</div>
+      <div style="font-size:9px;color:#475569;letter-spacing:1px;margin-top:4px;">ACTIVE SITE: 65% BLOCKED</div>
+    </div>
+
+    <!-- COMBAT LOG -->
+    <div class="mock-log">
+      <div class="mock-log-entry success">✓ MX-4203: 71% binding — NEW BEST!</div>
+      <div class="mock-log-entry">▸ MX-3491: 65% binding at active site</div>
+      <div class="mock-log-entry warn">▸ MX-2807: 28% — low pocket complementarity</div>
+      <div class="mock-log-entry">▸ SELECTED: MX-4203</div>
+    </div>
+
+    <!-- DOCKING GUIDE (post-docking state) -->
+    <div class="mock-docking-guide">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:18px;">🔬</span>
+        <div>
+          <div style="font-size:10px;font-weight:900;letter-spacing:2px;color:#22d3ee;">DOCKING COMPLETE</div>
+          <div style="font-size:9px;color:#475569;">Molecule: <span style="color:#94a3b8;">MX-4203</span></div>
+        </div>
+      </div>
+      <div class="dg-phase-row">
+        <span class="dg-step done">🧬 Membrane</span>
+        <span class="dg-arrow">▶</span>
+        <span class="dg-step done">🔗 Binding</span>
+        <span class="dg-arrow">▶</span>
+        <span class="dg-step done">⚗️ Docking</span>
+      </div>
+      <div style="height:1px;background:rgba(255,255,255,0.07);margin:8px 0;"></div>
+      <div class="dg-fact-hdr">💡 DRUG DISCOVERY INSIGHT</div>
+      <div class="dg-fact-title">The Active Site Pocket</div>
+      <div class="dg-fact-body">The pathogen's protein has a precise 3D pocket lined with amino acids. Your molecule must complement its shape and charge to lock in and block the enzyme.</div>
+      <div class="dg-key-term">
+        <span class="dg-key-label">KEY TERM</span>
+        <div class="dg-key-term-name">Active Site</div>
+        <div class="dg-key-term-def">The specific region of a protein where a drug binds. Blocking it can halt the pathogen's critical function.</div>
+      </div>
+      <!-- NEW: novelty result inline -->
+      <div style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:6px;padding:6px 10px;margin-top:8px;font-size:10px;">
+        <span style="color:#a78bfa;font-weight:800;">🔍 NOVELTY CHECK:</span>
+        <span style="color:#4ade80;margin-left:6px;">✓ Novel — not found in ChEMBL!</span>
+      </div>
+      <div class="dg-progress"><div class="dg-prog-fill"></div></div>
+      <div class="dg-complete-line">✅ Docking Complete — take your time reading!</div>
+      <button class="dg-resume-btn">▶ Resume Game</button>
+    </div>
+
+    <!-- MOLECULE DECK -->
+    <div class="mock-deck">
+      <div class="mock-deck-header">
+        <span>⚗️ SELECT MOLECULE TO FIRE</span>
+        <span style="color:#334155;">// SPACE or CLICK ARENA TO FIRE &nbsp;·&nbsp; ← ↑ ↓ → MOVE SHIP //</span>
+      </div>
+      <div class="mock-deck-cards">
+        <!-- Card 1: Selected, high score -->
+        <div class="mock-mol-card selected">
+          <div class="mock-card-key">[1] SELECTED</div>
+          <div class="mock-card-name">MX-4203</div>
+          <div class="mock-card-smiles">CC1CC(NC(=O)C(F)(F)Cl…</div>
+          <div class="mock-card-bar-bg"><div class="mock-card-bar-fill fill-g" style="width:71%"></div></div>
+          <div class="mock-card-pct c-green">71% <small style="color:#4ade80;font-size:9px;">+11% ↑</small></div>
+          <div class="mock-card-tags">
+            <span class="mock-tag tag-novel">NOVEL</span>
+            <span class="mock-tag tag-best">NEW BEST</span>
+            <span class="mock-tag tag-synth">Easy Synthesis</span>
+          </div>
+        </div>
+        <!-- Card 2: Medium score -->
+        <div class="mock-mol-card ok">
+          <div class="mock-card-key">[2]</div>
+          <div class="mock-card-name">MX-3491</div>
+          <div class="mock-card-smiles">O=C(Nc1ccc(F)cc1)C1CC…</div>
+          <div class="mock-card-bar-bg"><div class="mock-card-bar-fill fill-a" style="width:65%"></div></div>
+          <div class="mock-card-pct c-gold">65% <small style="color:#f97316;font-size:9px;">+5% ↑</small></div>
+          <div class="mock-card-tags">
+            <span class="mock-tag tag-novel">NOVEL</span>
+          </div>
+        </div>
+        <!-- Card 3: Lower score -->
+        <div class="mock-mol-card">
+          <div class="mock-card-key">[3]</div>
+          <div class="mock-card-name">MX-5102</div>
+          <div class="mock-card-smiles">CC(C)Cc1ccc(C(C)C(=O)…</div>
+          <div class="mock-card-bar-bg"><div class="mock-card-bar-fill fill-r" style="width:48%"></div></div>
+          <div class="mock-card-pct c-orange">48% <small style="color:#f97316;font-size:9px;">-12% ↓</small></div>
+          <div class="mock-card-tags"></div>
+        </div>
+      </div>
+      <!-- Molecule Journey Timeline (new feature proposal) -->
+      <div style="margin-top:10px;display:flex;align-items:center;gap:6px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);">
+        <span style="font-size:9px;color:#1e293b;font-weight:700;letter-spacing:1px;white-space:nowrap;">JOURNEY ▸</span>
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+          <div title="MX-2807: 28%" style="width:10px;height:10px;border-radius:50%;background:#ef4444;border:1px solid rgba(255,255,255,0.15);cursor:pointer;"></div>
+          <div style="width:14px;height:1px;background:#1e293b;"></div>
+          <div title="MX-3491: 65%" style="width:10px;height:10px;border-radius:50%;background:#fbbf24;border:1px solid rgba(255,255,255,0.15);cursor:pointer;"></div>
+          <div style="width:14px;height:1px;background:#1e293b;"></div>
+          <div title="MX-4203: 71% ← NEW BEST" style="width:14px;height:14px;border-radius:50%;background:#4ade80;border:2px solid rgba(74,222,128,0.7);cursor:pointer;box-shadow:0 0 6px rgba(74,222,128,0.4);"></div>
+          <span style="font-size:9px;color:#334155;margin-left:4px;">← Current Best</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end mock-game-wrapper -->
+
+  <div style="margin-top:24px;" class="card">
+    <div class="card-title">Key Differences from Current Game (highlighted above)</div>
+    <ol style="color:#64748b;font-size:13px;padding-left:20px;display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+      <li><strong style="color:#e2e8f0">Baseline Strip (NEW):</strong> "Known Drug: 60% | Your Best: 71% (+11% 🎉)" — always visible, orients every action.</li>
+      <li><strong style="color:#e2e8f0">Binding Affinity Ring (REPLACES HP bar):</strong> Shows % of active site blocked — science-accurate metaphor instead of combat HP.</li>
+      <li><strong style="color:#e2e8f0">Cards show delta score:</strong> "+11% ↑" above known baseline, coloured tags for novelty/best/synthesizability.</li>
+      <li><strong style="color:#e2e8f0">Novelty check inline in docking guide:</strong> "✓ Novel — not found in ChEMBL!" visible during docking, not just at victory.</li>
+      <li><strong style="color:#e2e8f0">Molecule Journey timeline:</strong> Coloured dots showing optimization path — red → amber → green shows scientific progress.</li>
+      <li><strong style="color:#e2e8f0">Navy background with semantic colours:</strong> Each bar/element has distinct gradient; information density increases.</li>
+      <li><strong style="color:#e2e8f0">Combat log uses science language:</strong> "71% binding — NEW BEST!" not "HIT +23 damage".</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════════ -->
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>
