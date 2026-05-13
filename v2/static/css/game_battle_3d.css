@@ -442,12 +442,19 @@ select.game-select {
     bottom: 16px;
     width: 292px;
     border: none;
-    border-radius: 16px;
+    border-radius: 0;
     padding: 0;
     background: transparent;
     pointer-events: all;
     z-index: 34;
     backdrop-filter: none;
+    /* Flex column: panel stacks above compact bar, grows upward */
+    display: flex;
+    flex-direction: column;
+    transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.molecule-dock.open {
+    width: min(360px, calc(100vw - 28px));
 }
 
 .molecule-dock-compact {
@@ -463,13 +470,21 @@ select.game-select {
     backdrop-filter: blur(12px);
     box-shadow: 0 14px 34px rgba(0,0,0,0.36), 0 0 26px rgba(0,242,255,0.08);
     cursor: pointer;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, border-radius 0.18s ease, border-top 0.18s ease;
 }
-.molecule-dock-compact:hover,
-.molecule-dock.open .molecule-dock-compact {
+/* Hover lift — only when dock is collapsed */
+.molecule-dock:not(.open) .molecule-dock-compact:hover {
     transform: translateY(-2px);
     border-color: rgba(0,242,255,0.75);
     box-shadow: 0 16px 38px rgba(0,0,0,0.42), 0 0 30px rgba(0,242,255,0.18);
+}
+/* Open state: compact bar becomes the bottom half of the unified panel */
+.molecule-dock.open .molecule-dock-compact {
+    border-color: rgba(0,242,255,0.75);
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.36);
 }
 
 .dock-main {
@@ -541,27 +556,31 @@ select.game-select {
 .dock-design-btn:hover { background: rgba(0,242,255,0.2); }
 
 .molecule-dock-panel {
-    position: absolute;
-    right: 0;
-    bottom: 86px;
-    width: min(380px, calc(100vw - 28px));
+    /* Inline flow — no absolute positioning, grows the dock upward */
+    width: 100%;
+    box-sizing: border-box;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 14px;
+    border: 1px solid rgba(0,242,255,0.42);
+    border-bottom: none;
+    border-radius: 18px 18px 0 0;
+    background: rgba(0,10,20,0.96);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.28), 0 0 24px rgba(0,242,255,0.08);
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: max-height 0.28s cubic-bezier(0.4,0,0.2,1),
+                opacity 0.22s ease,
+                visibility 0.22s,
+                padding 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+.molecule-dock.open .molecule-dock-panel {
     max-height: min(62vh, 430px);
     overflow: auto;
     padding: 14px;
-    border: 1px solid rgba(0,242,255,0.42);
-    border-radius: 18px;
-    background: rgba(0,10,20,0.96);
-    backdrop-filter: blur(14px);
-    box-shadow: 0 22px 55px rgba(0,0,0,0.48), 0 0 32px rgba(0,242,255,0.11);
-    opacity: 0;
-    transform: translateY(14px) scale(0.96);
-    pointer-events: none;
-    visibility: hidden;
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
-}
-.molecule-dock.open .molecule-dock-panel {
     opacity: 1;
-    transform: translateY(0) scale(1);
     pointer-events: all;
     visibility: visible;
 }
@@ -1493,13 +1512,15 @@ kbd {
         bottom: 10px;
         width: min(286px, calc(100vw - 76px));
     }
+    .molecule-dock.open {
+        width: min(340px, calc(100vw - 28px));
+    }
     .molecule-dock-compact {
         grid-template-columns: 1fr 54px 42px;
         min-height: 66px;
     }
     .dock-name { max-width: 118px; }
-    .molecule-dock-panel {
-        bottom: 78px;
+    .molecule-dock.open .molecule-dock-panel {
         max-height: 52vh;
     }
     .analyzing-overlay {
@@ -1542,15 +1563,14 @@ kbd {
         width: auto;
         bottom: 10px;
     }
+    .molecule-dock.open {
+        width: auto;
+    }
     .molecule-dock-compact {
         grid-template-columns: 1fr 58px 42px;
     }
     .dock-name { max-width: 46vw; }
-    .molecule-dock-panel {
-        left: 0;
-        right: 0;
-        width: auto;
-        bottom: 78px;
+    .molecule-dock.open .molecule-dock-panel {
         max-height: 48vh;
     }
     .leaderboard-panel {
