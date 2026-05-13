@@ -2,58 +2,58 @@ const TUT_STEPS = [
     {
         id: 'overview',
         title: 'What is PathoHunt 3D?',
-        category: 'MISSION OVERVIEW',
-        text: 'PathoHunt 3D is a <strong>real drug-discovery game</strong>. Every boss is an actual viral or cancer protein — Flu, COVID-19, HIV, EGFR Kinase, and more. Your mission: design molecules that block the protein\'s active site. The boss starts with <strong>300 HP</strong>. Drain it to zero and you may have found a genuine drug candidate.',
-        audio: 'Welcome, Scientist. PathoHunt 3D is a real drug discovery game. Every boss is an actual viral or cancer protein — Flu, COVID-19, HIV, EGFR Kinase, and more. Your mission is to design molecules that block the protein active site. The boss starts with 300 hit points. Drain it to zero and you may have found a genuine drug candidate.',
+        category: 'OVERVIEW',
+        text: 'You are a scientist fighting a real disease protein. <strong>Design drug molecules and fire them at the boss.</strong> Each molecule is scored by real chemistry — the better the drug, the more damage it deals. Defeat the boss and you\'ve designed a genuine drug candidate.',
+        audio: 'Welcome, Scientist. In PathoHunt 3D you fight a real disease protein by designing drug molecules and firing them at the boss. Each molecule is scored by real chemistry — the better the drug, the more damage it deals. Defeat the boss and you have designed a genuine drug candidate.',
     },
     {
         id: 'briefing',
-        title: 'The Mission Briefing',
-        category: 'BEFORE BATTLE',
-        text: 'Every battle opens with a <strong>Mission Briefing screen</strong>. It shows the boss lore, the <em>composite score target</em> you need to hit to deal maximum damage, and a quick control guide. Press <strong>START MISSION</strong> when you are ready to drop into the arena.',
-        audio: 'Every battle opens with a Mission Briefing screen. It shows the boss lore, the composite score target you need to deal maximum damage, and a quick control guide. Press Start Mission when you are ready to drop into the arena.',
+        title: 'Before the Battle',
+        category: 'GETTING STARTED',
+        text: 'Before each fight you see a <strong>Mission Briefing</strong>. Read the boss story, check the score you need to beat, then press <strong>START MISSION</strong>. You can also turn on <strong>Outbreak Mode</strong> for an 8-minute countdown challenge.',
+        audio: 'Before each fight you see a Mission Briefing. Read the boss story, check the score you need to beat, then press Start Mission. You can also turn on Outbreak Mode for an 8-minute countdown challenge.',
     },
     {
         id: 'controls',
-        title: 'Your Fighter Ship',
+        title: 'Moving & Firing',
         category: 'CONTROLS',
-        text: 'You pilot a <strong>cyan fighter ship</strong> at the bottom of the arena. Use the <strong>← → Arrow Keys</strong> to move left and right. Press <strong>1, 2, or 3</strong> to select a molecule from your deck. Press <strong>SPACE</strong> — or click anywhere in the arena — to launch your shot. The projectile flies from your ship toward the boss.',
-        audio: 'You pilot a cyan fighter ship at the bottom of the arena. Use the left and right arrow keys to move. Press 1, 2, or 3 to select a molecule. Press Space — or click the arena — to launch your shot. The projectile flies from your ship toward the boss.',
+        text: 'Use <strong>← →</strong> to move your ship. Press <strong>SPACE</strong> (or click the arena) to fire. Use keys <strong>1, 2, 3</strong> to pick a molecule before you fire. That\'s all the controls — simple!',
+        audio: 'Use the left and right arrow keys to move your ship. Press Space, or click the arena, to fire. Use keys 1, 2, and 3 to pick a molecule. That is all the controls.',
     },
     {
         id: 'deck',
-        title: 'The Molecule Deck',
+        title: 'Picking Your Molecule',
         category: 'CHEMISTRY',
-        text: 'Each round, an AI generates <strong>3 molecule candidates</strong>. The percentage is the <em>composite score</em> — a blend of drugability (QED), ease-of-synthesis (SAS), structural similarity to known drugs, and Lipinski drug-likeness. <strong>Higher score → more damage per hit.</strong> Pick the best one or use ⌨️ Custom to enter your own SMILES.',
-        audio: 'Each round, an AI generates 3 molecule candidates. The percentage is the composite score — a blend of drugability, ease of synthesis, structural similarity, and drug-likeness. Higher score means more damage per hit. Pick the best one or enter your own SMILES using the Custom button.',
+        text: 'Before each shot, the AI gives you up to <strong>3 molecule options</strong>. Each shows a <strong>Drug Score %</strong> — how good it is as a medicine. <strong>Higher score = more damage.</strong> Pick the highest one, or tap 🧪 to design your own. Don\'t overthink it — just pick the best number!',
+        audio: 'Before each shot, the AI gives you up to 3 molecule options. Each shows a Drug Score — how good it is as a medicine. Higher score means more damage. Pick the highest one, or tap the flask button to design your own. Just pick the best number!',
     },
     {
         id: 'attack',
-        title: 'Attack Flow — 3 Phases',
+        title: 'What Happens When You Fire',
         category: 'COMBAT',
-        text: 'When you fire, your shot <strong>locks onto the boss\'s position at that exact moment</strong>. The system then runs 3 scanning phases: <strong>Outer Membrane Scan</strong> → <strong>Binding Site Analysis</strong> → <strong>Quantum Docking</strong>. The first two show fake partial scores to build suspense. The <em>real score</em> — and the actual damage — only appears after phase 3.',
-        audio: 'When you fire, your shot locks onto the boss position at that exact moment. The system runs 3 scanning phases: Outer Membrane Scan, then Binding Site Analysis, then Quantum Docking. The first two show fake partial scores. The real score and actual damage only appear after phase 3.',
+        text: 'After you fire, the game <strong>calculates your molecule\'s real drug score</strong>. This takes a few seconds — you\'ll see a docking animation. <strong>Wait for the result</strong> before firing again. The final score shown is the real one — it\'s actual computational chemistry, not random.',
+        audio: 'After you fire, the game calculates your molecule\'s real drug score. This takes a few seconds — you will see a docking animation. Wait for the result before firing again. The final score shown is real — it is actual computational chemistry, not random.',
     },
     {
         id: 'dodge',
-        title: 'The Boss Dodges!',
+        title: 'The Boss Moves!',
         category: 'COMBAT',
-        text: 'The boss <strong>wanders the arena continuously</strong>. When your shot gets close, it may <strong>dodge sideways</strong>! Dodge chance: Easy 20%, Normal 35%, Hard 55% — and it rises by 15% more when the boss is below half health. A miss shows <em>💨 EVADED!</em> and breaks your combo. <strong>Tip:</strong> fire when the boss is cornered or slowing down.',
-        audio: 'The boss wanders the arena continuously. When your shot gets close, it may dodge sideways! Dodge chance is 20% on Easy, 35% on Normal, and 55% on Hard — rising further when the boss is below half health. A miss shows EVADED and breaks your combo. Fire when the boss is cornered or slowing down.',
+        text: 'The boss roams the arena and <strong>may dodge your shot</strong>. On Easy it dodges 1-in-5 shots; on Hard it dodges more than half. A miss shows <strong>💨 EVADED!</strong> — keep firing. <strong>Tip:</strong> aim when the boss is moving slowly or near a corner.',
+        audio: 'The boss roams the arena and may dodge your shot. On Easy it dodges 1 in 5 shots. On Hard it dodges more than half. A miss shows EVADED — just keep firing. Aim when the boss is moving slowly or near a corner.',
     },
     {
         id: 'threats',
-        title: 'Threats & Friendly Fire',
+        title: 'Red = Shoot. Green = Avoid.',
         category: 'SURVIVAL',
-        text: '<span style="color:#ff6666"><strong>Red spores</strong></span> fly toward your ship — shoot them to protect your <strong>Quantum Shield (1000 HP)</strong>. But <span style="color:#00ff88"><strong>GREEN cells</strong></span> are healthy host cells — <em>do NOT shoot them!</em> Hitting a green cell triggers <strong>FRIENDLY FIRE: −80 HP</strong> and resets your combo to zero. Use the 🔊 mute button to silence audio if needed.',
-        audio: 'Red spores fly toward your ship. Shoot them to protect your Quantum Shield. But green cells are healthy host cells. Do not shoot them! Hitting a green cell triggers Friendly Fire, costs 80 shield points, and resets your combo to zero.',
+        text: '<span style="color:#ff6666"><strong>🔴 Red spores</strong></span> fly toward you — <strong>shoot them</strong> or they drain your shield. <span style="color:#00ff88"><strong>🟢 Green cells</strong></span> are friendly — <strong>do NOT shoot them!</strong> Hitting a green cell costs <strong>−80 shield</strong> and ruins your streak. One rule: red = bad, green = good.',
+        audio: 'Red spores fly toward you — shoot them or they drain your shield. Green cells are friendly — do not shoot them! Hitting a green cell costs 80 shield and ruins your streak. One rule: red means bad, green means good.',
     },
     {
         id: 'endgame',
         title: 'How to Win',
-        category: 'END GAME',
-        text: 'The boss has <strong>300 HP</strong>. Each hit deals <strong>5–28 HP</strong> based on composite score. Beating your <em>previous best score</em> gives a <strong>discovery bonus</strong> on top. You need <strong>at least 8 attacks</strong> before the boss can be defeated. When the HP bar hits zero — <strong>you win!</strong> The victory screen shows your best molecule. Hit <strong>🔬 Cross-Validate in ChEMBL</strong> to check if your molecule is a truly novel drug candidate.',
-        audio: 'The boss has 300 hit points. Each hit deals 5 to 28 points based on composite score. Beating your previous best gives a discovery bonus on top. You need at least 8 attacks before the boss can die. When the HP bar hits zero, you win! The victory screen shows your best molecule. Cross-validate in ChEMBL to check if it is a truly novel drug candidate. Good luck, Scientist!',
+        category: 'VICTORY',
+        text: 'The boss has <strong>300 HP</strong>. Better molecules hit harder. Keep firing until the HP bar reaches zero — <strong>that\'s your win!</strong> After victory, the game shows your best molecule and lets you check whether it\'s a <strong>new discovery</strong> not yet in any drug database.',
+        audio: 'The boss has 300 hit points. Better molecules hit harder. Keep firing until the HP bar reaches zero — that is your win! After victory the game shows your best molecule and lets you check whether it is a new discovery not yet in any drug database. Good luck, Scientist!',
     },
 ];
 
@@ -256,8 +256,8 @@ function buildBriefing() {
         <div class="tvis-brief-mission">⚡ MISSION BRIEFING</div>
         <div class="tvis-brief-name">Corona Cutter</div>
         <div class="tvis-brief-lore">The COVID-19 virus uses this molecular scissors to build itself. Your job is to jam those scissors better than Paxlovid.</div>
-        <div class="tvis-brief-obj">🎯 Achieve <strong>70%</strong> composite score · deplete 300 HP</div>
-        <div class="tvis-brief-ctrl">← → Move · SPACE Fire · 1 / 2 / 3 Select</div>
+        <div class="tvis-brief-obj">🎯 Beat the best known drug (65% score) — one great shot wins!</div>
+        <div class="tvis-brief-ctrl">← → Move ship &nbsp;·&nbsp; SPACE Fire &nbsp;·&nbsp; 1 / 2 / 3 Pick molecule</div>
         <div class="tvis-brief-startbtn">⚔️ START MISSION</div>
     </div>`;
 }
