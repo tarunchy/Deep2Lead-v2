@@ -1818,6 +1818,7 @@ class PathoHunt3D {
     }
 
     takeDamage(val) {
+        if (this.attackLocked) return;   // immune while docking — player can't move
         const prevHP = this.playerHP;
         this.playerHP = Math.max(0, this.playerHP - val);
         this.pulseHudIcon('edgeShieldBtn', 'edge-flash', 900);
