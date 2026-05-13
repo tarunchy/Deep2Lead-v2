@@ -1,28 +1,61 @@
 {% extends "base.html" %}
-{% block title %}PathoHunt 3D — Choose Your Target{% endblock %}
+{% block title %}PathoHunt 3D{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/game_selector_3d.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="selector-hero">
-    <h1>⚔️ PATHOHUNT 3D — SELECT YOUR TARGET</h1>
-    <p>Each target is a real pathogenic protein. Choose wisely — your molecules must surpass known drugs.</p>
-</div>
+<div id="selectorRoot">
+    <canvas id="bgCanvas"></canvas>
 
-<div class="selector-top-bar">
-    <a href="/game/pathohunt-3d/tutorial"
-       style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,242,255,0.08);border:1px solid rgba(0,242,255,0.3);border-radius:8px;padding:6px 14px;font-size:0.85rem;color:#00f2ff;text-decoration:none;font-weight:600;">
-        🎓 How to Play
-    </a>
-</div>
+    <!-- TITLE SCREEN -->
+    <div class="gs-screen" id="screenTitle">
+        <div class="gs-title-logo">
+            <div class="gs-logo-text" data-text="PATHOHUNT 3D">PATHOHUNT 3D</div>
+            <div class="gs-logo-sub">MOLECULAR WARFARE · PATHOGEN STRIKE FORCE</div>
+        </div>
+        <div class="gs-press-start" id="titleCta">PRESS ANY KEY TO START</div>
+        <div class="gs-title-version">v2.0 · DEEP2LEAD</div>
+    </div>
 
-<div class="boss-selector-grid" id="bossSelectorGrid"></div>
+    <!-- MAIN MENU -->
+    <div class="gs-screen" id="screenMenu" style="display:none;">
+        <div class="gs-menu-logo">PATHOHUNT <span>3D</span></div>
+        <nav class="gs-main-menu">
+            <button class="gs-menu-btn" id="menuSelectTarget">
+                <span class="gs-menu-icon">⚔️</span>
+                <span class="gs-menu-label">SELECT TARGET</span>
+                <span class="gs-menu-arrow">›</span>
+            </button>
+            <button class="gs-menu-btn" id="menuHowToPlay">
+                <span class="gs-menu-icon">📡</span>
+                <span class="gs-menu-label">HOW TO PLAY</span>
+                <span class="gs-menu-arrow">›</span>
+            </button>
+            <button class="gs-menu-btn" id="menuBattleLog">
+                <span class="gs-menu-icon">🗂️</span>
+                <span class="gs-menu-label">BATTLE LOG</span>
+                <span class="gs-menu-arrow">›</span>
+            </button>
+        </nav>
+        <div class="gs-scanline-footer">CHOOSE YOUR MISSION · AGENT</div>
+    </div>
 
-<div class="boss-intro-overlay" id="bossIntroOverlay" style="display:none;">
-    <div class="boss-intro-panel" id="bossIntroPanel"></div>
+    <!-- TARGET SELECT -->
+    <div class="gs-screen" id="screenSelect" style="display:none;">
+        <div class="gs-select-header">
+            <button class="gs-back-btn" id="selectBack">‹ BACK</button>
+            <div class="gs-select-title">SELECT TARGET</div>
+            <div class="gs-select-count" id="selectCount"></div>
+        </div>
+        <div class="gs-dossier-grid" id="bossSelectorGrid"></div>
+    </div>
+
+    <!-- BOSS INTRO OVERLAY -->
+    <div class="gs-boss-overlay" id="bossIntroOverlay" style="display:none;">
+        <div class="gs-boss-panel" id="bossIntroPanel"></div>
+    </div>
 </div>
 {% endblock %}
 
