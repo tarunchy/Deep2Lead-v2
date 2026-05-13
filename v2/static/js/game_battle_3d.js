@@ -866,7 +866,9 @@ class PathoHunt3D {
         });
 
         window.addEventListener('keydown', e => {
-            // Prevent browser scroll / default actions for all game keys
+            // Don't intercept keys when user is typing in an input/textarea
+            const tag = document.activeElement?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
             if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) {
                 e.preventDefault();
             }
