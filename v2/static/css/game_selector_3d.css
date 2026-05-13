@@ -109,6 +109,13 @@
 
 .boss-card-info { padding-top: 4px; }
 
+.lock-reason-hint {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.45);
+    margin-top: 7px;
+    letter-spacing: 0.3px;
+}
+
 .boss-card-name {
     font-size: 1rem;
     font-weight: 700;

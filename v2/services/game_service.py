@@ -78,6 +78,20 @@ def _level_meta(target_id: str) -> dict | None:
     return next((lvl for lvl in _load_game_levels() if lvl["target_id"] == target_id), None)
 
 
+def get_unlocked_level_numbers(user_id) -> set:
+    """Levels 1-2 always open. Beating level N unlocks level N+1."""
+    won_target_ids = {
+        s.target_id for s in
+        GameSession.query.filter_by(user_id=user_id, status="won").all()
+    }
+    levels = _load_game_levels()
+    beaten_nums = {lvl["game_level"] for lvl in levels if lvl["target_id"] in won_target_ids}
+    unlocked = {1, 2}
+    for n in beaten_nums:
+        unlocked.add(n + 1)
+    return unlocked
+
+
 def get_all_bosses() -> list:
     levels = _load_game_levels()
     level_index = {lvl["target_id"]: lvl for lvl in levels}

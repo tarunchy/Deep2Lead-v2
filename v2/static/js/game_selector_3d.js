@@ -7,7 +7,7 @@ function initSelector() {
     if (!grid || !window.BOSSES_JSON) return;
 
     window.BOSSES_JSON.forEach((boss, idx) => {
-        const locked = boss.game_level > 2;
+        const locked = !boss.unlocked;
         const blobClass = 'boss-blob-' + (BLOB_COLORS[idx % BLOB_COLORS.length]);
         const diffLabel = boss.game_level <= 2 ? 'Scientist Junior' :
                           boss.game_level <= 4 ? 'Research Fellow' :
@@ -15,6 +15,7 @@ function initSelector() {
         const diffCls = boss.game_level <= 2 ? 'boss-diff-junior' :
                         boss.game_level <= 4 ? 'boss-diff-fellow' :
                         boss.game_level <= 6 ? 'boss-diff-pi' : 'boss-diff-nobel';
+        const lockReason = locked ? `Beat Level ${boss.game_level - 1} to unlock` : '';
 
         const card = document.createElement('div');
         card.className = 'boss-select-card' + (locked ? ' locked-card' : '');
@@ -30,6 +31,7 @@ function initSelector() {
                     <span class="boss-level-pill">LVL ${boss.game_level}</span>
                     <span class="boss-diff-pill ${diffCls}">${diffLabel}</span>
                 </div>
+                ${locked ? `<div class="lock-reason-hint">${lockReason}</div>` : ''}
             </div>
         `;
 

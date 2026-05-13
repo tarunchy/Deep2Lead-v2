@@ -131,6 +131,9 @@ def api_game_history():
 @login_required
 def game_selector_3d():
     bosses = game_service.get_all_bosses()
+    unlocked = game_service.get_unlocked_level_numbers(current_user.id)
+    for boss in bosses:
+        boss["unlocked"] = boss.get("game_level", 99) in unlocked
     return render_template("game_selector_3d.html", bosses=bosses)
 
 
