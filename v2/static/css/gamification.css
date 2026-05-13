@@ -2,35 +2,35 @@
 
 /* XP Bar (in navbar) */
 .xp-bar-wrapper { display: flex; align-items: center; gap: 8px; }
-.xp-level-badge { background: linear-gradient(135deg, #2b6cb0, #6b46c1); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+.xp-level-badge { background: rgba(0,242,255,0.12); border: 1px solid rgba(0,242,255,0.3); color: var(--accent); font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 2px; white-space: nowrap; font-family: 'Courier New', monospace; letter-spacing: .05em; }
 .xp-bar-outer { width: 80px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
 .xp-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), #3fb950); border-radius: 3px; transition: width 0.8s ease; }
 .xp-text { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
 
 /* Badge toast notification */
-.badge-toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid #3fb950; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; z-index: 9999; box-shadow: var(--shadow-md); animation: slideIn 0.4s ease; max-width: 300px; }
+.badge-toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid rgba(63,185,80,0.4); border-radius: 4px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; z-index: 9999; box-shadow: 0 0 24px rgba(63,185,80,0.15); animation: slideIn 0.4s ease; max-width: 300px; }
 .badge-toast-icon { font-size: 2rem; }
-.badge-toast-body strong { display: block; font-size: 0.9rem; color: #276749; }
+.badge-toast-body strong { display: block; font-size: 0.9rem; color: var(--success); }
 .badge-toast-body span { font-size: 0.8rem; color: var(--text-muted); }
 @keyframes slideIn { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 /* Mission board */
 .mission-list { display: flex; flex-direction: column; gap: 12px; }
 .mission-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow); }
-.mission-item.available { border-color: rgba(43,108,176,0.4); }
-.mission-item.complete { border-color: rgba(39,103,73,0.4); background: rgba(39,103,73,0.04); }
+.mission-item.available { border-color: rgba(0,242,255,0.3); }
+.mission-item.complete { border-color: rgba(63,185,80,0.3); background: rgba(63,185,80,0.04); }
 .mission-item.locked { opacity: 0.5; }
 .mission-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
 .mission-num.locked-num { background: var(--border); color: var(--text-muted); }
-.mission-num.available-num { background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent); }
-.mission-num.complete-num { background: #276749; color: #fff; }
+.mission-num.available-num { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(0,242,255,0.3); }
+.mission-num.complete-num { background: rgba(63,185,80,0.2); color: var(--success); border: 1px solid rgba(63,185,80,0.4); }
 .mission-body { flex: 1; }
 .mission-name { font-weight: 600; font-size: 0.95rem; color: var(--text); }
 .mission-desc { font-size: 0.83rem; color: var(--text-muted); margin-top: 2px; }
 .mission-action { flex-shrink: 0; }
 .btn-mission { padding: 7px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; }
 .btn-mission.available { background: var(--accent); color: #fff; }
-.btn-mission.complete-btn { background: transparent; border: 1px solid #276749; color: #276749; cursor: default; }
+.btn-mission.complete-btn { background: transparent; border: 1px solid rgba(63,185,80,0.4); color: var(--success); cursor: default; }
 .btn-mission.locked-btn { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
 
 /* Boss health bar */
@@ -45,7 +45,7 @@
 /* Badge grid */
 .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
 .badge-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; box-shadow: var(--shadow); }
-.badge-item.earned { border-color: rgba(39,103,73,0.4); background: rgba(39,103,73,0.04); }
+.badge-item.earned { border-color: rgba(63,185,80,0.35); background: rgba(63,185,80,0.05); }
 .badge-item.locked-badge { opacity: 0.35; }
 .badge-item .bi-icon { font-size: 2rem; }
 .badge-item .bi-name { font-size: 0.85rem; font-weight: 600; margin-top: 6px; color: var(--text); }

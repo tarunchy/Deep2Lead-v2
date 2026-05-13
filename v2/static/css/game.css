@@ -25,7 +25,7 @@
   background-clip: text;
 }
 .game-hero p {
-  color: var(--muted);
+  color: var(--text-muted);
   margin-top: 8px;
   font-size: 1rem;
 }
@@ -75,13 +75,13 @@
   font-size: 0.72rem;
   font-weight: 700;
   padding: 2px 9px;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 .boss-card.beaten .boss-level-badge { background: rgba(63,185,80,0.15); color: #4ade80; border-color: rgba(63,185,80,0.4); }
 
 .boss-emoji { font-size: 2.8rem; margin-bottom: 10px; display: block; }
 .boss-name { font-size: 1.05rem; font-weight: 700; color: var(--text); }
-.boss-subtitle { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+.boss-subtitle { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
 .boss-card .boss-difficulty { margin-top: 10px; }
 
 .boss-best-score {
@@ -138,7 +138,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--muted);
+  color: var(--text-muted);
   margin-bottom: 14px;
 }
 
@@ -167,7 +167,7 @@
 .hp-fill.low { background: linear-gradient(90deg, #16a34a, var(--g-hp-low)); }
 .hp-disclaimer {
   font-size: 0.72rem;
-  color: var(--muted);
+  color: var(--text-muted);
   font-style: italic;
   margin-top: 4px;
 }
@@ -182,7 +182,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 0.82rem;
   overflow: hidden;
   position: relative;
@@ -247,7 +247,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 0;
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 .attack-loading.visible { display: flex; }
@@ -306,7 +306,7 @@
 }
 .battle-boss-emoji { font-size: 2rem; }
 .battle-boss-name  { font-size: 1.2rem; font-weight: 700; }
-.battle-boss-sub   { font-size: 0.8rem; color: var(--muted); }
+.battle-boss-sub   { font-size: 0.8rem; color: var(--text-muted); }
 
 /* ── mode selector ── */
 .mode-selector {
@@ -322,7 +322,7 @@
   padding: 8px 16px;
   font-size: 0.85rem;
   cursor: pointer;
-  color: var(--muted);
+  color: var(--text-muted);
   transition: border-color 0.15s, color 0.15s;
 }
 .mode-btn.active { border-color: #58a6ff; color: #58a6ff; background: rgba(88,166,255,0.08); }
@@ -338,7 +338,7 @@
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  color: var(--muted);
+  color: var(--text-muted);
   transition: all 0.15s;
 }
 .diff-btn[data-d="junior"].active   { background: rgba(63,185,80,0.15);  border-color: #4ade80; color: #4ade80; }
@@ -392,7 +392,7 @@
 }
 .overlay-emoji { font-size: 3.6rem; display: block; margin-bottom: 12px; }
 .overlay-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
-.overlay-sub   { color: var(--muted); font-size: 0.95rem; margin-bottom: 20px; }
+.overlay-sub   { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px; }
 .overlay-btn {
   background: linear-gradient(135deg, #1d4ed8, #7c3aed);
   color: #fff;
@@ -407,7 +407,7 @@
 .overlay-btn.outline {
   background: transparent;
   border: 1px solid var(--border);
-  color: var(--muted);
+  color: var(--text-muted);
 }
 .overlay-btn:hover { opacity: 0.88; }
 

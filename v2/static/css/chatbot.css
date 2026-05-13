@@ -91,13 +91,14 @@
   color: var(--text);
 }
 .chat-bubble.bot code {
-  background: #e8edf3;
+  background: rgba(0,242,255,0.1);
   border-radius: 3px;
   padding: 1px 4px;
   font-size: 0.78rem;
   font-family: monospace;
+  color: var(--accent);
 }
-.chat-bubble.error { background: #fff5f5; border-color: #fed7d7; color: var(--danger); }
+.chat-bubble.error { background: rgba(255,77,77,0.1); border-color: rgba(255,77,77,0.3); color: var(--danger); }
 
 .chat-typing {
   align-self: flex-start;
@@ -177,14 +178,14 @@
 .chat-chip {
   background: var(--accent-light);
   color: var(--accent);
-  border: 1px solid #bee3f8;
+  border: 1px solid rgba(0,242,255,0.25);
   border-radius: 20px;
   padding: 3px 10px;
   font-size: 0.75rem;
   cursor: pointer;
   transition: background .15s;
 }
-.chat-chip:hover { background: #bee3f8; }
+.chat-chip:hover { background: rgba(0,242,255,0.15); }
 
 .chat-tools-badge {
   margin-top: 6px;
