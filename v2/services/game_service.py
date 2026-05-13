@@ -78,6 +78,10 @@ def _level_meta(target_id: str) -> dict | None:
     return next((lvl for lvl in _load_game_levels() if lvl["target_id"] == target_id), None)
 
 
+def get_wins_count(user_id) -> int:
+    return GameSession.query.filter_by(user_id=user_id, status="won").count()
+
+
 def get_unlocked_level_numbers(user_id) -> set:
     """Levels 1-2 always open. Beating level N unlocks level N+1."""
     won_target_ids = {

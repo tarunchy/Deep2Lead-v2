@@ -12,6 +12,7 @@ const MolDesigner = (() => {
         document.getElementById('molDesignerOverlay').style.display = 'flex';
         if (typeof audioMgr !== 'undefined') audioMgr.pause();
         reset();
+        setTimeout(() => window.GuideSystem?.trigger('designer_opened'), 400);
     }
 
     function close() {
@@ -46,6 +47,7 @@ const MolDesigner = (() => {
         document.querySelectorAll('.mdes-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
         document.getElementById('mdesTabDescribe').style.display = name === 'describe' ? '' : 'none';
         document.getElementById('mdesTabBuild').style.display    = name === 'build'    ? '' : 'none';
+        if (name === 'build') setTimeout(() => window.GuideSystem?.trigger('build_tab_clicked'), 300);
     }
 
     // ── Example prompts ───────────────────────────────────────────
@@ -230,6 +232,7 @@ const MolDesigner = (() => {
         if (window.pathoHunt3D) {
             window.pathoHunt3D.injectDesignedMolecule(currentSmiles, label);
         }
+        window.GuideSystem?.trigger('custom_mol_loaded');
         close();
     }
 

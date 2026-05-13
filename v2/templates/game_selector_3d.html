@@ -38,6 +38,11 @@
                 <span class="gs-menu-label">BATTLE LOG</span>
                 <span class="gs-menu-arrow">›</span>
             </button>
+            <button class="gs-menu-btn" id="menuTutorialToggle">
+                <span class="gs-menu-icon">📡</span>
+                <span class="gs-menu-label">TUTORIAL GUIDE</span>
+                <span class="gs-menu-arrow">○</span>
+            </button>
         </nav>
         <div class="gs-scanline-footer">CHOOSE YOUR MISSION · AGENT</div>
     </div>
@@ -62,6 +67,7 @@
 {% block scripts %}
 <script>
 window.BOSSES_JSON = {{ bosses | tojson }};
+window.WINS_COUNT  = {{ wins_count | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/game_selector_3d.js') }}"></script>
 {% endblock %}

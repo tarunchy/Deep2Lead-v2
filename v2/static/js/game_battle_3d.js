@@ -774,6 +774,12 @@ class PathoHunt3D {
                 if (bar) { bar.style.display = this.pinnedSmiles ? 'block' : 'none'; }
             });
         });
+        // Guide: fire deck_loaded trigger on the very first render
+        if (!this._deckFirstLoaded) {
+            this._deckFirstLoaded = true;
+            setTimeout(() => window.GuideSystem?.trigger('deck_loaded'), 600);
+        }
+
         // Update pinned-seed indicator
         let bar = document.getElementById('pinnedSeedBar');
         if (!bar) {
@@ -1303,6 +1309,11 @@ class PathoHunt3D {
         this.bossHP = newHP;
         if (composite > this.bestScore) this.bestScore = composite;
         this.attackCount = data.session?.attacks_count || (this.attackCount + 1);
+
+        // Guide: after first successful attack
+        if (this.attackCount === 1) {
+            setTimeout(() => window.GuideSystem?.trigger('after_first_attack'), 1200);
+        }
 
         // Log attack for notebook
         this.attackLog.push({ n: this.attackCount, composite, molName: proj?.molName || '?' });

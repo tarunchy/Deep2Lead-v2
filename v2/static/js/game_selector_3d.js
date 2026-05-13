@@ -124,6 +124,44 @@ function initMainMenu() {
     document.getElementById('menuBattleLog')?.addEventListener('click', () => {
         window.location.href = '/profile';
     });
+
+    initTutorialToggle();
+}
+
+function initTutorialToggle() {
+    const btn = document.getElementById('menuTutorialToggle');
+    if (!btn) return;
+
+    const wins   = window.WINS_COUNT ?? 99;
+    const forced = wins < 2;
+
+    if (forced) {
+        btn.querySelector('.gs-menu-label').textContent = 'TUTORIAL GUIDE: ACTIVE';
+        btn.style.opacity = '0.55';
+        btn.style.cursor  = 'not-allowed';
+        btn.title         = 'Auto-disables after your first 2 victories';
+        return;
+    }
+
+    const isOn = localStorage.getItem('pathoguide') === 'on';
+    _updateToggleLabel(btn, isOn);
+
+    btn.addEventListener('click', () => {
+        const nowOn = localStorage.getItem('pathoguide') !== 'on';
+        localStorage.setItem('pathoguide', nowOn ? 'on' : 'off');
+        _updateToggleLabel(btn, nowOn);
+    });
+}
+
+function _updateToggleLabel(btn, on) {
+    const label = btn.querySelector('.gs-menu-label');
+    const arrow = btn.querySelector('.gs-menu-arrow');
+    if (label) label.textContent = on ? 'TUTORIAL GUIDE: ON' : 'TUTORIAL GUIDE: OFF';
+    if (arrow) {
+        arrow.textContent = on ? '●' : '○';
+        arrow.style.color = on ? '#00f2ff' : 'rgba(0,242,255,0.3)';
+        arrow.style.fontSize = '0.85rem';
+    }
 }
 
 /* ── Dossier grid ──────────────────────────────────────── */

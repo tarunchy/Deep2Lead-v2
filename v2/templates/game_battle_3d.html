@@ -22,6 +22,22 @@
     <div id="vfx-flash"></div>
     <div id="vfx-damage"></div>
 
+    <!-- In-game guided tutorial popups -->
+    <div id="guideOverlay" class="guide-overlay" style="display:none;">
+        <div class="guide-popup">
+            <div class="guide-popup-header">
+                <span class="guide-cat" id="guideCat">GUIDE</span>
+                <span class="guide-step-badge">TUTORIAL</span>
+            </div>
+            <div class="guide-popup-title" id="guideTitle"></div>
+            <div class="guide-popup-body" id="guideBody"></div>
+            <div class="guide-popup-hint" id="guideHint" style="display:none;"></div>
+            <div class="guide-popup-actions">
+                <button class="guide-cta-btn" id="guideCta">Got it →</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Story/Mission Briefing Screen — 3-slide carousel -->
     <div id="storyScreen">
         <div class="story-panel">
@@ -51,6 +67,12 @@
                     <input type="checkbox" id="voiceToggle">
                     <span>🔊 <strong>Enable AI Voice Narration</strong> — off by default</span>
                 </label>
+                {% if tutorial_active %}
+                <div class="tutorial-active-banner">
+                    📡 <strong>Tutorial Guide Active</strong> — step-by-step prompts will appear as you play.
+                    Completes automatically after your first 2 victories.
+                </div>
+                {% endif %}
             </div>
             <!-- Slide 2: Controls -->
             <div class="story-slide" id="slide-2">
@@ -557,6 +579,7 @@
 
 <script>
 window.GAME_BOSS_ID = "{{ boss.id }}";
+window.GAME_BOSS_TARGET_ID = "{{ boss.target_id or boss.id }}";
 window.GAME_INITIAL_HP = {{ boss.boss_initial_hp or 100 }};
 window.GAME_STARTER_SMILES = "{{ boss.starter_smiles }}";
 window.GAME_WIN_THRESHOLD = {{ boss.win_threshold_easy or 0.70 }};
@@ -569,7 +592,10 @@ window.GAME_PATIENT_STORY = {{ (boss.patient_story or {}) | tojson }};
 window.GAME_MUTATION_POOL = {{ (boss.mutation_pool or []) | tojson }};
 window.GAME_PHASE2_TAUNT = {{ (boss.phase2_taunt or '') | tojson }};
 window.GAME_PHASE3_TAUNT = {{ (boss.phase3_taunt or '') | tojson }};
+window.WINS_COUNT = {{ wins_count | tojson }};
+window.TUTORIAL_ACTIVE = {{ tutorial_active | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/molecule_designer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_guide_3d.js') }}"></script>
 <script src="{{ url_for('static', filename='js/game_battle_3d.js') }}"></script>
 {% endblock %}

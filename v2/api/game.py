@@ -47,7 +47,10 @@ def game_battle_3d(target_id):
         return render_template("game_lobby.html",
                                bosses=game_service.get_all_bosses(),
                                error="Unknown boss"), 404
-    return render_template("game_battle_3d.html", boss=boss)
+    wins_count = game_service.get_wins_count(current_user.id)
+    tutorial_active = wins_count < 2
+    return render_template("game_battle_3d.html", boss=boss,
+                           wins_count=wins_count, tutorial_active=tutorial_active)
 
 
 @bp.route("/game/lab")
@@ -132,9 +135,10 @@ def api_game_history():
 def game_selector_3d():
     bosses = game_service.get_all_bosses()
     unlocked = game_service.get_unlocked_level_numbers(current_user.id)
+    wins_count = game_service.get_wins_count(current_user.id)
     for boss in bosses:
         boss["unlocked"] = boss.get("game_level", 99) in unlocked
-    return render_template("game_selector_3d.html", bosses=bosses)
+    return render_template("game_selector_3d.html", bosses=bosses, wins_count=wins_count)
 
 
 @bp.route("/game/history")
