@@ -1706,10 +1706,6 @@ class PathoHunt3D {
         const el2 = document.getElementById('analyzingMolName');
         if (el) el.textContent = line1 || 'ANALYZING MOLECULAR IMPACT';
         if (el2) el2.textContent = line2 || '';
-        // advance guide phase indicator
-        if (line1.includes('MEMBRANE')) this.setDockingGuideStep(0);
-        else if (line1.includes('BINDING')) this.setDockingGuideStep(1);
-        else if (line1.includes('DOCKING')) this.setDockingGuideStep(2);
     }
 
     // ── Docking education guide ───────────────────────────────────
@@ -2115,19 +2111,16 @@ class PathoHunt3D {
 
                 if (!p.phase1 && elapsed > 400) {
                     p.phase1 = true;
-                    const fake = Math.round(10 + Math.random() * 22);
-                    this.log(`MEMBRANE: ${fake}% — surface probe`, '#334455');
-                    this.setAnalyzingPhase(`MEMBRANE: ${fake}%`, p.molName);
+                    this.setDockingGuideStep(0);
                 }
                 if (!p.phase2 && elapsed > 1200) {
                     p.phase2 = true;
-                    const fake = Math.round(28 + Math.random() * 28);
-                    this.log(`BINDING: ${fake}% — active site`, '#445533');
-                    this.setAnalyzingPhase(`BINDING: ${fake}%`, p.molName);
+                    this.setDockingGuideStep(1);
                 }
                 if (!p.phase3 && elapsed > 2200) {
                     p.phase3 = true;
-                    this.setAnalyzingPhase('DOCKING…', p.molName);
+                    this.setDockingGuideStep(2);
+                    this.setAnalyzingPhase('DOCKING IN PROGRESS…', p.molName);
                 }
                 // Apply result as soon as phase3 done AND API responded
                 if (p.phase3 && p.apiSettled) {

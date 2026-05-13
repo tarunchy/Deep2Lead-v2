@@ -31,8 +31,8 @@ const TUT_STEPS = [
         id: 'attack',
         title: 'What Happens When You Fire',
         category: 'COMBAT',
-        text: 'After you fire, the game <strong>calculates your molecule\'s real drug score</strong>. This takes a few seconds — you\'ll see a docking animation. <strong>Wait for the result</strong> before firing again. The final score shown is the real one — it\'s actual computational chemistry, not random.',
-        audio: 'After you fire, the game calculates your molecule\'s real drug score. This takes a few seconds — you will see a docking animation. Wait for the result before firing again. The final score shown is real — it is actual computational chemistry, not random.',
+        text: 'After you fire, the game runs <strong>3 docking phases</strong> and calculates your molecule\'s real Drug Score. This takes a few seconds. <strong>Wait for the score to appear</strong> before firing again — it\'s actual computational chemistry on the real protein structure.',
+        audio: 'After you fire, the game runs 3 docking phases and calculates your molecule\'s real Drug Score. This takes a few seconds. Wait for the score to appear before firing again — it is actual computational chemistry on the real protein structure.',
     },
     {
         id: 'dodge',
@@ -318,25 +318,25 @@ function buildDeck() {
 function buildAttackPhases() {
     return `
     <div class="tvis-phases">
-        <div class="tvis-phase tvis-phase-fake">
+        <div class="tvis-phase tvis-phase-real">
             <div class="tvis-phase-num">1</div>
-            <div class="tvis-phase-name">Outer Membrane</div>
-            <div class="tvis-phase-score" style="color:#666">~18% <span class="tvis-fake-tag">PARTIAL</span></div>
+            <div class="tvis-phase-name">Membrane Scan</div>
+            <div class="tvis-phase-score" style="color:#888">scanning…</div>
         </div>
         <div class="tvis-phase-arrow">→</div>
-        <div class="tvis-phase tvis-phase-fake">
+        <div class="tvis-phase tvis-phase-real">
             <div class="tvis-phase-num">2</div>
             <div class="tvis-phase-name">Binding Site</div>
-            <div class="tvis-phase-score" style="color:#f6ad55">~44% <span class="tvis-fake-tag">PARTIAL</span></div>
+            <div class="tvis-phase-score" style="color:#888">analyzing…</div>
         </div>
         <div class="tvis-phase-arrow">→</div>
         <div class="tvis-phase tvis-phase-real">
             <div class="tvis-phase-num">3</div>
             <div class="tvis-phase-name">Quantum Docking</div>
-            <div class="tvis-phase-score" style="color:#3fb950">68% <span class="tvis-real-tag">REAL</span></div>
+            <div class="tvis-phase-score" style="color:#3fb950">68% ✓</div>
         </div>
     </div>
-    <div style="text-align:center;font-size:0.78rem;color:var(--muted);margin-top:12px;">Phases 1 and 2 are fake — real result only after phase 3</div>`;
+    <div style="text-align:center;font-size:0.78rem;color:var(--muted);margin-top:12px;">Your real Drug Score appears after all 3 phases complete</div>`;
 }
 
 function buildDodge() {
