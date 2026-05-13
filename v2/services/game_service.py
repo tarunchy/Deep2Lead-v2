@@ -132,6 +132,8 @@ def execute_attack(session_id, smiles: str, user_id) -> dict:
     if str(session.user_id) != str(user_id):
         raise ValueError("Unauthorised")
     if session.status != "active":
+        if session.status in ("won", "lost"):
+            return _completed_session_response(session)
         raise ValueError("Session is not active")
 
     target = target_service.get_curated_target(session.target_id)
@@ -164,6 +166,24 @@ def execute_attack(session_id, smiles: str, user_id) -> dict:
         props = property_calculator.compute_all(seed, seed)
         composite = _compute_composite(props) if props else 0.30
         best_props = {**(props or {}), "composite_score": composite}
+
+    # Re-read and lock the session before mutating combat state. Molecule
+    # generation can be slow; holding the DB lock across the LLM call would
+    # serialize users unnecessarily, but the final state update must be atomic.
+    session = (
+        GameSession.query.filter_by(id=session.id)
+        .with_for_update()
+        .populate_existing()
+        .first()
+    )
+    if not session:
+        raise ValueError("Session not found")
+    if str(session.user_id) != str(user_id):
+        raise ValueError("Unauthorised")
+    if session.status != "active":
+        if session.status in ("won", "lost"):
+            return _completed_session_response(session, meta)
+        raise ValueError("Session is not active")
 
     # Safety net: swap seed on persistent poor performance
     safety_net_threshold = 0.40
@@ -342,6 +362,53 @@ def execute_attack(session_id, smiles: str, user_id) -> dict:
         "memory_penalty": memory_penalty,
         "known_score": known_score,
         "discovery_threshold": discovery_threshold,
+    }
+
+
+def _completed_session_response(session: GameSession, meta: dict | None = None) -> dict:
+    """Return final session state without treating a repeated attack as an API error."""
+    if meta is None:
+        meta = _level_meta(session.target_id)
+
+    best_attack = (
+        GameAttack.query.filter_by(session_id=session.id)
+        .order_by(GameAttack.composite_score.desc(), GameAttack.created_at.desc())
+        .first()
+    )
+
+    best_props = {}
+    if best_attack:
+        best_props = {
+            "qed": best_attack.qed,
+            "sas": best_attack.sas,
+            "logp": best_attack.logp,
+            "mw": best_attack.mw,
+            "lipinski_pass": best_attack.lipinski_pass,
+            "composite_score": best_attack.composite_score,
+        }
+
+    known_score = meta.get("known_drug_score", 0.60) if meta else 0.60
+    status = session.status
+    return {
+        "code": "SESSION_ALREADY_WON" if status == "won" else "SESSION_ALREADY_LOST",
+        "message": f"Session already {status}",
+        "session": session.to_dict(),
+        "attack": best_attack.to_dict() if best_attack else None,
+        "best_smiles": best_attack.smiles if best_attack else None,
+        "best_props": best_props,
+        "all_candidates": [],
+        "damage": 0.0,
+        "new_hp": session.boss_current_hp,
+        "won": status == "won",
+        "lost": status == "lost",
+        "is_new_best": False,
+        "latency_ms": 0,
+        "phase_changed": False,
+        "new_mutation": None,
+        "phase_taunt": None,
+        "memory_penalty": False,
+        "known_score": known_score,
+        "discovery_threshold": session.win_threshold,
     }
 
 

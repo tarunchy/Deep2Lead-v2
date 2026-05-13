@@ -177,77 +177,144 @@
     <div id="victoryFlash"></div>
 
     <div id="game-hud">
-        <div class="hud-top">
-            <div class="bars-container">
-                <div class="bar-wrapper">
-                    <div class="bar-label enemy-label">
-                        <span>{{ boss.common_name or boss.id }}</span>
-                        <span id="enemy-hp-text">100.0 HP</span>
+        <div class="edge-hud edge-hud-left" id="edgeHudLeft" aria-label="Game status panels">
+            <div class="edge-hud-item" data-edge-panel="health">
+                <button class="edge-hud-btn edge-health-btn" id="edgeHealthBtn" type="button" aria-label="Target health">
+                    <span class="edge-icon">☣</span>
+                    <span class="edge-mini" id="edgeBossHpMini">300</span>
+                </button>
+                <div class="edge-panel" role="dialog" aria-label="Target health details">
+                    <button class="edge-panel-close" type="button" data-edge-close>×</button>
+                    <div class="edge-panel-title">Target Health</div>
+                    <div class="edge-panel-sub">{{ boss.common_name or boss.id }}</div>
+                    <div class="bar-wrapper">
+                        <div class="bar-label enemy-label">
+                            <span>Simulation HP</span>
+                            <span id="enemy-hp-text">300.0 HP</span>
+                        </div>
+                        <div class="hp-bar-bg enemy-bar-bg">
+                            <div class="enemy-bar-fill" id="enemy-hp-fill"></div>
+                        </div>
                     </div>
-                    <div class="hp-bar-bg enemy-bar-bg">
-                        <div class="enemy-bar-fill" id="enemy-hp-fill"></div>
-                    </div>
-                </div>
-                <div class="bar-wrapper">
-                    <div class="bar-label player-label">
-                        <span>QUANTUM SHIELD</span>
-                        <span id="player-hp-text">1000 / 1000</span>
-                    </div>
-                    <div class="hp-bar-bg player-bar-bg">
-                        <div class="player-bar-fill" id="player-hp-fill"></div>
-                    </div>
-                </div>
-                <div class="bar-wrapper">
-                    <div class="bar-label" style="color:#f6ad55">
-                        <span>BEST SCORE</span>
-                        <span id="best-score-text">0%</span>
-                    </div>
-                    <div class="hp-bar-bg" style="border-color:#f6ad55;position:relative;overflow:visible;">
-                        <div id="best-score-fill"></div>
-                        <div id="win-threshold-marker"></div>
-                    </div>
-                </div>
-                <!-- Baseline strip: always shows known drug vs your best -->
-                <div class="baseline-strip" id="baselineStrip">
-                    <span class="bs-known">⚗️ Known Drug: <strong id="bs-known-pct">–%</strong></span>
-                    <span class="bs-sep">|</span>
-                    <span class="bs-yours">Your Best: <strong id="bs-best-pct">0%</strong></span>
-                    <span class="bs-delta" id="bs-delta" style="display:none;"></span>
+                    <div class="edge-help-text">Hit the target pocket with a strong molecule to finish the mission.</div>
                 </div>
             </div>
-            <div style="text-align:right;">
-                <div style="font-size:12px;font-weight:bold;">ARENA: <span id="loc-name" style="color:#fff">JUNGLE_SECTOR</span></div>
-                <div style="font-size:10px;opacity:0.6;margin-top:4px;">SYNC_STATUS: ACTIVE</div>
-                <div id="attack-counter" style="font-size:11px;color:#888;margin-top:6px;">ATTACKS: 0</div>
-                <div id="rp-display" style="font-size:11px;color:#f5c518;margin-top:4px;">⭐ 0 RP</div>
-                <div id="outbreak-timer" style="display:none;font-size:13px;font-weight:900;color:#ff3e3e;margin-top:6px;letter-spacing:2px;">⏱ 8:00</div>
-                <button id="btnMute" class="mute-btn" title="Pause audio (M = mute)">🔊</button>
-                <button id="btnLeaderboard" class="mute-btn" title="Leaderboard" style="margin-left:4px;">🏆</button>
-                <button id="btnNotebook" class="mute-btn" title="Researcher's Notebook" style="margin-left:4px;display:none;">📔</button>
+
+            <div class="edge-hud-item" data-edge-panel="shield">
+                <button class="edge-hud-btn edge-shield-btn" id="edgeShieldBtn" type="button" aria-label="Shield and score">
+                    <span class="edge-icon">⬡</span>
+                    <span class="edge-mini" id="edgeShieldMini">1000</span>
+                    <span class="edge-mini edge-mini-sub" id="edgeBestMini">0%</span>
+                </button>
+                <div class="edge-panel" role="dialog" aria-label="Shield and score details">
+                    <button class="edge-panel-close" type="button" data-edge-close>×</button>
+                    <div class="edge-panel-title">Shield + Discovery</div>
+                    <div class="bar-wrapper">
+                        <div class="bar-label player-label">
+                            <span>Quantum Shield</span>
+                            <span id="player-hp-text">1000 / 1000</span>
+                        </div>
+                        <div class="hp-bar-bg player-bar-bg">
+                            <div class="player-bar-fill" id="player-hp-fill"></div>
+                        </div>
+                    </div>
+                    <div class="bar-wrapper">
+                        <div class="bar-label" style="color:#f6ad55">
+                            <span>Best Score</span>
+                            <span id="best-score-text">0%</span>
+                        </div>
+                        <div class="hp-bar-bg" style="border-color:#f6ad55;position:relative;overflow:visible;">
+                            <div id="best-score-fill"></div>
+                            <div id="win-threshold-marker"></div>
+                        </div>
+                    </div>
+                    <div class="baseline-strip" id="baselineStrip">
+                        <span class="bs-known">Known Drug: <strong id="bs-known-pct">–%</strong></span>
+                        <span class="bs-sep">|</span>
+                        <span class="bs-yours">Your Best: <strong id="bs-best-pct">0%</strong></span>
+                        <span class="bs-delta" id="bs-delta" style="display:none;"></span>
+                    </div>
+                    <div class="edge-stat-row">
+                        <span id="attack-counter">ATTACKS: 0</span>
+                        <span id="rp-display">⭐ 0 RP</span>
+                    </div>
+                    <div id="outbreak-timer" style="display:none;">⏱ 8:00</div>
+                </div>
+            </div>
+
+            <div class="edge-hud-item" data-edge-panel="controls">
+                <button class="edge-hud-btn" id="edgeControlsBtn" type="button" aria-label="Controls">
+                    <span class="edge-icon">⌨</span>
+                </button>
+                <div class="edge-panel" role="dialog" aria-label="Controls">
+                    <button class="edge-panel-close" type="button" data-edge-close>×</button>
+                    <div class="edge-panel-title">Controls</div>
+                    <div class="edge-list">
+                        <span>← ↑ ↓ → Move ship</span>
+                        <span>SPACE Fire molecule</span>
+                        <span>1 / 2 / 3 Select molecule</span>
+                        <span>Click open arena to fire</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="edge-hud-item" data-edge-panel="threats">
+                <button class="edge-hud-btn" id="edgeThreatBtn" type="button" aria-label="Threat legend">
+                    <span class="edge-icon">⚠</span>
+                </button>
+                <div class="edge-panel" role="dialog" aria-label="Threat legend">
+                    <button class="edge-panel-close" type="button" data-edge-close>×</button>
+                    <div class="edge-panel-title">Threat Legend</div>
+                    <div class="edge-list">
+                        <span><strong class="danger-dot">●</strong> Red spores damage your shield.</span>
+                        <span><strong class="safe-dot">●</strong> Green cells are friendly. Do not shoot them.</span>
+                        <span>Misses are learning data. Try again.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="edge-hud-item" data-edge-panel="audio">
+                <button class="edge-hud-btn" id="edgeAudioBtn" type="button" aria-label="Audio and tools">
+                    <span class="edge-icon">🔊</span>
+                </button>
+                <div class="edge-panel" role="dialog" aria-label="Audio and tools">
+                    <button class="edge-panel-close" type="button" data-edge-close>×</button>
+                    <div class="edge-panel-title">Audio + Tools</div>
+                    <div class="edge-button-row">
+                        <button id="btnMute" class="mute-btn" title="Pause audio (M = mute)">🔊 Audio</button>
+                        <button id="btnLeaderboard" class="mute-btn" title="Leaderboard">🏆 Board</button>
+                        <button id="btnNotebook" class="mute-btn" title="Researcher's Notebook" style="display:none;">📔 Notes</button>
+                    </div>
+                    <div class="edge-help-text">M key mutes/unmutes narration.</div>
+                </div>
+            </div>
+
+            <div class="edge-hud-item" data-edge-panel="activity">
+                <button class="edge-hud-btn edge-activity-btn" id="edgeActivityBtn" type="button" aria-label="Molecule activity">
+                    <span class="edge-icon">⚗</span>
+                    <span class="edge-mini" id="edgeScoreMini">0%</span>
+                </button>
+                <div class="edge-panel edge-log-panel" role="dialog" aria-label="Molecule activity log">
+                    <button class="edge-panel-close" type="button" data-edge-close>×</button>
+                    <div class="edge-panel-title">Molecule Activity</div>
+                    <div class="edge-panel-sub" id="edgeSelectedMol">No molecule selected</div>
+                    <div id="combat-log"></div>
+                </div>
             </div>
         </div>
 
-        <div class="instruction-hint">
-            // CONTROLS<br>
-            ← ↑ ↓ → MOVE SHIP<br>
-            SPACE: FIRE<br>
-            1/2/3: SELECT MOL<br>
-            CLICK: FIRE (MOUSE)<br>
-            <br>
-            // THREATS<br>
-            🔴 RED = ENEMY SPORE<br>
-            🟢 GREEN = FRIENDLY!<br>
-            <br>
-            🔊 CLICK: PAUSE AUDIO<br>
-            M KEY: MUTE/UNMUTE<br>
-            🧪 DESIGN DRUG: custom mol
-        </div>
-
-        <div class="crosshair-ui" id="crosshair-ui"><div class="ch-dot"></div></div>
-
-        <div class="tactical-sidebar">
-            <div class="config-title">ENVIRONMENT</div>
+        <button id="settingsToggle" class="settings-toggle" type="button" aria-label="Open arena settings">⚙</button>
+        <div id="settingsBackdrop" class="settings-backdrop" hidden></div>
+        <aside class="settings-drawer" id="settingsDrawer" aria-label="Arena settings">
+            <div class="settings-drawer-header">
+                <div>
+                    <div class="config-title">Arena Settings</div>
+                    <div class="settings-arena-name">ARENA: <span id="loc-name">JUNGLE_SECTOR</span></div>
+                </div>
+                <button id="settingsClose" class="settings-close" type="button" aria-label="Close settings">×</button>
+            </div>
             <div class="config-item">
+                <span class="config-label">Environment</span>
                 <select id="biome-select" class="game-select">
                     <option value="jungle">🌲 Bio-Jungle</option>
                     <option value="space">🌌 Deep Space</option>
@@ -257,7 +324,6 @@
                     <option value="city">🏙️ Neon City</option>
                 </select>
             </div>
-            <div class="config-title">COMBAT PARAMS</div>
             <div class="config-item">
                 <span class="config-label">Difficulty</span>
                 <select id="diff-select" class="game-select">
@@ -281,7 +347,9 @@
                     <option value="nonlinear" selected>Parabolic</option>
                 </select>
             </div>
-        </div>
+        </aside>
+
+        <div class="crosshair-ui" id="crosshair-ui"><div class="ch-dot"></div></div>
 
         <!-- Winning badge — shown when boss HP < 50% -->
         <div id="winningBadge" class="winning-badge" style="display:none;">🏆 WINNING!</div>
@@ -294,8 +362,6 @@
             <div class="lb-header">🏆 TOP SCIENTISTS<button id="lbClose" style="float:right;background:none;border:none;color:#888;cursor:pointer;font-size:14px;">✕</button></div>
             <div id="lbList"><div style="opacity:0.5;font-size:11px;padding:10px;">Loading…</div></div>
         </div>
-
-        <div id="combat-log"></div>
 
         <div class="science-card" id="scienceCard">
             <button class="sc-close" id="scClose">✕</button>
@@ -331,23 +397,34 @@
             <div class="analyzing-mol" id="analyzingMolName"></div>
         </div>
 
-        <div class="hud-bottom">
-            <div class="molecule-deck" id="moleculeDeck">
-                <div class="deck-header">
-                    <span class="deck-label">⚗️ LOADED MOLECULE</span>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                        <!-- Molecule journey timeline -->
-                        <div class="journey-timeline" id="journeyTimeline" title="Your optimization journey">
-                            <span class="journey-label">JOURNEY ▸</span>
-                            <div class="journey-dots" id="journeyDots"></div>
-                        </div>
-                        <button class="deck-custom-btn" id="btnDesignMol" title="Design your own drug">🧪 Design Drug</button>
+        <div class="molecule-deck molecule-dock" id="moleculeDeck">
+            <div class="molecule-dock-compact" id="moleculeDockToggle" role="button" tabindex="0" aria-label="Open molecule dock">
+                <div class="dock-main">
+                    <span class="dock-icon">⚗</span>
+                    <div>
+                        <div class="dock-label">Loaded Molecule</div>
+                        <div class="dock-name" id="dockMolName">Generating...</div>
                     </div>
+                </div>
+                <div class="dock-score-wrap">
+                    <span id="dockScoreText">0%</span>
+                    <div class="dock-score-track"><div class="dock-score-fill" id="dockScoreFill"></div></div>
+                </div>
+                <button class="dock-design-btn" id="btnDesignMol" title="Design your own drug">🧪</button>
+            </div>
+            <div class="molecule-dock-panel" id="moleculeDockPanel" aria-label="Loaded molecule details">
+                <div class="deck-header">
+                    <span class="deck-label">⚗️ Loaded Molecules</span>
+                    <button class="deck-collapse-btn" id="moleculeDockClose" type="button" aria-label="Collapse molecule dock">×</button>
+                </div>
+                <div class="journey-timeline" id="journeyTimeline" title="Your optimization journey">
+                    <span class="journey-label">JOURNEY ▸</span>
+                    <div class="journey-dots" id="journeyDots"></div>
                 </div>
                 <div class="deck-cards" id="deckCards">
                     <div class="mol-card loading"><div class="mol-loading-text">GENERATING...</div></div>
                 </div>
-                <div class="deck-fire-hint">// SPACE or CLICK ARENA TO FIRE · ← ↑ ↓ → MOVE SHIP //</div>
+                <div class="deck-fire-hint">// select card, then fire with SPACE or open arena click //</div>
             </div>
         </div>
     </div>

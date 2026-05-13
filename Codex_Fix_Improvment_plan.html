@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex Fix and Improvement Plan - PathoHunt 3D</title>
+  <style>
+    :root {
+      --bg: #081017;
+      --panel: #101c25;
+      --panel-2: #142632;
+      --text: #e8f1f5;
+      --muted: #9fb0b9;
+      --line: #24404d;
+      --accent: #28c7b7;
+      --accent-2: #f6b35d;
+      --danger: #ff6b63;
+      --good: #6fd08c;
+      --code: #0b141b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(40, 199, 183, 0.16), transparent 28rem),
+        radial-gradient(circle at 85% 10%, rgba(246, 179, 93, 0.13), transparent 24rem),
+        linear-gradient(135deg, #071017 0%, #0a141c 45%, #061016 100%);
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 44px 0 64px;
+    }
+
+    .hero {
+      border: 1px solid rgba(40, 199, 183, 0.28);
+      background: linear-gradient(135deg, rgba(16, 28, 37, 0.94), rgba(20, 38, 50, 0.78));
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4.4rem);
+      line-height: 0.98;
+      letter-spacing: -0.06em;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 1rem;
+      color: #ffffff;
+    }
+
+    p { margin: 0 0 14px; color: var(--muted); }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 26px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      background: rgba(8, 16, 23, 0.58);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .stat strong {
+      display: block;
+      color: #fff;
+      font-size: 1.5rem;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .section {
+      margin-top: 24px;
+      border: 1px solid var(--line);
+      background: rgba(16, 28, 37, 0.86);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .finding {
+      border-left: 4px solid var(--danger);
+      background: rgba(255, 107, 99, 0.07);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 16px 0;
+    }
+
+    .finding.good { border-left-color: var(--good); background: rgba(111, 208, 140, 0.07); }
+    .finding.warn { border-left-color: var(--accent-2); background: rgba(246, 179, 93, 0.07); }
+
+    ul, ol { margin: 10px 0 0; padding-left: 22px; }
+    li { margin: 8px 0; color: var(--muted); }
+    strong { color: var(--text); }
+
+    code {
+      color: #d9f7f2;
+      background: var(--code);
+      border: 1px solid rgba(40, 199, 183, 0.16);
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: 0.9em;
+    }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 14px;
+      overflow: auto;
+      color: #d9f7f2;
+      background: var(--code);
+      border: 1px solid rgba(40, 199, 183, 0.16);
+      border-radius: 12px;
+      font-size: 0.88rem;
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(8, 16, 23, 0.48);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(40, 199, 183, 0.36);
+      color: var(--accent);
+      background: rgba(40, 199, 183, 0.08);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .table-wrap { overflow-x: auto; margin-top: 12px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #ffffff;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(8, 16, 23, 0.55);
+    }
+
+    td { color: var(--muted); }
+
+    .footer-note {
+      color: #718690;
+      font-size: 0.9rem;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 820px) {
+      main { width: min(100% - 24px, 1120px); padding-top: 24px; }
+      .hero, .section { padding: 20px; border-radius: 18px; }
+      .summary-grid, .roadmap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <div class="eyebrow">PathoHunt 3D investigation</div>
+    <h1>Attack API fix and game UX improvement plan</h1>
+    <p style="margin-top: 18px; max-width: 780px;">
+      Scope: analyze the 400 BAD REQUEST seen while firing molecules at
+      <code>/game/pathohunt-3d/influenza_na</code>, identify the likely root cause,
+      and propose implementation changes for review before touching production code.
+    </p>
+
+    <div class="summary-grid">
+      <div class="stat">
+        <strong>Root cause</strong>
+        Session reaches <code>won</code>, then later attack calls reuse the same completed session.
+      </div>
+      <div class="stat">
+        <strong>Secondary bug</strong>
+        Multiple attack requests can overlap, creating duplicate attack numbers and stale state.
+      </div>
+      <div class="stat">
+        <strong>UX impact</strong>
+        The player sees "API ERROR" instead of victory, completed-session, or retry guidance.
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Observed Evidence</h2>
+    <div class="finding warn">
+      <strong>Server log pattern:</strong> session <code>633090a3-7a31-4dd0-96e9-46d3b2280875</code>
+      accepted several <code>POST /attack</code> requests with HTTP 200, then subsequent
+      <code>POST /attack</code> requests returned HTTP 400 with a 34 byte body.
+      A 34 byte JSON body matches <code>{"error":"Session is not active"}</code>.
+    </div>
+    <div class="finding">
+      <strong>Database state:</strong> that session exists with <code>status = won</code>,
+      <code>best_score = 0.704</code>, and <code>win_threshold = 0.67</code>.
+      The first later 400 is therefore expected from the current backend guard, but it is handled badly by the frontend.
+    </div>
+    <pre>{
+  found: true,
+  status: "won",
+  attacks_count: 3,
+  best_score: 0.704,
+  boss_current_hp: 266.78,
+  win_threshold: 0.67
+}</pre>
+    <div class="finding">
+      <strong>Concurrency evidence:</strong> the same session has five stored attack rows but
+      <code>attacks_count</code> is only 3, and attack numbers are duplicated. That indicates overlapping
+      requests across gunicorn workers are reading and committing stale session state.
+    </div>
+    <pre>[
+  [1, 0.5680, 18.89, 281.11, true],
+  [1, 0.5744, 19.06, 280.94, true],
+  [2, 0.5744,  7.44, 273.67, true],
+  [3, 0.7040, 18.16, 255.51, true],
+  [3, 0.5680,  6.89, 266.78, false]
+]</pre>
+  </section>
+
+  <section class="section">
+    <h2>Why It Happens</h2>
+    <ol>
+      <li><strong>The route maps any game-service <code>ValueError</code> to HTTP 400.</strong> See <code>v2/api/game.py:99-109</code>.</li>
+      <li><strong>The service rejects completed sessions.</strong> <code>v2/services/game_service.py:134-135</code> raises <code>Session is not active</code> when the session is already <code>won</code> or <code>lost</code>.</li>
+      <li><strong>The backend declares victory by score threshold, not HP depletion.</strong> <code>v2/services/game_service.py:240-248</code> marks the session as <code>won</code> when a molecule beats the known drug by 5 percent, even if boss HP is still high. That is valid game logic, but the UI still presents boss HP as the main win metaphor.</li>
+      <li><strong>The frontend starts the expensive backend attack immediately at launch.</strong> <code>v2/static/js/game_battle_3d.js:1005-1015</code> calls <code>/attack</code> as soon as the projectile is fired, before the projectile hits, misses, or gets blocked.</li>
+      <li><strong>Blocked shots unlock the player while the original backend request can still be running.</strong> <code>v2/static/js/game_battle_3d.js:1921-1931</code> sets <code>attackLocked = false</code> when a spore blocks a projectile. The user can fire again while a previous <code>/attack</code> is still mutating the same session.</li>
+      <li><strong>The frontend hides the actual error.</strong> <code>v2/static/js/game_battle_3d.js:1052-1058</code> treats all errors as "API ERROR - minimal damage applied" and does not show <code>data.error</code> or recover to victory/loss state.</li>
+    </ol>
+  </section>
+
+  <section class="section">
+    <h2>Fix Plan</h2>
+    <div class="roadmap">
+      <div class="card">
+        <span class="badge">P0 backend</span>
+        <h3>Return meaningful completed-session responses</h3>
+        <ul>
+          <li>Change inactive-session handling from generic HTTP 400 to either HTTP 409 with a structured code, or HTTP 200 with current session state when status is <code>won</code> or <code>lost</code>.</li>
+          <li>Recommended payload: <code>{ code, error, session, won, lost }</code>. For <code>won</code>, include best attack data so the client can show victory instead of "API ERROR".</li>
+          <li>Keep invalid SMILES and missing target as 400. Treat completed session as state conflict, not bad input.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <span class="badge">P0 frontend</span>
+        <h3>Stop masking attack errors</h3>
+        <ul>
+          <li>In <code>launchAttack</code>, parse <code>r.ok</code> and persist <code>status</code>, <code>code</code>, and <code>error</code> on <code>proj.apiResult</code>.</li>
+          <li>In <code>applyAttackResult</code>, if the response says <code>SESSION_NOT_ACTIVE</code> and the returned session is <code>won</code>, call <code>onVictory</code>. If it is <code>lost</code>, show the loss screen.</li>
+          <li>For real network failures, show a clear retry toast and do not apply fake minimal damage. Fake damage hides data integrity bugs.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <span class="badge">P0 state</span>
+        <h3>Remove overlapping session mutations</h3>
+        <ul>
+          <li>Use a row lock in <code>execute_attack</code>: query the session with <code>with_for_update()</code> inside one transaction before reading <code>status</code>, <code>best_score</code>, <code>boss_current_hp</code>, and <code>attacks_count</code>.</li>
+          <li>Add a uniqueness rule or sequence-safe counter for <code>GameAttack.attack_number</code> per session.</li>
+          <li>Consider a <code>client_attack_id</code> UUID in the request and a unique DB constraint so retries are idempotent instead of double-scoring.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <span class="badge">P0 game logic</span>
+        <h3>Only score actual boss hits</h3>
+        <ul>
+          <li>Move the <code>/attack</code> API call from projectile launch to the moment the projectile parks on/hits the boss.</li>
+          <li>If a projectile misses, hits a green cell, or is blocked by a spore, do not call <code>/attack</code> and do not mutate the server session.</li>
+          <li>This aligns player-visible action with persisted game state and eliminates many race windows.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="finding good">
+      <strong>Recommended implementation order:</strong> first structured error handling, then call-on-hit, then backend row locking/idempotency. This gives immediate user-visible relief while still closing the deeper race condition.
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>UI/UX Improvement Plan</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Issue</th>
+            <th>Current behavior</th>
+            <th>Recommended fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Win condition mismatch</td>
+            <td>The UI emphasizes boss HP, but the backend wins immediately when score beats known drug threshold. In the observed session, victory happened with boss HP still around 267.</td>
+            <td>Rename the main objective to "Discovery Threshold" or make HP depletion the actual win condition. My recommendation: keep threshold victory, but make it first-class in the HUD and victory transition.</td>
+          </tr>
+          <tr>
+            <td>Too much permanent HUD chrome</td>
+            <td>Top bars, baseline strip, right sidebar, combat log, instructions, science card, docking guide, and deck compete for attention.</td>
+            <td>Reduce the active HUD to: target status, selected molecule, discovery progress, fire state. Move environment, difficulty, missile, and trajectory controls into a settings drawer.</td>
+          </tr>
+          <tr>
+            <td>Error feedback is not actionable</td>
+            <td>All API failures become "API ERROR - minimal damage applied".</td>
+            <td>Use specific states: "Mission already completed", "Molecule generation timed out", "Invalid SMILES", "Network retry available". Include a retry button where safe.</td>
+          </tr>
+          <tr>
+            <td>Waiting state feels disconnected</td>
+            <td>The docking guide appears after impact, but the backend request was already started at launch.</td>
+            <td>Start the backend request at impact and let the docking guide become the honest loading state. Show phases as real progress: queued, generating, scoring, result.</td>
+          </tr>
+          <tr>
+            <td>Mobile/responsive support is weak</td>
+            <td><code>game_battle_3d.css</code> has fixed desktop dimensions and no meaningful media queries for the game HUD.</td>
+            <td>Add breakpoints for tablet/mobile, collapse side controls, enlarge touch targets, and make deck cards horizontally scrollable below 768px.</td>
+          </tr>
+          <tr>
+            <td>Visual hierarchy</td>
+            <td>Everything is cyan-on-dark, which fits sci-fi but makes controls and data feel equally important.</td>
+            <td>Keep the sci-fi style but assign semantic colors: teal for actions, amber for science/threshold, red for danger, green for success. Increase contrast on secondary text currently near <code>#333</code>/<code>#445</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Concrete Change List For Next Pass</h2>
+    <h3>Backend files</h3>
+    <ul>
+      <li><code>v2/api/game.py</code>: add structured attack error responses and use 409 for completed-session conflict if not returning final state as 200.</li>
+      <li><code>v2/services/game_service.py</code>: add locked session read/update, idempotency key support, consistent attack number assignment, and a helper for final session result.</li>
+      <li><code>v2/models/game_models.py</code>: add optional <code>client_attack_id</code> and unique constraints if we choose idempotency.</li>
+      <li><code>v2/migrations/versions/...</code>: create migration for any new column/constraint.</li>
+    </ul>
+
+    <h3>Frontend files</h3>
+    <ul>
+      <li><code>v2/static/js/game_battle_3d.js</code>: move API call to hit resolution, add <code>AbortController</code> or request registry, handle non-OK responses, and route completed sessions to victory/loss screens.</li>
+      <li><code>v2/templates/game_battle_3d.html</code>: simplify always-visible HUD, add a clear discovery objective panel, and move advanced controls into a drawer.</li>
+      <li><code>v2/static/css/game_battle_3d.css</code>: add responsive breakpoints, stronger text contrast, clearer control hierarchy, and less persistent visual noise.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>Validation Plan</h2>
+    <ul>
+      <li>Backend unit test: attacking a completed session returns a structured completed-session response, not a generic 400.</li>
+      <li>Backend concurrency test: two simultaneous attacks on one active session cannot create duplicate attack numbers or stale <code>boss_current_hp</code>.</li>
+      <li>Frontend test: mock a completed-session response and verify the client opens victory/loss UI instead of logging "API ERROR".</li>
+      <li>Gameplay test: blocked and missed projectiles do not create <code>GameAttack</code> rows.</li>
+      <li>Manual smoke test: run <code>v2/run.sh restart</code>, play <code>/game/pathohunt-3d/influenza_na</code>, fire until win, then confirm no repeated console 400s.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>Risk Notes</h2>
+    <ul>
+      <li>Moving API scoring from launch to impact makes the player wait after impact, but it is more truthful and prevents blocked shots from scoring in the database.</li>
+      <li>Row locks protect session integrity but can make concurrent attacks wait. That is acceptable because one session should resolve one scoring event at a time.</li>
+      <li>Changing win-condition language matters. If the game says "boss HP", players expect HP zero to win. If the actual win is discovery threshold, the UI should say so directly.</li>
+    </ul>
+    <p class="footer-note">
+      This is a planning document only. No app code has been changed in this pass.
+    </p>
+  </section>
+</main>
+</body>
+</html>

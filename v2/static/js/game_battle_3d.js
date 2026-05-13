@@ -232,6 +232,7 @@ class PathoHunt3D {
         this.selectedCardIdx = 0;
         this.selectedSmiles = window.GAME_STARTER_SMILES || '';
         this.selectedMolName = 'SEED';
+        this.selectedMolScore = 0;
         this.bestScore = 0;
         this.knownScore = window.GAME_KNOWN_SCORE || 0.60;
         this.winThreshold = this.knownScore + 0.05; // discovery: beat known drug by 5%
@@ -262,6 +263,7 @@ class PathoHunt3D {
         this.lastFrameTime = Date.now();
         this.fireReady = true;
         this.fireCooldown = 800;
+        this.attackTimeoutMs = 115000;
         this._warned300 = false;
         this._warned150 = false;
 
@@ -746,7 +748,12 @@ class PathoHunt3D {
                 <div class="mol-card-pct" style="color:${barColor}">${pct}%</div>
                 <div class="mol-card-delta" style="color:${deltaColor};font-size:0.65rem;margin-top:2px;">${deltaStr}</div>
             `;
-            div.addEventListener('click', () => this.selectCard(i));
+            div.addEventListener('click', e => {
+                e.stopPropagation();
+                const wasSelected = this.selectedCardIdx === i;
+                this.selectCard(i);
+                if (wasSelected) this.fireSelectedFromDeck();
+            });
             dc.appendChild(div);
         });
         // Pin button events (stop propagation so card click isn't also triggered)
@@ -785,8 +792,55 @@ class PathoHunt3D {
         this.selectedCardIdx = idx;
         this.selectedSmiles = this.currentDeck[idx].smiles;
         this.selectedMolName = this.currentDeck[idx].name;
+        this.selectedMolScore = this.currentDeck[idx].composite || 0;
         document.querySelectorAll('.mol-card').forEach((c, i) => c.classList.toggle('selected', i === idx));
         this.log(`SELECTED: ${this.selectedMolName}`);
+        this.updateMoleculeDock();
+        this.pulseHudIcon('edgeActivityBtn', 'edge-pulse', 1200);
+        this.pulseMoleculeDock();
+    }
+
+    updateMoleculeDock() {
+        const name = this.selectedMolName || 'No molecule';
+        const score = Math.max(0, Math.min(1, this.selectedMolScore || 0));
+        const pct = Math.round(score * 100);
+        const setText = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        };
+        setText('dockMolName', name);
+        setText('dockScoreText', `${pct}%`);
+        setText('edgeScoreMini', `${pct}%`);
+        setText('edgeSelectedMol', `${name} · ${pct}% selected`);
+        const fill = document.getElementById('dockScoreFill');
+        if (fill) fill.style.width = `${pct}%`;
+    }
+
+    pulseMoleculeDock() {
+        const dock = document.getElementById('moleculeDeck');
+        if (!dock) return;
+        dock.classList.remove('edge-pulse');
+        void dock.offsetWidth;
+        dock.classList.add('edge-pulse');
+        setTimeout(() => dock.classList.remove('edge-pulse'), 1400);
+    }
+
+    pulseHudIcon(id, className = 'edge-pulse', duration = 1200) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove(className);
+        void el.offsetWidth;
+        el.classList.add(className);
+        if (duration) setTimeout(() => el.classList.remove(className), duration);
+    }
+
+    fireSelectedFromDeck() {
+        if (this.isGameOver || !this.gameStarted) return;
+        if (this.attackLocked) { this.showLockedWarning(); return; }
+        if (!this.fireReady) return;
+        this.fireReady = false;
+        setTimeout(() => { this.fireReady = true; }, this.fireCooldown);
+        this.launchAttack();
     }
 
     injectDesignedMolecule(smiles, label) {
@@ -826,14 +880,22 @@ class PathoHunt3D {
         window.addEventListener('keyup', e => { this.keys[e.code] = false; });
 
         this.container.addEventListener('mousemove', e => this.onMouseMove(e));
-        this.container.addEventListener('mousedown', () => {
+        this.container.addEventListener('mousedown', e => {
+            if (this.isUiControlEvent(e)) return;
             if (this.isGameOver || this.attackLocked) return;
             this.isAiming = true;
             document.getElementById('crosshair-ui')?.classList.add('aiming');
         });
-        this.container.addEventListener('mouseup', () => this.onMouseUp());
+        this.container.addEventListener('mouseup', e => {
+            if (this.isUiControlEvent(e)) {
+                this.cancelAiming();
+                return;
+            }
+            this.onMouseUp();
+        });
         document.getElementById('biome-select')?.addEventListener('change', e => this.applyTheme(e.target.value));
         document.getElementById('diff-select')?.addEventListener('change', () => this.updateSpawnRate());
+        this.setupEdgeHudInteractions();
         document.getElementById('scClose')?.addEventListener('click', () => this.hideScienceCard());
         document.getElementById('btnCustomSmiles')?.addEventListener('click', () => {
             const row = document.getElementById('deckCustomRow');
@@ -871,7 +933,17 @@ class PathoHunt3D {
         document.getElementById('notebookCsvBtn')?.addEventListener('click', () => this.exportNotebookCsv());
 
         // Docking guide resume button
-        document.getElementById('dgResumeBtn')?.addEventListener('click', () => this._forceDismissGuide());
+        const resumeBtn = document.getElementById('dgResumeBtn');
+        if (resumeBtn) {
+            ['pointerdown', 'mousedown', 'mouseup', 'click'].forEach(type => {
+                resumeBtn.addEventListener(type, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.cancelAiming();
+                    if (type === 'click') this._forceDismissGuide();
+                });
+            });
+        }
 
         // Weapon loadout picker (story screen)
         document.querySelectorAll('.story-weapon-btn').forEach(btn => {
@@ -881,6 +953,116 @@ class PathoHunt3D {
                 this.deckSize = parseInt(btn.dataset.count, 10) || 1;
             });
         });
+    }
+
+    setupEdgeHudInteractions() {
+        document.querySelectorAll('.edge-hud-btn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                const item = btn.closest('.edge-hud-item');
+                if (!item) return;
+                const willOpen = !item.classList.contains('open');
+                document.querySelectorAll('.edge-hud-item.open').forEach(el => {
+                    if (el !== item) el.classList.remove('open');
+                });
+                item.classList.toggle('open', willOpen);
+            });
+        });
+
+        document.querySelectorAll('[data-edge-close]').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                btn.closest('.edge-hud-item')?.classList.remove('open');
+            });
+        });
+
+        const settingsToggle = document.getElementById('settingsToggle');
+        const settingsClose = document.getElementById('settingsClose');
+        const settingsBackdrop = document.getElementById('settingsBackdrop');
+        settingsToggle?.addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleSettingsDrawer();
+        });
+        settingsClose?.addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.closeSettingsDrawer();
+        });
+        settingsBackdrop?.addEventListener('click', () => this.closeSettingsDrawer());
+
+        const dockToggle = document.getElementById('moleculeDockToggle');
+        const dockClose = document.getElementById('moleculeDockClose');
+        dockToggle?.addEventListener('click', e => {
+            if (e.target.closest('#btnDesignMol')) return;
+            e.preventDefault();
+            e.stopPropagation();
+            this.toggleMoleculeDock();
+        });
+        dockToggle?.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleMoleculeDock();
+            }
+        });
+        dockClose?.addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.closeMoleculeDock();
+        });
+        document.getElementById('btnDesignMol')?.addEventListener('click', e => {
+            e.stopPropagation();
+        });
+
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.edge-hud')) this.closeEdgePanels();
+            if (!e.target.closest('.molecule-dock')) this.closeMoleculeDock();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                this.closeSettingsDrawer();
+                this.closeEdgePanels();
+                this.closeMoleculeDock();
+            }
+        });
+    }
+
+    closeEdgePanels() {
+        document.querySelectorAll('.edge-hud-item.open').forEach(el => el.classList.remove('open'));
+    }
+
+    toggleSettingsDrawer() {
+        const drawer = document.getElementById('settingsDrawer');
+        if (drawer?.classList.contains('open')) this.closeSettingsDrawer();
+        else this.openSettingsDrawer();
+    }
+
+    openSettingsDrawer() {
+        const drawer = document.getElementById('settingsDrawer');
+        const toggle = document.getElementById('settingsToggle');
+        const backdrop = document.getElementById('settingsBackdrop');
+        drawer?.classList.add('open');
+        toggle?.classList.add('active');
+        if (backdrop) backdrop.hidden = false;
+    }
+
+    closeSettingsDrawer() {
+        const drawer = document.getElementById('settingsDrawer');
+        const toggle = document.getElementById('settingsToggle');
+        const backdrop = document.getElementById('settingsBackdrop');
+        drawer?.classList.remove('open');
+        toggle?.classList.remove('active');
+        if (backdrop) backdrop.hidden = true;
+    }
+
+    toggleMoleculeDock() {
+        document.getElementById('moleculeDeck')?.classList.toggle('open');
+    }
+
+    closeMoleculeDock() {
+        document.getElementById('moleculeDeck')?.classList.remove('open');
     }
 
     onSpacebarFire() {
@@ -932,8 +1114,38 @@ class PathoHunt3D {
             if (this.attackLocked) this.showLockedWarning();
             else this.launchAttack();
         }
+        this.cancelAiming();
+    }
+
+    cancelAiming() {
         this.isAiming = false;
         document.getElementById('crosshair-ui')?.classList.remove('aiming');
+    }
+
+    isUiControlEvent(event) {
+        const target = event?.target;
+        if (!target || !target.closest) return false;
+        return Boolean(target.closest([
+            'button',
+            'a',
+            'input',
+            'select',
+            'textarea',
+            '[role="button"]',
+            '.edge-hud',
+            '.settings-toggle',
+            '.settings-drawer',
+            '.settings-backdrop',
+            '#dockingGuide',
+            '.molecule-deck',
+            '.molecule-dock',
+            '.tactical-sidebar',
+            '.science-card',
+            '.leaderboard-panel',
+            '#notebookOverlay',
+            '#molDesignerOverlay',
+            '.mdes-modal'
+        ].join(',')));
     }
 
     showLockedWarning() {
@@ -997,23 +1209,45 @@ class PathoHunt3D {
             targetPos: bossPos,
             parked: false, hitTime: 0,
             apiResult: null, apiSettled: false,
+            apiStarted: false, abortController: null,
+            smiles: smilesToSend,
             molName,
         };
         this.projectiles.push(proj);
         this.log(`FIRING: ${molName}`, "#00f2ff");
+    }
 
-        if (this.sessionId) {
-            fetch(`/api/v3/game/session/${this.sessionId}/attack`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ smiles: smilesToSend })
-            }).then(r => r.json()).then(data => {
-                proj.apiResult = data;
-                proj.apiSettled = true;
-            }).catch(() => {
-                proj.apiResult = null;
-                proj.apiSettled = true;
-            });
+    startAttackScoring(proj) {
+        if (!proj || proj.apiStarted) return;
+        proj.apiStarted = true;
+
+        if (!this.sessionId) {
+            proj.apiResult = { error: 'Game session is not ready yet.' };
+            proj.apiSettled = true;
+            return;
         }
+
+        const controller = new AbortController();
+        proj.abortController = controller;
+        fetch(`/api/v3/game/session/${this.sessionId}/attack`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ smiles: proj.smiles }),
+            signal: controller.signal,
+        }).then(async r => {
+            let data = {};
+            try { data = await r.json(); } catch (_) {}
+            if (!r.ok) {
+                data.error = data.error || `Attack failed with HTTP ${r.status}`;
+                data.http_status = r.status;
+            }
+            proj.apiResult = data;
+            proj.apiSettled = true;
+        }).catch(err => {
+            if (err && err.name === 'AbortError') return;
+            proj.apiResult = { error: 'Network error while scoring the molecule.' };
+            proj.apiSettled = true;
+        });
     }
 
     showAnalyzing(molName) {
@@ -1021,6 +1255,7 @@ class PathoHunt3D {
         const mn = document.getElementById('analyzingMolName');
         if (el) el.style.display = 'flex';
         if (mn) mn.textContent = molName || '';
+        document.getElementById('edgeActivityBtn')?.classList.add('edge-blink');
         if (this.monster) {
             this.monster.traverse(m => {
                 if (m.isMesh && m.material && m.material.emissive) m.material.emissive.setHex(0xffaa00);
@@ -1032,6 +1267,7 @@ class PathoHunt3D {
     hideAnalyzing() {
         const el = document.getElementById('analyzingOverlay');
         if (el) el.style.display = 'none';
+        document.getElementById('edgeActivityBtn')?.classList.remove('edge-blink');
         const profile = this.bossProfile;
         if (this.monster) {
             this.monster.traverse(m => {
@@ -1050,11 +1286,9 @@ class PathoHunt3D {
         }
 
         if (!data || data.error) {
-            this.bossHP = Math.max(0, this.bossHP - 1);
-            this.updateHUD();
+            this.showAttackError(data?.error || 'Molecule scoring failed. Try firing again.');
             this.attackLocked = false;
             this.refreshOneCard(this.firedCardIdx ?? 0);
-            this.log("API ERROR — minimal damage applied", "#ff3e3e");
             return;
         }
 
@@ -1082,6 +1316,7 @@ class PathoHunt3D {
         // Memory penalty note
         if (data.memory_penalty) {
             this.log('⚠️ Molecular memory penalty — try a novel scaffold!', '#888');
+            this.pulseHudIcon('edgeActivityBtn', 'edge-warning', 1800);
         }
 
         // Phase transition
@@ -1129,6 +1364,19 @@ class PathoHunt3D {
         this.attackLocked = false;
         // Only replace the slot that was fired — other cards stay unchanged
         setTimeout(() => this.refreshOneCard(this.firedCardIdx ?? 0), 500);
+    }
+
+    showAttackError(message) {
+        const text = String(message || 'Molecule scoring failed. Try again.').substring(0, 140);
+        this.log(`SCORING ERROR: ${text}`, "#ff3e3e");
+        this.pulseHudIcon('edgeActivityBtn', 'edge-warning', 1800);
+        const div = document.createElement('div');
+        div.className = 'locked-warn';
+        div.style.borderColor = 'rgba(255,62,62,0.55)';
+        div.style.color = '#ff6b63';
+        div.textContent = `⚠️ ${text}`;
+        this.container.appendChild(div);
+        setTimeout(() => div.remove(), 2600);
     }
 
     showFloatingDamage(damage, isNewBest, composite) {
@@ -1414,6 +1662,14 @@ class PathoHunt3D {
         document.getElementById('best-score-text').textContent = `${Math.round(this.bestScore * 100)}%`;
         const ac = document.getElementById('attack-counter');
         if (ac) ac.textContent = `ATTACKS: ${this.attackCount}`;
+        const bossMini = document.getElementById('edgeBossHpMini');
+        if (bossMini) bossMini.textContent = Math.round(this.bossHP);
+        const shieldMini = document.getElementById('edgeShieldMini');
+        if (shieldMini) shieldMini.textContent = this.playerHP;
+        const bestMini = document.getElementById('edgeBestMini');
+        if (bestMini) bestMini.textContent = `${Math.round(this.bestScore * 100)}%`;
+        const shieldBtn = document.getElementById('edgeShieldBtn');
+        if (shieldBtn) shieldBtn.classList.toggle('edge-danger', this.playerHP <= 300 && !this.isGameOver);
         // Winning badge: show when bestScore beats known drug baseline
         const wb = document.getElementById('winningBadge');
         if (wb) wb.style.display = (this.bestScore >= this.knownScore && !this.isGameOver) ? 'block' : 'none';
@@ -1564,6 +1820,7 @@ class PathoHunt3D {
     takeDamage(val) {
         const prevHP = this.playerHP;
         this.playerHP = Math.max(0, this.playerHP - val);
+        this.pulseHudIcon('edgeShieldBtn', 'edge-flash', 900);
         const vd = document.getElementById('vfx-damage');
         if (vd) { vd.style.opacity = 0.5; setTimeout(() => vd.style.opacity = 0, 150); }
         this.updateHUD();
@@ -1851,6 +2108,7 @@ class PathoHunt3D {
             const p = this.projectiles[i];
             if (p.parked) {
                 const elapsed = Date.now() - p.hitTime;
+                if (!p.apiStarted) this.startAttackScoring(p);
                 p.mesh.position.x = this.monster.position.x + Math.cos(t * 4 + i) * 2;
                 p.mesh.position.y = this.monster.position.y + Math.sin(t * 4 + i) * 2;
 
@@ -1873,9 +2131,9 @@ class PathoHunt3D {
                 // Apply result as soon as phase3 done AND API responded
                 if (p.phase3 && p.apiSettled) {
                     this.applyAttackResult(p.apiResult, p);
-                } else if (elapsed > 25000) {
-                    // Hard timeout — LLM can take 10-20s on busy GPU; 25s gives it room
-                    this.applyAttackResult(null, p);
+                } else if (elapsed > this.attackTimeoutMs) {
+                    if (p.abortController) p.abortController.abort();
+                    this.applyAttackResult({ error: 'Molecule scoring timed out. Try again.' }, p);
                 }
                 continue;
             }
