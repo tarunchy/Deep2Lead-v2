@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}Evaluate Fine-tune — Deep2Lead{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/3d_viewer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evaluate_finetune.css') }}">
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.spin-icon { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 6px; }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="page-header" style="margin-bottom:20px;">
+  <h1 style="font-size:1.5rem;font-weight:700;">Evaluate Fine-tune</h1>
+  <p style="color:var(--text-muted);margin-top:4px;font-size:.9rem;">
+    Run both the production and fine-tuned Gemma4-E2B models on the same prompt and compare results side by side.
+  </p>
+</div>
+
+<!-- Model status bar -->
+<div class="card" style="margin-bottom:16px;padding:12px 16px;">
+  <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center;">
+    <div style="font-size:.82rem;font-weight:600;color:var(--text-muted);">Model Status</div>
+    <div style="font-size:.82rem;">
+      <span class="health-dot unknown" id="prodDot"></span>
+      <span id="prodStatus" style="color:var(--text-muted);">dlyog04:9000 — checking…</span>
+    </div>
+    <div style="font-size:.82rem;">
+      <span class="health-dot unknown" id="ftDot"></span>
+      <span id="ftStatus" style="color:var(--text-muted);">dgx1:9002 — checking…</span>
+    </div>
+    <div style="margin-left:auto;">
+      <span style="font-size:.75rem;background:rgba(88,166,255,.1);color:#58a6ff;border:1px solid rgba(88,166,255,.2);padding:2px 10px;border-radius:12px;">Production: dlyog04:9000</span>
+      <span style="font-size:.75rem;background:rgba(63,185,80,.1);color:#3fb950;border:1px solid rgba(63,185,80,.2);padding:2px 10px;border-radius:12px;margin-left:6px;">Fine-tuned: dgx1:9002 + LoRA</span>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+  <!-- Left: Target + Structure viewer -->
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <h3 style="font-size:1rem;margin-bottom:12px;">Target</h3>
+      {% if target %}
+        <div style="font-weight:600;">{{ target.name }}</div>
+        <div style="color:var(--text-muted);font-size:.85rem;margin:4px 0;">{{ target.disease }} · {{ target.organism }}</div>
+        <div style="background:var(--accent-light);border:1px solid rgba(43,108,176,.2);border-radius:8px;padding:8px 10px;font-size:.82rem;margin-top:8px;">
+          {{ target.analogy }}
+        </div>
+        <a href="{{ url_for('target.target_picker_page') }}" class="btn btn-sm btn-outline" style="margin-top:10px;">Change Target</a>
+      {% else %}
+        <p style="color:var(--text-muted);font-size:.88rem;">No target selected.</p>
+        <a href="{{ url_for('target.target_picker_page') }}" class="btn btn-primary btn-sm" style="margin-top:8px;">Choose a Target →</a>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:1rem;margin-bottom:10px;">Protein Structure</h3>
+      <div class="viewer-container" style="height:260px;position:relative;">
+        <div id="structureViewer" style="width:100%;height:100%;"></div>
+        <div class="viewer-label">Protein Structure</div>
+        <div id="sourceBadge" class="viewer-source-badge source-alphafold" style="display:none;"></div>
+        <div id="viewerLoadingLabel" class="viewer-loading">
+          <div>Loading structure…</div>
+          <div style="font-size:.8rem;">Fetching from AlphaFold / RCSB PDB</div>
+        </div>
+      </div>
+      <div id="viewerWarning" class="viewer-warning" style="display:none;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-sm btn-outline" onclick="StructureViewer.setStyle('cartoon')">Cartoon</button>
+        <button class="btn btn-sm btn-outline" onclick="StructureViewer.setStyle('stick')">Stick</button>
+        <button class="btn btn-sm btn-outline" onclick="StructureViewer.setStyle('confidence')">Confidence</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Form -->
+  <div>
+    <div class="card">
+      <h3 style="font-size:1rem;margin-bottom:12px;">Generate & Compare</h3>
+
+      <input type="hidden" id="target_id"      value="{{ target.id if target else '' }}">
+      <input type="hidden" id="uniprot_id"     value="{{ target.uniprot_id if target else '' }}">
+      <input type="hidden" id="pdb_id"         value="{{ target.pdb_id if target else '' }}">
+      <input type="hidden" id="target_name_val" value="{{ target.name if target else '' }}">
+
+      <div class="form-group">
+        <label>Protein Sequence (first 80 AA used)</label>
+        <textarea id="amino_acid_seq" rows="3" class="form-control" style="font-family:monospace;font-size:.82rem;"
+          placeholder="MKTIIALSYIFCLVFA…">{{ target.amino_acid_seq if target and target.amino_acid_seq else '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Seed SMILES</label>
+        <input type="text" id="seed_smiles" class="form-control" style="font-family:monospace;"
+          placeholder="CC(=O)Oc1ccccc1C(=O)O"
+          value="{{ target.known_drug_smiles if target else '' }}">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>Candidates per model</label>
+          <select id="num_candidates" class="form-control">
+            <option value="5">5 (fast)</option>
+            <option value="8" selected>8</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Diversity level</label>
+          <select id="noise_level" class="form-control">
+            <option value="0.2">Low (similar)</option>
+            <option value="0.4" selected>Medium</option>
+            <option value="0.7">High (diverse)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="background:var(--accent-light);border:1px solid rgba(43,108,176,.2);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:.82rem;">
+        <strong>Both models will run in parallel.</strong> Production uses <code>dlyog04:9000</code> (OpenAI API, ~5-10s).
+        Fine-tuned uses <code>dgx1:9002</code> (QLoRA, ~10-20s). Total wait = slower model's time.
+      </div>
+
+      <button type="button" id="compareBtn" class="btn btn-primary" style="width:100%;" onclick="runComparison()">
+        Compare Both Models
+      </button>
+
+      <div id="compareProgress" style="display:none;margin-top:16px;">
+        <div style="background:var(--border);border-radius:6px;overflow:hidden;height:8px;margin-bottom:10px;position:relative;">
+          <div id="cmpBar" style="height:100%;background:linear-gradient(90deg,#58a6ff,#3fb950);width:0%;transition:width .8s ease;border-radius:6px;"></div>
+          <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(88,166,255,.15),transparent);animation:shimmer 1.6s infinite;"></div>
+        </div>
+        <div style="font-size:.82rem;color:var(--text-muted);text-align:center;" id="cmpLabel">Initializing…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Results Section -->
+<div id="compareResults" style="display:none;margin-top:20px;">
+
+  <!-- Side-by-side candidate tables -->
+  <div class="compare-grid">
+
+    <!-- Production -->
+    <div class="model-panel production">
+      <div class="model-panel-header">
+        <span class="health-dot up"></span>
+        Production — dlyog04:9000
+        <span style="font-size:.72rem;font-weight:400;margin-left:auto;opacity:.7;">Gemma4-E2B (full precision)</span>
+      </div>
+      <div class="model-panel-body">
+        <div id="prodStats" style="margin-bottom:12px;"></div>
+        <div id="prodError" style="color:#ff7b72;font-size:.82rem;display:none;margin-bottom:8px;"></div>
+        <div id="prodTable"></div>
+      </div>
+    </div>
+
+    <!-- Fine-tuned -->
+    <div class="model-panel finetuned">
+      <div class="model-panel-header">
+        <span class="health-dot up"></span>
+        Fine-tuned — dgx1:9002
+        <span style="font-size:.72rem;font-weight:400;margin-left:auto;opacity:.7;">Gemma4-E2B + QLoRA v1</span>
+      </div>
+      <div class="model-panel-body">
+        <div id="ftStats" style="margin-bottom:12px;"></div>
+        <div id="ftError" style="color:#ff7b72;font-size:.82rem;display:none;margin-bottom:8px;"></div>
+        <div id="ftTable"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Comparison Report -->
+  <div class="report-card" id="reportCard" style="display:none;">
+    <h3 style="font-size:1rem;margin-bottom:14px;font-weight:700;">Comparison Report</h3>
+    <div id="winnerBanner" class="report-winner-banner"></div>
+    <div class="metric-compare-grid" id="metricGrid"></div>
+
+    <div style="margin-top:16px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:.8rem;color:var(--text-muted);">
+      <strong style="color:var(--text);">Weighting:</strong>
+      Validity 30% · QED 25% · SAS 15% · Composite score 15% · Uniqueness 10% · Speed 5%
+    </div>
+
+    <div class="disclaimer-box" style="margin-top:14px;">
+      <strong>Educational comparison only.</strong> Scores are approximations from a computer model.
+      Fine-tuned model v1 was trained on 40,240 samples (Mol-Instructions + MOSES + Deep2Lead custom).
+      Key improvements: +22.5pp SMILES validity, +0.009 avg QED. Key weakness: lower uniqueness.
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/structure_viewer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/evaluate_finetune.js') }}"></script>
+<script>
+const TARGET_ID  = "{{ target.id if target else '' }}";
+const UNIPROT_ID = "{{ target.uniprot_id if target else '' }}";
+const PDB_ID     = "{{ target.pdb_id if target else '' }}";
+
+document.addEventListener("DOMContentLoaded", async () => {
+  loadModelHealth();
+  StructureViewer.init("structureViewer");
+  if (!TARGET_ID) return;
+
+  const res = await apiFetch("/api/v3/structure/best", {
+    method: "POST",
+    body: JSON.stringify({ target_id: TARGET_ID, uniprot_id: UNIPROT_ID, pdb_id: PDB_ID })
+  }).catch(() => null);
+
+  if (res && res.pdb_url) {
+    StructureViewer.loadPdbUrl(res.pdb_url, res.source === "esmfold" ? "confidence" : "cartoon");
+    const badge = document.getElementById("sourceBadge");
+    if (badge) {
+      badge.textContent = res.source_label || res.source;
+      badge.className = "viewer-source-badge source-" + (res.source || "rcsb");
+      badge.style.display = "block";
+    }
+    if (res.warning) {
+      const w = document.getElementById("viewerWarning");
+      if (w) { w.textContent = res.warning; w.style.display = "block"; }
+    }
+  }
+});
+</script>
+{% endblock %}

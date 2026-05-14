@@ -1,7 +1,12 @@
 import re
 import time
 import requests
-from config.settings import DGX_BASE_URL, DGX_TIMEOUT, MAX_RETRY_ATTEMPTS
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from config.settings import (
+    DGX_BASE_URL, DGX_TIMEOUT,
+    FINETUNED_BASE_URL, FINETUNED_TIMEOUT,
+    MAX_RETRY_ATTEMPTS,
+)
 from services.molecule_validator import filter_candidates
 from utils.mol_utils import canonicalize
 
@@ -29,14 +34,15 @@ def _parse_smiles_from_text(text: str) -> list[str]:
     candidates = []
     for line in lines:
         line = line.strip().strip(".,;\"'`")
-        # Strip leading numbering like "1.", "1)"
         line = re.sub(r"^\d+[\.\)]\s*", "", line)
         if line and smiles_pattern.match(line):
             candidates.append(line)
     return candidates
 
 
-def _call_gemma4(prompt: str) -> str:
+def _call_production(prompt: str) -> tuple[str, float]:
+    """Call production model (dlyog04:9000, OpenAI-compatible)."""
+    t0 = time.time()
     resp = requests.post(
         f"{DGX_BASE_URL}/v1/chat/completions",
         json={
@@ -47,37 +53,42 @@ def _call_gemma4(prompt: str) -> str:
         timeout=DGX_TIMEOUT,
     )
     resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"]
+    text = resp.json()["choices"][0]["message"]["content"]
+    return text, time.time() - t0
 
 
-def generate(
-    seed_smile: str,
-    amino_acid_seq: str,
-    noise: float = 0.5,
-    n: int = 10,
-) -> dict:
-    canon_seed = canonicalize(seed_smile)
-    if canon_seed is None:
-        raise ValueError("Invalid seed SMILES")
+def _call_finetuned(prompt: str) -> tuple[str, float]:
+    """Call fine-tuned model (dgx1:9002, FastAPI /v1/text)."""
+    t0 = time.time()
+    resp = requests.post(
+        f"{FINETUNED_BASE_URL}/v1/text",
+        json={"prompt": prompt, "temperature": 0.8, "max_new_tokens": 512},
+        timeout=FINETUNED_TIMEOUT,
+    )
+    resp.raise_for_status()
+    text = resp.json()["response"]
+    return text, time.time() - t0
 
-    prompt = _build_prompt(canon_seed, amino_acid_seq, noise, n)
+
+def _run_model(caller, prompt: str, canon_seed: str, n: int) -> dict:
+    """Run one model, parse and filter results."""
     collected: list[str] = []
     latency_ms = 0
+    error = None
 
     for attempt in range(MAX_RETRY_ATTEMPTS):
         try:
-            t0 = time.time()
-            raw = _call_gemma4(prompt)
-            latency_ms = int((time.time() - t0) * 1000)
+            raw, elapsed = caller(prompt)
+            latency_ms = int(elapsed * 1000)
         except requests.exceptions.RequestException as e:
             if attempt == MAX_RETRY_ATTEMPTS - 1:
-                raise RuntimeError(f"Gemma4 API unreachable: {e}") from e
+                error = str(e)
             continue
 
         parsed = _parse_smiles_from_text(raw)
         valid = filter_candidates(parsed, canon_seed)
         collected.extend(valid)
-        collected = list(dict.fromkeys(collected))  # deduplicate, preserve order
+        collected = list(dict.fromkeys(collected))
         if len(collected) >= n:
             break
 
@@ -85,12 +96,64 @@ def generate(
         "smiles": collected[:n],
         "total_generated": len(collected),
         "latency_ms": latency_ms,
+        "error": error,
     }
+
+
+def generate(
+    seed_smile: str,
+    amino_acid_seq: str,
+    noise: float = 0.5,
+    n: int = 10,
+    model_backend: str = "production",
+) -> dict:
+    canon_seed = canonicalize(seed_smile)
+    if canon_seed is None:
+        raise ValueError("Invalid seed SMILES")
+
+    prompt = _build_prompt(canon_seed, amino_acid_seq, noise, n)
+    caller = _call_finetuned if model_backend == "finetuned" else _call_production
+    result = _run_model(caller, prompt, canon_seed, n)
+
+    if result["error"] and not result["smiles"]:
+        raise RuntimeError(f"Model API unreachable: {result['error']}")
+
+    return result
+
+
+def generate_both(
+    seed_smile: str,
+    amino_acid_seq: str,
+    noise: float = 0.5,
+    n: int = 10,
+) -> dict:
+    """Call production and fine-tuned models in parallel."""
+    canon_seed = canonicalize(seed_smile)
+    if canon_seed is None:
+        raise ValueError("Invalid seed SMILES")
+
+    prompt = _build_prompt(canon_seed, amino_acid_seq, noise, n)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        fut_prod = pool.submit(_run_model, _call_production, prompt, canon_seed, n)
+        fut_ft   = pool.submit(_run_model, _call_finetuned,  prompt, canon_seed, n)
+        prod_res = fut_prod.result()
+        ft_res   = fut_ft.result()
+
+    return {"production": prod_res, "finetuned": ft_res}
 
 
 def check_dgx_health() -> bool:
     try:
         resp = requests.get(f"{DGX_BASE_URL}/health", timeout=5)
         return resp.status_code == 200 and resp.json().get("status") == "healthy"
+    except Exception:
+        return False
+
+
+def check_finetuned_health() -> bool:
+    try:
+        resp = requests.get(f"{FINETUNED_BASE_URL}/health", timeout=5)
+        return resp.status_code == 200 and resp.json().get("status") in ("ready", "healthy")
     except Exception:
         return False

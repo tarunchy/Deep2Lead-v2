@@ -346,6 +346,7 @@ window.PAGE_GUIDE = {
           uniprot_id: UNIPROT_ID,
           pdb_id: PDB_ID,
           target_name: "{{ target.name if target else '' }}",
+          model_backend: (typeof getModelBackend === "function") ? getModelBackend() : "production",
         };
 
         _abortController = new AbortController();

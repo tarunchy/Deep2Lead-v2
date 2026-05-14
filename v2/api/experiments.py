@@ -112,6 +112,7 @@ def generate():
             amino_acid_seq=aa_seq,
             noise=data["noise"],
             n=data["num_candidates"],
+            model_backend=data.get("model_backend", "production"),
         )
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503

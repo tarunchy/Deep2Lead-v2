@@ -1,0 +1,146 @@
+/* ── Evaluate Fine-tune page ── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.model-panel {
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  overflow: hidden;
+}
+
+.model-panel.production { border-color: rgba(88,166,255,.5); }
+.model-panel.finetuned  { border-color: rgba(63,185,80,.5); }
+
+.model-panel-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: .95rem;
+}
+
+.model-panel.production .model-panel-header { background: rgba(88,166,255,.1); color: #58a6ff; }
+.model-panel.finetuned  .model-panel-header { background: rgba(63,185,80,.1);  color: #3fb950; }
+
+.model-panel-body { padding: 12px 16px 16px; }
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: .82rem;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-row .label { color: var(--text-muted); }
+.stat-row .val   { font-weight: 600; }
+
+/* Report card */
+.report-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-top: 20px;
+}
+
+.report-winner-banner {
+  text-align: center;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.winner-production { background: rgba(88,166,255,.15); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
+.winner-finetuned  { background: rgba(63,185,80,.15);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+.winner-tie        { background: rgba(255,166,87,.15);  color: #ffa657; border: 1px solid rgba(255,166,87,.3); }
+
+.metric-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.metric-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+.metric-card .metric-name { font-size: .75rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+.metric-card .metric-winner { font-size: .85rem; font-weight: 700; }
+.metric-card .metric-vals { font-size: .75rem; color: var(--text-muted); margin-top: 4px; }
+.metric-winner.prod { color: #58a6ff; }
+.metric-winner.ft   { color: #3fb950; }
+.metric-winner.tie  { color: var(--text-muted); }
+
+/* Health dots */
+.health-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+.health-dot.up   { background: #3fb950; }
+.health-dot.down { background: #ff7b72; }
+.health-dot.unknown { background: #ffa657; }
+
+/* Model selector badge in sidebar */
+.model-selector-widget {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: .78rem;
+}
+.model-selector-widget label { color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 600; }
+.model-selector-widget select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 5px;
+  padding: 4px 6px;
+  font-size: .78rem;
+  cursor: pointer;
+}
+
+/* Candidate table (dark-themed for comparison page) */
+.cmp-candidate-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .78rem;
+}
+.cmp-candidate-table th {
+  padding: 6px 8px;
+  text-align: left;
+  font-weight: 600;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+.cmp-candidate-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.cmp-candidate-table tr:last-child td { border-bottom: none; }
+.cmp-candidate-table tr { cursor: pointer; transition: background .15s; }
+.cmp-candidate-table tr:hover { background: var(--accent-light); }
+
+@media (max-width: 900px) {
+  .compare-grid { grid-template-columns: 1fr; }
+  .metric-compare-grid { grid-template-columns: repeat(2, 1fr); }
+}

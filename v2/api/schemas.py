@@ -14,6 +14,21 @@ class GenerateSchema(Schema):
     target_name = fields.Str(load_default=None)
     uniprot_id = fields.Str(load_default=None)
     mode = fields.Str(load_default="2d", validate=validate.OneOf(["2d", "3d"]))
+    model_backend = fields.Str(load_default="production", validate=validate.OneOf(["production", "finetuned"]))
+
+
+class CompareSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    amino_acid_seq = fields.Str(load_default="")
+    smile = fields.Str(required=True, validate=validate.Length(min=2))
+    noise = fields.Float(load_default=0.5, validate=validate.Range(min=0.0, max=1.0))
+    num_candidates = fields.Int(load_default=10, validate=validate.Range(min=1, max=20))
+    target_id = fields.Str(load_default=None)
+    pdb_id = fields.Str(load_default=None)
+    target_name = fields.Str(load_default=None)
+    uniprot_id = fields.Str(load_default=None)
 
 
 class ExperimentUpdateSchema(Schema):

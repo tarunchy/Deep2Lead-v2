@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css', v='1.0.1') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/gamification.css', v='1.0.1') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/page_guide.css', v='1.0.1') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/evaluate_finetune.css') }}">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -41,6 +42,9 @@
       </a>
       <a href="{{ url_for('auto_experiment.auto_exp_page') }}" class="{% if request.endpoint == 'auto_experiment.auto_exp_page' %}active{% endif %}" title="Auto Experiment">
         <span class="nav-icon">🔁</span><span class="nav-label">Auto Experiment</span>
+      </a>
+      <a href="/evaluate-finetune" class="{% if request.endpoint == 'evaluate_finetune.evaluate_page' %}active{% endif %}" title="Evaluate Fine-tune">
+        <span class="nav-icon">⚡</span><span class="nav-label">Evaluate Fine-tune</span>
       </a>
       <a href="/game/pathohunt-3d" class="{% if 'game_battle_3d' in request.endpoint or 'game_selector_3d' in request.endpoint %}active{% endif %}" title="PathoHunt 3D">
         <span class="nav-icon">⚔️</span><span class="nav-label">PathoHunt 3D</span>
@@ -94,6 +98,14 @@
         <div class="sidebar-xp-bar">
           <div class="sidebar-xp-fill" id="xpBarInner"></div>
         </div>
+      </div>
+      <!-- Model backend selector -->
+      <div class="model-selector-widget nav-label">
+        <label>Default AI Model</label>
+        <select id="modelBackendSelect" onchange="setModelBackend(this.value)">
+          <option value="production">Production (dlyog04:9000)</option>
+          <option value="finetuned">Fine-tuned (dgx1:9002)</option>
+        </select>
       </div>
       <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline sidebar-logout nav-label">Logout</a>
       <button class="theme-toggle-btn nav-label" id="themeToggleBtn" title="Toggle theme">
@@ -182,6 +194,18 @@
       applyTheme(next);
     });
   }
+})();
+
+// Model backend preference
+function setModelBackend(val) {
+  localStorage.setItem("d2l_model_backend", val);
+}
+function getModelBackend() {
+  return localStorage.getItem("d2l_model_backend") || "production";
+}
+(function () {
+  const sel = document.getElementById("modelBackendSelect");
+  if (sel) sel.value = getModelBackend();
 })();
 </script>
 {% block scripts %}{% endblock %}
