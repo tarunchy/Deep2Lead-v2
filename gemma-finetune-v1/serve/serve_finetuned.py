@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Deep2Lead Drug Discovery API (Fine-tuned Gemma4-E2B)",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -77,8 +77,10 @@ class TextRequest(BaseModel):
     prompt: str
     system: Optional[str] = None
     max_new_tokens: int = 512
-    temperature: float = 0.8
-    top_p: float = 0.9
+    temperature: float = 0.9        # raised from 0.8 — more structural diversity
+    top_p: float = 0.92             # raised from 0.9 — wider nucleus sampling
+    top_k: int = 50                 # prevents degenerate high-prob token loops
+    repetition_penalty: float = 1.3 # key fix: breaks same-SMILES repetition
 
 
 class GenerateResponse(BaseModel):
@@ -98,6 +100,13 @@ def health():
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "none",
         "vram_free_gb": round(torch.cuda.mem_get_info()[0] / 1e9, 1) if torch.cuda.is_available() else 0,
     }
+
+
+@app.get("/v1/params")
+def generation_params():
+    """Return current default generation parameters — useful for verifying deployed config."""
+    defaults = TextRequest.__fields__
+    return {k: v.default for k, v in defaults.items() if k not in ("prompt", "system")}
 
 
 @app.post("/v1/text", response_model=GenerateResponse)
@@ -133,6 +142,8 @@ def generate_text(req: TextRequest):
             do_sample=True,
             temperature=req.temperature,
             top_p=req.top_p,
+            top_k=req.top_k,
+            repetition_penalty=req.repetition_penalty,
             use_cache=True,
         )
 
