@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Winning Gemma Strategy — Tarun & Tanisha</title>
+<link rel="stylesheet" href="winning_gemma_strategy.css">
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Winning Gemma 4 Good — Full Strategy</h1>
+    <div class="sub">Kaggle Gemma 4 Good Hackathon · Tarun & Tanisha Chawdhury · DLYog Lab × Franklin High School</div>
+    <span class="badge badge-gold">Unsloth Prize $10K</span>
+    <span class="badge badge-purple">Health &amp; Sciences $10K</span>
+    <span class="badge badge-green">v2 Model: LIVE on dgx1:9003</span>
+    <span class="badge badge-blue">v3 Training: ~1040/3518 steps</span>
+    <span class="badge badge-red">Deadline: May 18 11:59 PM UTC</span>
+  </header>
+
+  <!-- ===== WIN PROBABILITY ===== -->
+  <section>
+    <h2>🎯 Win Assessment</h2>
+    <div class="score-grid">
+      <div class="score-card score-gold">
+        <div class="score-num">8/10</div>
+        <div class="score-label">Unsloth Prize Odds</div>
+      </div>
+      <div class="score-card score-purple">
+        <div class="score-num">9/10</div>
+        <div class="score-label">Health &amp; Sciences Odds</div>
+      </div>
+      <div class="score-card score-green">
+        <div class="score-num">225K</div>
+        <div class="score-label">Training Records</div>
+      </div>
+      <div class="score-card score-blue">
+        <div class="score-num">37h</div>
+        <div class="score-label">Time Remaining</div>
+      </div>
+    </div>
+    <div class="track-grid">
+      <div class="track-card gold">
+        <div class="track-title">Unsloth Prize — Best Fine-tuned Gemma 4</div>
+        <div class="track-prize">$10,000</div>
+        <ul>
+          <li class="strong">225K domain-specific records — 4–10× larger than typical submissions</li>
+          <li class="strong">RS-LoRA r=64, rationale-first ChatML — shows deep expertise</li>
+          <li class="strong">IBM MAMMAL as independent ground-truth scorer — not self-referential eval</li>
+          <li class="strong">Real BindingDB affinities (Kd/Ki/IC50 ≤ 100nM) — not synthetic data</li>
+          <li class="strong">v2 model running NOW — can demo live at any point</li>
+          <li class="risk">Need quantified improvement over base Gemma4 (v3 eval pending)</li>
+          <li class="risk">Kaggle notebook required in addition to GitHub repo</li>
+        </ul>
+      </div>
+      <div class="track-card purple">
+        <div class="track-title">Health &amp; Sciences Impact Track</div>
+        <div class="track-prize">$10,000</div>
+        <ul>
+          <li class="strong">Production platform — not a Colab demo. Real routes, real DB, real game.</li>
+          <li class="strong">PathoHunt 3D — genuinely original concept designed by a high schooler</li>
+          <li class="strong">Father-daughter story = perfect "Gemma 4 Good" human narrative</li>
+          <li class="strong">8 real disease bosses (COVID MPro, EGFR, HIV Protease, BACE1…)</li>
+          <li class="strong">Educational mission: makes drug discovery accessible to students</li>
+          <li class="risk">Need polished demo video — judges won't open localhost:5018</li>
+          <li class="risk">Tanisha segment must be confident and clear on camera</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <strong>Core differentiator:</strong> Most submissions are Jupyter notebooks with a fine-tuning loop and a few sample outputs.
+      We have a working game that a high school student designed, a production platform with 7 live routes, and a human story
+      that makes judges feel something. Gemma 4 <em>Good</em> — this is the Good.
+    </div>
+  </section>
+
+  <!-- ===== COMPETITIVE COMPARISON ===== -->
+  <section>
+    <h2>📊 How We Stack Up vs Typical Competition</h2>
+    <table>
+      <tr>
+        <th>Dimension</th>
+        <th>Typical Submission</th>
+        <th>Our Submission</th>
+        <th>Advantage</th>
+      </tr>
+      <tr>
+        <td>Dataset size</td>
+        <td>10–50K records, often synthetic</td>
+        <td>225K records, real BindingDB affinities</td>
+        <td class="win">✓ Strong</td>
+      </tr>
+      <tr>
+        <td>Training setup</td>
+        <td>Default LoRA r=8 or r=16, Colab</td>
+        <td>RS-LoRA r=64, α=128, GB10 GPU, 24h run</td>
+        <td class="win">✓ Strong</td>
+      </tr>
+      <tr>
+        <td>Evaluation</td>
+        <td>Perplexity or a few sample outputs</td>
+        <td>3-tier: chemistry + target-conditioning + IBM MAMMAL DTI</td>
+        <td class="win">✓ Very Strong</td>
+      </tr>
+      <tr>
+        <td>Demo format</td>
+        <td>Static notebook, screenshots</td>
+        <td>Live platform + game + video</td>
+        <td class="win">✓ Very Strong</td>
+      </tr>
+      <tr>
+        <td>Human story</td>
+        <td>None / generic motivation</td>
+        <td>Father-daughter, Franklin High School</td>
+        <td class="win">✓ Unique</td>
+      </tr>
+      <tr>
+        <td>Educational angle</td>
+        <td>Research-only framing</td>
+        <td>Student-accessible game + tutorial system</td>
+        <td class="win">✓ Strong</td>
+      </tr>
+      <tr>
+        <td>Kaggle notebook</td>
+        <td>Full inline notebook</td>
+        <td>Need to build (Sprint 5 risk)</td>
+        <td class="risk">⚠ Must do</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- ===== VIDEO SCRIPT ===== -->
+  <section>
+    <h2>🎬 Full Demo Video Script — ~5 Minutes</h2>
+
+    <div class="warn-box">
+      <strong>Key decision:</strong> Record Tanisha's segments (Scenes 1, 2, 5) TODAY using the live v2 model — no need to wait for v3.
+      The game works now. Record Tarun's science segment (Scenes 3, 4) after v3 eval completes May 17 morning with real numbers.
+    </div>
+
+    <!-- Scene 1 -->
+    <div class="scene">
+      <div class="scene-header">
+        <span class="scene-num-badge daughter">SCENE 1</span>
+        <div class="scene-title">The Hook — Why Drug Discovery Needed a Game</div>
+        <div class="scene-meta">⏱ 0:00 – 0:50 · Tanisha on camera</div>
+      </div>
+      <div class="dialogue tanisha">
+        <div class="speaker">Tanisha</div>
+        <div class="text">
+          Hi, I'm Tanisha. I'm a sophomore at Franklin High School, and my dad is an AI engineer who builds tools that help scientists discover new drugs.
+          Last month, he tried to teach me how drug discovery actually works — like, how do you find a molecule that can fight a disease?
+        </div>
+        <div class="action">[casual, slightly laughing — genuine teen voice]</div>
+      </div>
+      <div class="dialogue tanisha">
+        <div class="speaker">Tanisha</div>
+        <div class="text">
+          Honestly? I found it pretty complicated. Binding affinity, SMILES strings, IC50 values — it felt like another language.
+          But then I thought: what if we made it a game? What if the disease was the final boss, and the drug was the weapon —
+          and you had to figure out which weapon could actually defeat it?
+        </div>
+        <div class="action">[energized, owns this idea]</div>
+      </div>
+      <div class="dialogue tanisha">
+        <div class="speaker">Tanisha</div>
+        <div class="text">
+          So that's what we built. I designed the game concept, and using Claude — an AI coding assistant — I actually built it.
+          My dad built the AI brain behind it. Let me show you.
+        </div>
+        <div class="action">[cut to screen share of localhost:5018/game/pathohunt-3d]</div>
+      </div>
+    </div>
+
+    <!-- Scene 2 -->
+    <div class="scene">
+      <div class="scene-header">
+        <span class="scene-num-badge daughter">SCENE 2</span>
+        <div class="scene-title">PathoHunt 3D Gameplay — Live Demo</div>
+        <div class="scene-meta">⏱ 0:50 – 2:10 · Tanisha screen share</div>
+      </div>
+      <div class="dialogue tanisha">
+        <div class="speaker">Tanisha (screen share of PathoHunt 3D)</div>
+        <div class="text">
+          This is PathoHunt 3D. Each level is a real disease — a pathogen boss. Right now I'm going to fight SARS-CoV-2 MPro,
+          which is the enzyme that lets COVID-19 replicate inside your cells.
+        </div>
+        <div class="action">[click: select COVID MPro boss · show the 3D protein structure loading]</div>
+      </div>
+      <div class="dialogue tanisha">
+        <div class="speaker">Tanisha</div>
+        <div class="text">
+          So the AI — which is Gemma 4, fine-tuned by my dad on 225,000 real drug-target pairs — it generates a drug molecule
+          as my "ammunition." Watch what happens.
+        </div>
+        <div class="action">[click Generate · AI generates a SMILES string with rationale · show it appear on screen]</div>
+      </div>
+      <div class="dialogue tanisha">
+        <div class="speaker">Tanisha</div>
+        <div class="text">
+          It just created a real drug candidate. Now another AI model — IBM's MAMMAL — scores how well that molecule
+          actually binds to the COVID protein. A high score means it hits the target. A low score means the pathogen wins this round.
+        </div>
+        <div class="action">[show MAMMAL score populating · binding result displayed · XP reward animation]</div>
+      </div>
+      <div class="dialogue tanisha">
+        <div class="speaker">Tanisha</div>
+        <div class="text">
+          Every round I'm actually learning real drug discovery — binding affinity, what makes a molecule drug-like, why some
+          structures work and others don't. The game teaches it in a language I can understand. There's even a tutorial that
+          explains Lipinski's Rule of 5 in game terms.
+        </div>
+        <div class="action">[briefly show /tutorial page · switch back to game · show Mission Board with active challenges]</div>
+      </div>
+    </div>
+
+    <!-- Scene 3 -->
+    <div class="scene">
+      <div class="scene-header">
+        <span class="scene-num-badge dad">SCENE 3</span>
+        <div class="scene-title">The Science — Fine-tuning Gemma 4 on Real Drug Data</div>
+        <div class="scene-meta">⏱ 2:10 – 3:20 · Tarun on camera + screen share</div>
+      </div>
+      <div class="dialogue tarun">
+        <div class="speaker">Tarun</div>
+        <div class="text">
+          I'm Tarun, Tanisha's dad and an AI engineer at DLYog Lab. Let me show you the science behind the game's AI brain.
+        </div>
+      </div>
+      <div class="dialogue tarun">
+        <div class="speaker">Tarun</div>
+        <div class="text">
+          We fine-tuned Google's Gemma 4 — specifically the 2-billion parameter instruction-tuned model — using Unsloth,
+          which makes the training dramatically faster and more memory-efficient.
+          Our dataset is 225,000 drug-target pairs sourced from BindingDB and ChEMBL — real experimental measurements,
+          not synthetic data. Every record has a confirmed binding affinity below 100 nanomolar, meaning these are compounds
+          that actually work against their targets.
+        </div>
+        <div class="action">[show terminal: wc -l on the final dataset file · or show the data/build_dataset_v3.py breakdown]</div>
+      </div>
+      <div class="dialogue tarun">
+        <div class="speaker">Tarun</div>
+        <div class="text">
+          The training architecture uses rank-stabilized LoRA — r equals 64 — running on an NVIDIA GB10 Grace Blackwell GPU
+          with 122 gigabytes of unified VRAM. We ran 3,518 gradient steps over two epochs with an effective batch size of 128.
+          The key innovation in the data format: we trained the model not just to output a molecule, but to reason first —
+          explaining why a specific structure targets a specific protein — before generating the SMILES string.
+          That rationale-first format is what makes the game's explanations coherent and educational.
+        </div>
+        <div class="action">[show snippet of ChatML training format — system prompt, rationale, SMILES output]</div>
+      </div>
+    </div>
+
+    <!-- Scene 4 -->
+    <div class="scene">
+      <div class="scene-header">
+        <span class="scene-num-badge dad">SCENE 4</span>
+        <div class="scene-title">Evaluation Results — How Much Better Is It?</div>
+        <div class="scene-meta">⏱ 3:20 – 4:20 · Tarun screen share of eval tables</div>
+      </div>
+      <div class="dialogue tarun">
+        <div class="speaker">Tarun</div>
+        <div class="text">
+          We used a three-tier evaluation framework to measure real improvement over the base Gemma 4 model.
+        </div>
+      </div>
+      <div class="dialogue tarun">
+        <div class="speaker">Tarun</div>
+        <div class="text">
+          Tier one: chemistry quality. The fine-tuned model generates valid SMILES strings at [X]% versus [Y]% for the base model.
+          QED — a standard drug-likeness score where 1.0 is ideal — improved from [base] to [finetuned].
+          Molecular novelty versus the training set is [Z]%, which means the model is genuinely creating new candidates,
+          not memorizing training data.
+        </div>
+        <div class="action">[FILL IN: X, Y, Z from eval_results_v3 after Sprint 2 — show Table 1 on screen]</div>
+      </div>
+      <div class="dialogue tarun">
+        <div class="speaker">Tarun</div>
+        <div class="text">
+          Tier two: target conditioning. When we ask the model to generate a drug for EGFR versus HIV Protease,
+          does it actually generate structurally different compounds? Our target specificity score is [W],
+          measured by Tanimoto similarity between target classes. This confirms the model has learned the biology,
+          not just molecular syntax.
+        </div>
+        <div class="action">[show Table 2 on screen · highlight Tanimoto cross-class divergence]</div>
+      </div>
+      <div class="dialogue tarun">
+        <div class="speaker">Tarun</div>
+        <div class="text">
+          Tier three: IBM MAMMAL DTI scoring. MAMMAL is IBM Research's drug-target interaction model.
+          We pass our generated molecules through MAMMAL independently — it has no access to our training data.
+          Average predicted pKd for held-out targets is [V], versus [U] for base model outputs.
+          That's an independent confirmation that the molecules we generate actually have better predicted binding.
+        </div>
+        <div class="action">[show MAMMAL score distribution histogram · v2 vs base side by side]</div>
+      </div>
+    </div>
+
+    <!-- Scene 5 -->
+    <div class="scene">
+      <div class="scene-header">
+        <span class="scene-num-badge both">SCENE 5</span>
+        <div class="scene-title">Close — The Bigger Vision</div>
+        <div class="scene-meta">⏱ 4:20 – 5:00 · Both on camera</div>
+      </div>
+      <div class="dialogue tanisha">
+        <div class="speaker">Tanisha</div>
+        <div class="text">
+          The platform is completely open. Any student can go in, pick a disease, and start experimenting with AI-generated drug candidates.
+          There's a tutorial, there's a social feed where you can share your discoveries, there are missions to complete.
+          It turned something I found intimidating into something I actually want to do more of.
+        </div>
+      </div>
+      <div class="dialogue tarun">
+        <div class="speaker">Tarun</div>
+        <div class="text">
+          Drug discovery takes 10 to 15 years and billions of dollars per approved drug. AI is starting to change that.
+          But the biggest bottleneck isn't just compute — it's the next generation of scientists who need to understand
+          this space well enough to ask the right questions. That's what Deep2Lead and PathoHunt are for.
+          Tanisha's idea — making it a game — is the thing that makes it stick.
+        </div>
+      </div>
+      <div class="dialogue tanisha">
+        <div class="speaker">Tanisha</div>
+        <div class="text">
+          All the code is on GitHub. The model is on HuggingFace. Everything is open source.
+          If you're a student, a teacher, or a researcher — it's free to use and build on.
+        </div>
+        <div class="action">[show GitHub repo URL + HuggingFace model card URL · fade to Deep2Lead logo]</div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <strong>Recording order (minimize risk):</strong>
+      Record Scenes 1 + 2 + 5 with Tanisha TODAY — game is live on v2, no v3 needed.
+      Record Scenes 3 + 4 with Tarun on May 17 after v3 eval results are in — fill in [X], [Y], [Z], [W], [V], [U] with real numbers.
+      Edit together in one pass.
+    </div>
+  </section>
+
+  <!-- ===== KAGGLE NOTEBOOK STRUCTURE ===== -->
+  <section>
+    <h2>📓 Kaggle Notebook Structure</h2>
+    <p style="color:#8b949e; font-size:0.85rem; margin-bottom:1rem;">
+      Kaggle submissions require a notebook. This notebook should be self-contained: readable without the platform, but
+      link out to the full platform for the live demo. Target: ~800 lines, clean output, runnable in &lt;30 min on Kaggle GPU.
+    </p>
+
+    <div class="nb-cell">
+      <span class="nb-type md">MD</span>
+      <div class="nb-content"><strong># PathoHunt: Teaching Drug Discovery with Gemma 4 + Unsloth</strong><br>
+      <em>By Tarun Chawdhury (DLYog Lab) and Tanisha Chawdhury (Franklin High School)</em><br>
+      — Origin story paragraph · What we built · Links to platform + video + HuggingFace</div>
+    </div>
+
+    <div class="nb-cell">
+      <span class="nb-type md">MD</span>
+      <div class="nb-content"><strong>## The Dataset</strong> — BindingDB 150K + ChEMBL 65K + MOSES 10K = 225,060 records<br>
+      Show data source breakdown table · Affinity filter rationale · ChatML format example with rationale-first output</div>
+    </div>
+
+    <div class="nb-cell">
+      <span class="nb-type code">CODE</span>
+      <div class="nb-content"><em>pip install unsloth (pinned version 2026.5.2)</em><br>
+      Load model from HuggingFace: <code>TarCh/gemma4-drug-discovery-v3</code><br>
+      Load with FastLanguageModel — show load_in_4bit=True, CUDA confirmed</div>
+    </div>
+
+    <div class="nb-cell">
+      <span class="nb-type code">CODE</span>
+      <div class="nb-content"><em>5 inference examples — one per disease target</em><br>
+      Inputs: COVID MPro · EGFR · HIV Protease · BACE1 · DPP-4<br>
+      Outputs: formatted as (rationale, SMILES, drug-likeness check) — clean printed table</div>
+    </div>
+
+    <div class="nb-cell">
+      <span class="nb-type md">MD</span>
+      <div class="nb-content"><strong>## Evaluation Results</strong> — 3-tier framework explanation</div>
+    </div>
+
+    <div class="nb-cell">
+      <span class="nb-type code">CODE</span>
+      <div class="nb-content"><em>Tier 1 — Chemistry quality</em><br>
+      SMILES validity · QED distribution · Novelty vs training set<br>
+      Show side-by-side: base Gemma4 vs fine-tuned · matplotlib bar chart</div>
+    </div>
+
+    <div class="nb-cell">
+      <span class="nb-type code">CODE</span>
+      <div class="nb-content"><em>Tier 2 — Target conditioning</em><br>
+      Tanimoto similarity within-target vs cross-target · Show model learned biology, not just syntax</div>
+    </div>
+
+    <div class="nb-cell">
+      <span class="nb-type code">CODE</span>
+      <div class="nb-content"><em>Tier 3 — IBM MAMMAL DTI scores</em><br>
+      pKd distribution for generated molecules · Compare fine-tuned vs base<br>
+      Show MAMMAL is independent (no access to training data)</div>
+    </div>
+
+    <div class="nb-cell">
+      <span class="nb-type md">MD</span>
+      <div class="nb-content"><strong>## PathoHunt 3D — The Game</strong><br>
+      Screenshot gallery · Game architecture diagram · Link to demo video<br>
+      Tanisha's quote: "Dad, why don't we make it a game…"</div>
+    </div>
+
+    <div class="nb-cell">
+      <span class="nb-type md">MD</span>
+      <div class="nb-content"><strong>## How to Use — Open Platform</strong><br>
+      GitHub repo · HuggingFace model card · Deploy instructions<br>
+      Call to action: for students, teachers, researchers</div>
+    </div>
+
+    <div class="highlight-box">
+      <strong>Notebook title (copy-paste this exactly):</strong><br>
+      <code>PathoHunt: Teaching Drug Discovery with Gemma 4 + Unsloth — A Father-Daughter Hackathon</code>
+    </div>
+  </section>
+
+  <!-- ===== SPRINT TIMELINE ===== -->
+  <section>
+    <h2>🗓️ Remaining Sprint Timeline — 37 Hours to Deadline</h2>
+    <ul class="timeline">
+
+      <li class="done">
+        <div class="tl-time">✓ COMPLETE</div>
+        <div class="tl-title">Sprint 1 — Dataset Build + Training Launch</div>
+        <div class="tl-desc">225K records built · v3 training running at ~1040/3518 on GB10 · v2 model live on dgx1:9003</div>
+      </li>
+
+      <li class="active">
+        <div class="tl-time">NOW — May 16 (today)</div>
+        <div class="tl-title">Record Video Scenes 1, 2, 5 — Tanisha's Segments</div>
+        <div class="tl-desc">
+          PathoHunt 3D is live with v2 model. No need to wait for v3.<br>
+          Scene 1: Tanisha on camera — the origin story (50s)<br>
+          Scene 2: PathoHunt 3D gameplay screen share — pick COVID MPro, generate drug, see MAMMAL score (80s)<br>
+          Scene 5: Both on camera — bigger vision close (40s)<br>
+          Tools needed: OBS or QuickTime screen record · decent mic (even phone mic in quiet room)
+        </div>
+      </li>
+
+      <li class="active">
+        <div class="tl-time">May 16 — While recording</div>
+        <div class="tl-title">Start Kaggle Notebook Draft</div>
+        <div class="tl-desc">
+          Write markdown cells 1–2 (story + dataset) · Placeholder cells for eval numbers<br>
+          Load v2 model in Kaggle env · Run 5 inference examples · Confirm notebook executes
+        </div>
+        <div class="tl-cmd">ssh dgx1 'curl -s http://localhost:9003/v1/generate -d @sample_req.json'</div>
+      </li>
+
+      <li class="next">
+        <div class="tl-time">May 17 ~7 AM — Training completes</div>
+        <div class="tl-title">Sprint 2 — Run v3 Evaluation</div>
+        <div class="tl-desc">3-tier eval: chemistry + target conditioning + MAMMAL DTI scores. Estimated 2–4 hours.</div>
+        <div class="tl-cmd">ssh dgx1 'cd ~/unsloth/gemma-4-finetune-v2 &amp;&amp; source ~/.unsloth/.unsloth/bin/activate &amp;&amp; python3 eval/run_full_eval.py --lora-path ./drug_discovery/lora/gemma4_e2b_drug_v3 --n-general 60 --n-per-target 20 --output-dir ./eval_results_v3'</div>
+      </li>
+
+      <li class="next">
+        <div class="tl-time">May 17 ~11 AM</div>
+        <div class="tl-title">Sprint 3 — Connect v3 to Platform</div>
+        <div class="tl-desc">Start serve_v3.py on dgx1:9004 · Update v2 app config endpoint 9003 → 9004 · Test PathoHunt 3D end-to-end with v3</div>
+        <div class="tl-cmd">ssh dgx1 'SCREEN -dmS gemma4_serve_v3 bash -c "source ~/.unsloth/.unsloth/bin/activate &amp;&amp; python3 serve/serve_v3.py"'</div>
+      </li>
+
+      <li class="next">
+        <div class="tl-time">May 17 ~1 PM</div>
+        <div class="tl-title">Record Scenes 3 + 4 — Tarun's Science Segments</div>
+        <div class="tl-desc">Fill in eval numbers into script · Record with v3 eval tables on screen · Edit all 5 scenes into final 5-min video</div>
+      </li>
+
+      <li class="urgent">
+        <div class="tl-time">May 17 ~5 PM</div>
+        <div class="tl-title">Sprint 4 — HuggingFace Push + Kaggle Notebook Final</div>
+        <div class="tl-desc">Push LoRA adapter → HuggingFace Hub as TarCh/gemma4-drug-discovery-v3 · Write model card · Finalize Kaggle notebook with real eval numbers · Test full notebook run</div>
+      </li>
+
+      <li class="urgent">
+        <div class="tl-time">May 18 — Buffer day</div>
+        <div class="tl-title">Sprint 5 — GitHub README + Final Review + Submit</div>
+        <div class="tl-desc">Architecture diagram in README · Eval tables · HuggingFace link · Video link<br>
+        Submit on Kaggle before 11:59 PM UTC. Build in 6+ hour buffer for any last issues.</div>
+      </li>
+
+    </ul>
+  </section>
+
+  <!-- ===== KEY TALKING POINTS FOR JUDGES ===== -->
+  <section>
+    <h2>🗣️ Judge Psychology — What Lands vs What Doesn't</h2>
+    <table>
+      <tr>
+        <th>Don't say</th>
+        <th>Say instead</th>
+        <th>Why it works</th>
+      </tr>
+      <tr>
+        <td>"We fine-tuned a model"</td>
+        <td>"We trained Gemma 4 on 225,000 real experimental measurements from pharmaceutical databases"</td>
+        <td class="ok">Specificity signals depth</td>
+      </tr>
+      <tr>
+        <td>"Our model performs well"</td>
+        <td>"SMILES validity [X]% vs [Y]% base · pKd [V] vs [U] — independently verified by IBM MAMMAL"</td>
+        <td class="win">Numbers + independent scorer = credibility</td>
+      </tr>
+      <tr>
+        <td>"We used Unsloth for efficiency"</td>
+        <td>"Unsloth reduced our VRAM footprint enough to run 24h training on a single GB10 GPU with 2% of parameters trainable"</td>
+        <td class="ok">Shows you understand the tool, not just used it</td>
+      </tr>
+      <tr>
+        <td>"My daughter helped"</td>
+        <td>"Tanisha designed the game concept — I tried to teach her drug discovery, she made it better for everyone"</td>
+        <td class="win">Agency matters — she's the inventor, not just the presenter</td>
+      </tr>
+      <tr>
+        <td>"This could help drug discovery"</td>
+        <td>"Any student, teacher, or researcher can deploy this today. The model is on HuggingFace, the platform is open source."</td>
+        <td class="win">Accessibility = "Good" in Gemma 4 Good</td>
+      </tr>
+      <tr>
+        <td>"The game is fun"</td>
+        <td>"The game teaches Lipinski's Rule of 5 and binding affinity through game mechanics — without those terms ever appearing in the UI until the tutorial"</td>
+        <td class="win">Pedagogical design shows thought</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- ===== SUBMISSION CHECKLIST ===== -->
+  <section>
+    <h2>✅ Submission Checklist</h2>
+    <table>
+      <tr><th>Item</th><th>Status</th><th>Due</th></tr>
+      <tr>
+        <td>v2 model live (interim demo capability)</td>
+        <td class="win">✓ Done — dgx1:9003</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>225K dataset built</td>
+        <td class="win">✓ Done</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>v3 training complete</td>
+        <td class="ok">In progress — ~1040/3518</td>
+        <td>May 17 ~7AM</td>
+      </tr>
+      <tr>
+        <td>Video: Tanisha scenes (1, 2, 5)</td>
+        <td class="risk">⬜ Record TODAY</td>
+        <td>May 16</td>
+      </tr>
+      <tr>
+        <td>v3 evaluation run (3-tier)</td>
+        <td class="risk">⬜ After training</td>
+        <td>May 17 AM</td>
+      </tr>
+      <tr>
+        <td>Video: Tarun scenes (3, 4) with real numbers</td>
+        <td class="risk">⬜ After eval</td>
+        <td>May 17 PM</td>
+      </tr>
+      <tr>
+        <td>Final video edited + uploaded (YouTube/Loom)</td>
+        <td class="risk">⬜</td>
+        <td>May 17 PM</td>
+      </tr>
+      <tr>
+        <td>HuggingFace model card + LoRA push</td>
+        <td class="risk">⬜</td>
+        <td>May 17 PM</td>
+      </tr>
+      <tr>
+        <td>Kaggle notebook: runs clean, eval tables filled</td>
+        <td class="risk">⬜ Draft today, finalize May 17</td>
+        <td>May 18 AM</td>
+      </tr>
+      <tr>
+        <td>GitHub README: architecture, eval, links</td>
+        <td class="risk">⬜</td>
+        <td>May 18 AM</td>
+      </tr>
+      <tr>
+        <td><strong>Kaggle submission before 11:59 PM UTC</strong></td>
+        <td class="risk">⬜</td>
+        <td><strong>May 18</strong></td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- ===== SCREEN RECORDING SETUP ===== -->
+  <section>
+    <h2>🖥️ Screen Recording — Quick Setup Guide</h2>
+    <p style="color:#8b949e; font-size:0.85rem; margin-bottom:1rem;">
+      For Tanisha's game demo (Scenes 1, 2, 5) — get this done today while training runs.
+    </p>
+    <table>
+      <tr><th>What to show</th><th>Route / Action</th></tr>
+      <tr>
+        <td>PathoHunt 3D landing</td>
+        <td><code>localhost:5018/game/pathohunt-3d</code> — pause on boss selection screen</td>
+      </tr>
+      <tr>
+        <td>Select COVID MPro boss</td>
+        <td>Click SARS-CoV-2 MPro · show the 3D protein structure loading animation</td>
+      </tr>
+      <tr>
+        <td>AI generates drug ammunition</td>
+        <td>Click Generate · let the SMILES + rationale stream in · read the rationale aloud</td>
+      </tr>
+      <tr>
+        <td>MAMMAL scores the hit</td>
+        <td>Show the binding affinity score appear · XP reward · win/lose result</td>
+      </tr>
+      <tr>
+        <td>Tutorial page</td>
+        <td><code>localhost:5018/tutorial</code> — 5 seconds, shows educational depth</td>
+      </tr>
+      <tr>
+        <td>Mission Board</td>
+        <td><code>localhost:5018/missions</code> — 5 seconds, shows gamification</td>
+      </tr>
+      <tr>
+        <td>3D Experiment</td>
+        <td><code>localhost:5018/run-3d</code> — optional, shows platform breadth</td>
+      </tr>
+    </table>
+    <pre>Mac screen record shortcut: Cmd+Shift+5 → Record selected portion → select browser window
+Audio: built-in mic is fine · quiet room · speak clearly · natural pace
+Best takes: aim for 2 takes per scene, pick the better one</pre>
+  </section>
+
+  <footer>
+    Generated May 16, 2026 · Deep2Lead v2 · DLYog Lab × Franklin High School ·
+    See also: <a href="finetune-gemma-v3.html" style="color:#58a6ff">finetune-gemma-v3.html</a> ·
+    <a href="Tarun_Tanisha_hackathon_detail.html" style="color:#58a6ff">Tarun_Tanisha_hackathon_detail.html</a>
+  </footer>
+
+</div>
+</body>
+</html>
