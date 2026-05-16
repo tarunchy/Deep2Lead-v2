@@ -11,6 +11,7 @@ Usage:
     python3 data/download_datasets_v2.py
 """
 
+import json
 import os
 import random
 import sys
@@ -68,97 +69,45 @@ def _chembl_rationale(fasta: str, smiles: str, target_name: str) -> dict:
     return to_rationale_chatml(user, rationale, [smiles], system=SYSTEM_PROMPT)
 
 
-def _try_chembl_hf() -> list:
-    """Pull ChEMBL bioactivity data from Hugging Face (openproblems/ChEMBL-bioactivities)."""
-    print("  Trying HuggingFace ChEMBL bioactivities dataset...")
-    try:
-        from datasets import load_dataset
-        ds = load_dataset("openproblems/ChEMBL-bioactivities", split="train",
-                          trust_remote_code=False)
-        print(f"  Loaded {len(ds):,} ChEMBL rows.")
-        return list(ds)
-    except Exception as e:
-        print(f"  ChEMBL HF dataset failed: {e}")
+def _load_chembl_jsonl(path: str) -> list[tuple[str, str, str]]:
+    """
+    Load pre-downloaded ChEMBL pairs from the JSONL file produced by download_chembl.py.
+    Each line: {"fasta": "...", "smiles": "...", "target_name": "...", "ic50_nm": 42.0}
+    Returns list of (fasta, smiles, target_name).
+    """
+    if not os.path.exists(path):
         return []
-
-
-def _try_bindingdb_hf() -> list:
-    """Pull BindingDB from HuggingFace."""
-    print("  Trying HuggingFace BindingDB dataset...")
-    try:
-        from datasets import load_dataset
-        ds = load_dataset("liupf/BindingDB", split="train", trust_remote_code=False)
-        print(f"  Loaded {len(ds):,} BindingDB rows.")
-        return list(ds)
-    except Exception as e:
-        print(f"  BindingDB HF dataset failed: {e}")
-        return []
-
-
-def _parse_chembl_row(row: dict) -> tuple[str, str, str] | None:
-    """Extract (fasta, smiles, target_name) from a ChEMBL row."""
-    smiles = (row.get("canonical_smiles") or row.get("smiles") or "").strip()
-    fasta  = (row.get("sequence") or row.get("target_sequence") or
-              row.get("protein_sequence") or "").strip()
-    name   = (row.get("target_name") or row.get("pref_name") or "Unknown Target").strip()
-
-    # Activity filter
-    ic50 = row.get("standard_value") or row.get("ic50_nM") or row.get("activity_value")
-    try:
-        ic50_val = float(ic50)
-        if ic50_val > CHEMBL_IC50_CUTOFF_NM:
-            return None
-    except (TypeError, ValueError):
-        pass  # no activity value — keep if SMILES + FASTA present
-
-    if not smiles or not fasta or len(fasta) < 10:
-        return None
-    if not is_valid_smiles(smiles):
-        return None
-    return fasta, smiles, name
-
-
-def _parse_bindingdb_row(row: dict) -> tuple[str, str, str] | None:
-    smiles = (row.get("Ligand SMILES") or row.get("smiles") or "").strip()
-    fasta  = (row.get("BindingDB Target Chain Sequence") or row.get("sequence") or "").strip()
-    name   = (row.get("Target Name") or row.get("target_name") or "Unknown Target").strip()
-    ic50   = row.get("IC50 (nM)") or row.get("Ki (nM)") or row.get("Kd (nM)")
-    try:
-        if float(ic50) > CHEMBL_IC50_CUTOFF_NM:
-            return None
-    except (TypeError, ValueError):
-        pass
-    if not smiles or not fasta or len(fasta) < 10:
-        return None
-    if not is_valid_smiles(smiles):
-        return None
-    return fasta, smiles, name
+    pairs = []
+    with open(path) as f:
+        for line in f:
+            try:
+                row = json.loads(line)
+                fasta  = row.get("fasta", "").strip()
+                smiles = row.get("smiles", "").strip()
+                name   = row.get("target_name", "Unknown").strip()
+                if fasta and smiles and len(fasta) >= 10 and is_valid_smiles(smiles):
+                    pairs.append((fasta, smiles, name))
+            except Exception:
+                pass
+    return pairs
 
 
 def download_target_conditioned_pairs(n: int, mammal_threshold: float) -> list:
     """
-    Download ChEMBL + BindingDB pairs, apply MAMMAL affinity filter, return ChatML records.
-    Falls back to built-in known drug pairs if both HF datasets fail.
+    Load ChEMBL pairs from local JSONL (produced by download_chembl.py),
+    apply IBM MAMMAL affinity filter via dlyog03 API, return ChatML records.
+    Falls back to built-in known drug pairs if JSONL not found.
     """
-    print(f"\n[ChEMBL/BindingDB] Targeting {n:,} high-affinity pairs ...")
-    raw_pairs: list[tuple[str, str, str]] = []
+    from config import CHEMBL_PAIRS_PATH
 
-    # Attempt ChEMBL
-    chembl_rows = _try_chembl_hf()
-    for row in chembl_rows:
-        parsed = _parse_chembl_row(row)
-        if parsed:
-            raw_pairs.append(parsed)
+    print(f"\n[ChEMBL] Targeting {n:,} high-affinity pairs ...")
+    raw_pairs = _load_chembl_jsonl(CHEMBL_PAIRS_PATH)
 
-    # Attempt BindingDB
-    bdb_rows = _try_bindingdb_hf()
-    for row in bdb_rows:
-        parsed = _parse_bindingdb_row(row)
-        if parsed:
-            raw_pairs.append(parsed)
-
-    if not raw_pairs:
-        print("  No ChEMBL/BindingDB data available — using built-in known drug pairs as seed.")
+    if raw_pairs:
+        print(f"  Loaded {len(raw_pairs):,} pairs from {CHEMBL_PAIRS_PATH}")
+    else:
+        print(f"  JSONL not found at {CHEMBL_PAIRS_PATH}.")
+        print("  Run download_chembl.py first. Using built-in seed pairs for now.")
         raw_pairs = _builtin_known_pairs()
 
     # Deduplicate by SMILES
@@ -168,30 +117,28 @@ def download_target_conditioned_pairs(n: int, mammal_threshold: float) -> list:
         if smiles not in seen:
             seen.add(smiles)
             unique_pairs.append((fasta, smiles, name))
-
     random.shuffle(unique_pairs)
     print(f"  Unique pairs after dedup: {len(unique_pairs):,}")
 
-    # Apply IBM MAMMAL affinity filter
+    # Apply IBM MAMMAL affinity filter via dlyog03:8090
     from data.mammal_filter import load_mammal_filter_or_passthrough
     mammal = load_mammal_filter_or_passthrough(threshold=mammal_threshold)
 
     if mammal is not None:
-        print(f"  Running IBM MAMMAL affinity filter (threshold={mammal_threshold}) ...")
-        fasta_smiles = [(f, s) for f, s, _ in unique_pairs[:min(n * 3, len(unique_pairs))]]
-        kept = mammal.filter_pairs(fasta_smiles)
-        kept_set = {s for _, s in kept}
-        filtered = [(f, s, nm) for f, s, nm in unique_pairs if s in kept_set]
+        print(f"  Running IBM MAMMAL filter (dlyog03:8090, threshold={mammal_threshold}) ...")
+        pool = unique_pairs[:min(n * 3, len(unique_pairs))]
+        fasta_smiles = [(f, s) for f, s, _ in pool]
+        kept         = mammal.filter_pairs(fasta_smiles)
+        kept_set     = {s for _, s in kept}
+        filtered     = [(f, s, nm) for f, s, nm in pool if s in kept_set]
         print(f"  After MAMMAL filter: {len(filtered):,} pairs kept")
     else:
-        print("  MAMMAL filter skipped — using all pairs above IC50 cutoff.")
+        print("  MAMMAL filter skipped (dlyog03 API not reachable).")
         filtered = unique_pairs
 
-    # Subsample to target n
     if len(filtered) > n:
         filtered = random.sample(filtered, n)
 
-    # Convert to ChatML records
     records = [_chembl_rationale(f, s, nm) for f, s, nm in filtered]
     print(f"  Target-conditioned records: {len(records):,}")
     return records
