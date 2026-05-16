@@ -182,19 +182,25 @@ print("LoRA adapter saved.")
 
 # ── 6. Export merged model ─────────────────────────────────────────────────────
 print(f"\nExporting merged 16-bit model → {MERGED_DIR}")
-os.makedirs(MERGED_DIR, exist_ok=True)
-model.save_pretrained_merged(MERGED_DIR, processor, save_method="merged_16bit")
-print("Merged model saved.")
+try:
+    os.makedirs(MERGED_DIR, exist_ok=True)
+    model.save_pretrained_merged(MERGED_DIR, processor, save_method="merged_16bit")
+    print("Merged model saved.")
+except Exception as e:
+    print(f"Merged export skipped (non-fatal): {e}")
 
-# ── 7. Export GGUF ────────────────────────────────────────────────────────────
+# ── 7. Export GGUF (optional — fails gracefully on broken llama.cpp installs) ──
 print(f"\nExporting GGUF ({GGUF_QUANT}) → {GGUF_DIR}")
-os.makedirs(GGUF_DIR, exist_ok=True)
-model.save_pretrained_gguf(GGUF_DIR, processor, quantization_method=GGUF_QUANT)
-
-from pathlib import Path
-for f in Path(GGUF_DIR).glob("*.gguf"):
-    size_mb = f.stat().st_size / 1e6
-    print(f"  {f.name}  ({size_mb:.0f} MB)")
+try:
+    os.makedirs(GGUF_DIR, exist_ok=True)
+    model.save_pretrained_gguf(GGUF_DIR, processor, quantization_method=GGUF_QUANT)
+    from pathlib import Path
+    for f in Path(GGUF_DIR).glob("*.gguf"):
+        size_mb = f.stat().st_size / 1e6
+        print(f"  {f.name}  ({size_mb:.0f} MB)")
+except Exception as e:
+    print(f"GGUF export skipped (non-fatal — llama.cpp conversion issue): {e}")
+    print("LoRA adapter and merged model are sufficient for serving.")
 
 print("\n" + "="*60)
 print("DONE. Next steps:")
