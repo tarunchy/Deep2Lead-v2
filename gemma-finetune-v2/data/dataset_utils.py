@@ -8,6 +8,13 @@ import json
 import re
 from typing import Optional
 
+try:
+    from rdkit import RDLogger
+    RDLogger.DisableLog("rdApp.error")
+    RDLogger.DisableLog("rdApp.warning")
+except Exception:
+    pass
+
 _Chem = None
 
 
@@ -93,7 +100,8 @@ def load_jsonl(path: str) -> list:
         return [json.loads(l) for l in f if l.strip()]
 
 
+_SMILES_CHAR = re.compile(r'[0-9\[\]=#@\\/]')
+
 def extract_smiles_from_text(text: str) -> list[str]:
-    pattern = r'[A-Za-z0-9@+\-\[\]()=#$.\/\\%]{5,}'
-    candidates = re.findall(pattern, text)
-    return [s for s in candidates if is_valid_smiles(s)]
+    candidates = re.findall(r'[A-Za-z0-9@+\-\[\]()=#$.\/\\%]{5,}', text)
+    return [s for s in candidates if _SMILES_CHAR.search(s) and is_valid_smiles(s)]

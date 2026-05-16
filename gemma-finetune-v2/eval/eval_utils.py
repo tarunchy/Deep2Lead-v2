@@ -6,6 +6,14 @@ import re
 import statistics
 from typing import Optional
 
+# Suppress RDKit parse-error spam — invalid candidates are handled by None checks.
+try:
+    from rdkit import RDLogger
+    RDLogger.DisableLog("rdApp.error")
+    RDLogger.DisableLog("rdApp.warning")
+except Exception:
+    pass
+
 
 # ── SMILES / RDKit ─────────────────────────────────────────────────────────────
 
@@ -27,11 +35,21 @@ def canonical(smiles: str) -> Optional[str]:
 
 
 def extract_smiles_from_text(text: str) -> list[str]:
-    """Extract all valid SMILES tokens from free text."""
+    """
+    Extract valid SMILES from free text.
+    Pre-filter: candidate must contain at least one SMILES-specific character
+    (digit, bracket, bond symbol, stereo marker) so plain English words like
+    'amino', 'chains', 'molecule' never reach RDKit.
+    """
     from rdkit import Chem
+    # Broad match first
     candidates = re.findall(r'[A-Za-z0-9@+\-\[\]()=#$.\/\\%]{5,}', text)
+    # Require at least one SMILES fingerprint character
+    _smiles_char = re.compile(r'[0-9\[\]=#@\\/]')
     out = []
     for s in candidates:
+        if not _smiles_char.search(s):
+            continue
         mol = Chem.MolFromSmiles(s)
         if mol is not None:
             out.append(Chem.MolToSmiles(mol))
