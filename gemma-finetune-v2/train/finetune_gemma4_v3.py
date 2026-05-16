@@ -4,7 +4,7 @@ Fine-tune Gemma4-E2B v3 on Deep2Lead drug discovery dataset.
 v3 upgrades over v2:
   - Dataset: ~220K records (was 12K) — BindingDB + ChEMBL + Mol-Instructions
   - LoRA r=64, alpha=128 (was r=32, alpha=64)
-  - Full 16-bit training (GB10 has 122GB VRAM — no need for 4-bit)
+  - 4-bit base load + bf16 LoRA training (best of both — low VRAM, full precision adapters)
   - Larger effective batch (batch=8, grad_accum=16 → effective=128)
   - 2 epochs (sufficient with 10x more data)
   - Port 9004 (v2 stays on 9003)
@@ -27,7 +27,7 @@ OUTPUT_DIR       = "./drug_discovery/lora/gemma4_e2b_drug_v3"
 MERGED_DIR       = "./drug_discovery/lora/gemma4_e2b_drug_v3_merged"
 
 MAX_SEQ_LENGTH   = 4096
-LOAD_IN_4BIT     = False    # Use 16-bit on GB10 — better quality, plenty of VRAM
+LOAD_IN_4BIT     = True     # 4-bit base + bf16 LoRA: unsloth bnb-4bit model requires this
 
 LORA_R           = 64       # doubled from v2
 LORA_ALPHA       = 128      # doubled from v2
@@ -79,13 +79,11 @@ def main():
     # ── Load model ──────────────────────────────────────────────────────────
     print("[1/5] Loading model ...")
     from unsloth import FastModel
-    import torch
 
     model, processor = FastModel.from_pretrained(
         model_name=MODEL_NAME,
         max_seq_length=MAX_SEQ_LENGTH,
         load_in_4bit=LOAD_IN_4BIT,
-        dtype=torch.bfloat16,
     )
 
     # ── Apply LoRA ──────────────────────────────────────────────────────────
