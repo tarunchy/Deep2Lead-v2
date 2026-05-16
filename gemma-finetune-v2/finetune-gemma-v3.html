@@ -374,8 +374,64 @@ python3 eval/run_full_eval.py --lora-path ./drug_discovery/lora/gemma4_e2b_drug_
     </table>
   </section>
 
+  <!-- Session Recovery -->
+  <section>
+    <h2><span class="icon">🔄</span> Session Recovery — If Claude Restarts</h2>
+    <p style="color:#8b949e;font-size:0.88rem;margin-bottom:1rem">
+      Tell Claude: <em>"Read <code>gemma-finetune-v2/finetune-gemma-v3.html</code> and pick up where we left off"</em>
+    </p>
+
+    <div style="margin-bottom:1.2rem">
+      <div class="label" style="font-size:0.78rem;color:#8b949e;margin-bottom:0.5rem">STEP 1 — Check dgx1 training</div>
+      <div class="monitor-box">
+        <div class="cmd-label">Is training still running?</div>
+        <pre>ssh dgx1 'grep -oE "[0-9]+/3518" ~/unsloth/gemma-4-finetune-v2/TRAIN_V3.log | tail -3'</pre>
+      </div>
+      <div class="monitor-box" style="margin-top:0.5rem">
+        <div class="cmd-label">Did it complete or error?</div>
+        <pre>ssh dgx1 'grep "COMPLETE\|ERROR\|EXIT" ~/unsloth/gemma-4-finetune-v2/TRAIN_V3.log'</pre>
+      </div>
+      <div class="monitor-box" style="margin-top:0.5rem">
+        <div class="cmd-label">If training died — relaunch autopilot (it skips dataset rebuild, resumes from checkpoint if one exists)</div>
+        <pre>ssh dgx1 'cd ~/unsloth/gemma-4-finetune-v2 && bash scripts/autopilot_v3.sh'</pre>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1.2rem">
+      <div class="label" style="font-size:0.78rem;color:#8b949e;margin-bottom:0.5rem">STEP 2 — Check / restart dlyog03 MAMMAL API</div>
+      <div class="monitor-box">
+        <div class="cmd-label">Status check</div>
+        <pre>ssh -i ~/.ssh/id_rsa dlyog@192.168.86.20 'cd /home/dlyog/apps/ibm_biomed && bash run.sh status'</pre>
+      </div>
+      <div class="monitor-box" style="margin-top:0.5rem">
+        <div class="cmd-label">Restart (if GPU memory high or 80% util)</div>
+        <pre>ssh -i ~/.ssh/id_rsa dlyog@192.168.86.20 'cd /home/dlyog/apps/ibm_biomed && bash run.sh restart'</pre>
+      </div>
+      <div class="monitor-box" style="margin-top:0.5rem">
+        <div class="cmd-label">Available run.sh commands</div>
+        <pre>bash run.sh start | stop | restart | status | log</pre>
+      </div>
+    </div>
+
+    <div>
+      <div class="label" style="font-size:0.78rem;color:#8b949e;margin-bottom:0.5rem">STEP 3 — Key facts to tell Claude on restart</div>
+      <table>
+        <tbody>
+          <tr><td style="width:30%">Training log</td><td><code>ssh dgx1 'tail -f ~/unsloth/gemma-4-finetune-v2/TRAIN_V3.log'</code></td></tr>
+          <tr><td>tmux session</td><td><code>ssh dgx1 'tmux ls'</code> — session name: <code>autopilot_v3</code></td></tr>
+          <tr><td>Dataset</td><td><code>~/unsloth/gemma-4-finetune-v2/data/merged_finetune_v3.jsonl</code> — 225,060 records, already built</td></tr>
+          <tr><td>LoRA output</td><td><code>~/unsloth/gemma-4-finetune-v2/drug_discovery/lora/gemma4_e2b_drug_v3</code></td></tr>
+          <tr><td>MAMMAL API</td><td><code>http://192.168.86.20:8090</code> — SSH key <code>~/.ssh/id_rsa</code>, user <code>dlyog</code></td></tr>
+          <tr><td>dgx1 SSH</td><td>alias <code>dgx1</code>, key <code>~/.ssh/id_rsa_dgx</code></td></tr>
+          <tr><td>Torch on dgx1</td><td><code>torch==2.11.0+cu130</code> — ARM64, must use cu130 index URL if reinstalling</td></tr>
+          <tr><td>Deadline</td><td>May 18, 2026 11:59 PM UTC — Kaggle Gemma 4 Good Hackathon</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <footer>
-    Deep2Lead v3 · Generated May 16, 2026 · Kaggle Gemma 4 Good Hackathon · Deadline May 18, 2026 11:59 PM UTC
+    Deep2Lead v3 · Generated May 16, 2026 · Last updated: MAMMAL run.sh + GPU fix · Kaggle deadline May 18, 2026 11:59 PM UTC
   </footer>
 
 </div>
