@@ -61,8 +61,9 @@ def compare_models():
 @login_required
 def model_health():
     return jsonify({
-        "production": molecule_generator.check_dgx_health(),
-        "finetuned":  molecule_generator.check_finetuned_health(),
+        "production":   molecule_generator.check_dgx_health(),
+        "finetuned":    molecule_generator.check_finetuned_health(),
+        "finetuned_v2": molecule_generator.check_finetuned_v2_health(),
     })
 
 

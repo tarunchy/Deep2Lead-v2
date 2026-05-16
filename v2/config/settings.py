@@ -12,11 +12,17 @@ DGX_PORT = int(os.getenv("DGX_PORT", "9000"))
 DGX_BASE_URL = f"http://{DGX_HOST}:{DGX_PORT}"
 DGX_TIMEOUT = int(os.getenv("DGX_GEMMA4_TIMEOUT", "90"))
 
-# Fine-tuned model — dgx1:9002 (QLoRA adapter, FastAPI /v1/text)
+# Fine-tuned model v1 — dgx1:9002 (QLoRA r=16, SMolInstruct+MOSES, FastAPI /v1/text)
 FINETUNED_HOST = os.getenv("FINETUNED_HOST", "dgx1")
 FINETUNED_PORT = int(os.getenv("FINETUNED_PORT", "9002"))
 FINETUNED_BASE_URL = f"http://{FINETUNED_HOST}:{FINETUNED_PORT}"
 FINETUNED_TIMEOUT = int(os.getenv("FINETUNED_TIMEOUT", "120"))
+
+# Fine-tuned model v2 — dgx1:9003 (QLoRA r=32 RS-LoRA, ChEMBL+MAMMAL, FastAPI /v1/text)
+FINETUNED_V2_HOST = os.getenv("FINETUNED_V2_HOST", "dgx1")
+FINETUNED_V2_PORT = int(os.getenv("FINETUNED_V2_PORT", "9003"))
+FINETUNED_V2_BASE_URL = f"http://{FINETUNED_V2_HOST}:{FINETUNED_V2_PORT}"
+FINETUNED_V2_TIMEOUT = int(os.getenv("FINETUNED_V2_TIMEOUT", "120"))
 
 # Molecule generation
 MAX_CANDIDATES = 50

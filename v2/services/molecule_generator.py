@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from config.settings import (
     DGX_BASE_URL, DGX_TIMEOUT,
     FINETUNED_BASE_URL, FINETUNED_TIMEOUT,
+    FINETUNED_V2_BASE_URL, FINETUNED_V2_TIMEOUT,
     MAX_RETRY_ATTEMPTS,
 )
 from services.molecule_validator import filter_candidates
@@ -58,12 +59,25 @@ def _call_production(prompt: str) -> tuple[str, float]:
 
 
 def _call_finetuned(prompt: str) -> tuple[str, float]:
-    """Call fine-tuned model (dgx1:9002, FastAPI /v1/text)."""
+    """Call fine-tuned model v1 (dgx1:9002, FastAPI /v1/text)."""
     t0 = time.time()
     resp = requests.post(
         f"{FINETUNED_BASE_URL}/v1/text",
-        json={"prompt": prompt, "temperature": 0.8, "max_new_tokens": 512},
+        json={"prompt": prompt, "temperature": 0.85, "max_new_tokens": 512},
         timeout=FINETUNED_TIMEOUT,
+    )
+    resp.raise_for_status()
+    text = resp.json()["response"]
+    return text, time.time() - t0
+
+
+def _call_finetuned_v2(prompt: str) -> tuple[str, float]:
+    """Call fine-tuned model v2 (dgx1:9003, FastAPI /v1/text)."""
+    t0 = time.time()
+    resp = requests.post(
+        f"{FINETUNED_V2_BASE_URL}/v1/text",
+        json={"prompt": prompt, "temperature": 0.85, "max_new_tokens": 512},
+        timeout=FINETUNED_V2_TIMEOUT,
     )
     resp.raise_for_status()
     text = resp.json()["response"]
@@ -112,7 +126,12 @@ def generate(
         raise ValueError("Invalid seed SMILES")
 
     prompt = _build_prompt(canon_seed, amino_acid_seq, noise, n)
-    caller = _call_finetuned if model_backend == "finetuned" else _call_production
+    if model_backend == "finetuned":
+        caller = _call_finetuned
+    elif model_backend == "finetuned_v2":
+        caller = _call_finetuned_v2
+    else:
+        caller = _call_production
     result = _run_model(caller, prompt, canon_seed, n)
 
     if result["error"] and not result["smiles"]:
@@ -134,13 +153,15 @@ def generate_both(
 
     prompt = _build_prompt(canon_seed, amino_acid_seq, noise, n)
 
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        fut_prod = pool.submit(_run_model, _call_production, prompt, canon_seed, n)
-        fut_ft   = pool.submit(_run_model, _call_finetuned,  prompt, canon_seed, n)
-        prod_res = fut_prod.result()
-        ft_res   = fut_ft.result()
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        fut_prod  = pool.submit(_run_model, _call_production,   prompt, canon_seed, n)
+        fut_ft    = pool.submit(_run_model, _call_finetuned,    prompt, canon_seed, n)
+        fut_ft_v2 = pool.submit(_run_model, _call_finetuned_v2, prompt, canon_seed, n)
+        prod_res  = fut_prod.result()
+        ft_res    = fut_ft.result()
+        ft_v2_res = fut_ft_v2.result()
 
-    return {"production": prod_res, "finetuned": ft_res}
+    return {"production": prod_res, "finetuned": ft_res, "finetuned_v2": ft_v2_res}
 
 
 def check_dgx_health() -> bool:
@@ -154,6 +175,14 @@ def check_dgx_health() -> bool:
 def check_finetuned_health() -> bool:
     try:
         resp = requests.get(f"{FINETUNED_BASE_URL}/health", timeout=5)
+        return resp.status_code == 200 and resp.json().get("status") in ("ready", "healthy")
+    except Exception:
+        return False
+
+
+def check_finetuned_v2_health() -> bool:
+    try:
+        resp = requests.get(f"{FINETUNED_V2_BASE_URL}/health", timeout=5)
         return resp.status_code == 200 and resp.json().get("status") in ("ready", "healthy")
     except Exception:
         return False

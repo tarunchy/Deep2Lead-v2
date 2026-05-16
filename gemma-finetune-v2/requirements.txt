@@ -1,0 +1,22 @@
+# Core — already installed in unsloth venv on DGX
+# unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git  ← already there
+# torch  ← already there
+
+# Data
+datasets>=2.14.0
+huggingface_hub>=0.23.0
+
+# Chemistry — dataset building and evaluation
+rdkit>=2023.9.5
+tqdm>=4.66.0
+
+# Serving
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.7.0
+
+# IBM MAMMAL filter (v2 new dependency)
+# Install with:
+#   pip install git+https://github.com/BiomedSciAI/biomed-multi-alignment.git
+# The filter degrades gracefully if not installed (logs a warning, skips MAMMAL gating).
+# fuse-medical-dl  ← installed as transitive dep of biomed-multi-alignment

@@ -104,7 +104,8 @@
         <label>Default AI Model</label>
         <select id="modelBackendSelect" onchange="setModelBackend(this.value)">
           <option value="production">Production (dlyog04:9000)</option>
-          <option value="finetuned">Fine-tuned (dgx1:9002)</option>
+          <option value="finetuned">Fine-tuned v1 (dgx1:9002)</option>
+          <option value="finetuned_v2">Fine-tuned v2 (dgx1:9003)</option>
         </select>
       </div>
       <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline sidebar-logout nav-label">Logout</a>

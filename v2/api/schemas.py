@@ -14,7 +14,7 @@ class GenerateSchema(Schema):
     target_name = fields.Str(load_default=None)
     uniprot_id = fields.Str(load_default=None)
     mode = fields.Str(load_default="2d", validate=validate.OneOf(["2d", "3d"]))
-    model_backend = fields.Str(load_default="production", validate=validate.OneOf(["production", "finetuned"]))
+    model_backend = fields.Str(load_default="production", validate=validate.OneOf(["production", "finetuned", "finetuned_v2"]))
 
 
 class CompareSchema(Schema):
