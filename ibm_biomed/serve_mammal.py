@@ -62,27 +62,33 @@ def _predict_one(fasta: str, smiles: str) -> dict:
     fasta_trimmed = fasta[:MAX_FASTA]
     sample = {"target_seq": fasta_trimmed, "drug_seq": smiles}
 
-    sample = TASK.data_preprocessing(
-        sample_dict=sample,
-        tokenizer_op=TOK,
-        target_sequence_key="target_seq",
-        drug_sequence_key="drug_seq",
-        norm_y_mean=None,
-        norm_y_std=None,
-        device=torch.device(DEVICE),
-    )
+    with torch.no_grad():
+        sample = TASK.data_preprocessing(
+            sample_dict=sample,
+            tokenizer_op=TOK,
+            target_sequence_key="target_seq",
+            drug_sequence_key="drug_seq",
+            norm_y_mean=None,
+            norm_y_std=None,
+            device=torch.device(DEVICE),
+        )
 
-    batch_dict = MODEL.forward_encoder_only([sample])
+        batch_dict = MODEL.forward_encoder_only([sample])
 
-    batch_dict = TASK.process_model_output(
-        batch_dict,
-        scalars_preds_processed_key="model.out.dti_bindingdb_kd",
-        norm_y_mean=NORM_Y_MEAN,
-        norm_y_std=NORM_Y_STD,
-    )
+        batch_dict = TASK.process_model_output(
+            batch_dict,
+            scalars_preds_processed_key="model.out.dti_bindingdb_kd",
+            norm_y_mean=NORM_Y_MEAN,
+            norm_y_std=NORM_Y_STD,
+        )
 
-    pkd   = float(batch_dict["model.out.dti_bindingdb_kd"][0])
-    score = _pkd_to_score(pkd)
+        pkd   = float(batch_dict["model.out.dti_bindingdb_kd"][0])
+        score = _pkd_to_score(pkd)
+
+    del sample, batch_dict
+    if DEVICE == "cuda":
+        torch.cuda.empty_cache()
+
     return {
         "pkd":       round(pkd, 4),
         "score":     round(score, 4),
@@ -223,6 +229,9 @@ def predict_batch(req: BatchRequest):
             log.warning(f"Pair error (skipping): {e}")
             results.append(BindingResponse(pkd=0.0, score=0.0, is_binder=False,
                                            raw_output="error", latency_ms=0))
+        finally:
+            if DEVICE == "cuda":
+                torch.cuda.empty_cache()
 
     total_ms = int((time.time() - t0) * 1000)
     per_ms   = total_ms // max(len(results), 1)
