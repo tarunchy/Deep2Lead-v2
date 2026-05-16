@@ -115,13 +115,17 @@ python3 train/finetune_gemma4_v2.py 2>&1 | tee "$LOG_DIR/step8_train.log"
 echo "  Done. Log: $LOG_DIR/step8_train.log"
 echo ""
 
-# ── Step 9: Evaluate ──────────────────────────────────────────────────────────
-echo "[Step 9/10] Evaluating v2 model ..."
-python3 eval/evaluate_model_v2.py \
+# ── Step 9: Evaluate (three-tier: chemistry + target-cond + rationale) ────────
+echo "[Step 9/10] Running full three-tier evaluation ..."
+python3 eval/run_full_eval.py \
     --lora-path ./drug_discovery/lora/gemma4_e2b_drug_v2 \
-    --n-prompts 30 \
+    --merged-data ./data/merged_finetune_v2.jsonl \
+    --n-general 60 \
+    --n-per-target 20 \
+    --output-dir ./eval_results \
     2>&1 | tee "$LOG_DIR/step9_eval.log"
-echo "  Done. Log: $LOG_DIR/step9_eval.log"
+echo "  Done. Results: $PROJECT_DIR/eval_results/"
+echo "  Summary table: $PROJECT_DIR/eval_results/summary_table.md"
 echo ""
 
 # ── Step 10: Start serve API ──────────────────────────────────────────────────
