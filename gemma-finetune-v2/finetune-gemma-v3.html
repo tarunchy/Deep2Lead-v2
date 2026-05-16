@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep2Lead v3 — Session Summary</title>
+<link rel="stylesheet" href="finetune-gemma-v3.css">
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <h1>Deep2Lead — Gemma4-E2B v3 Fine-tune</h1>
+    <div class="subtitle">Session Summary · May 15–16, 2026</div>
+    <div>
+      <span class="badge badge-green">Kaggle Gemma 4 Good Hackathon</span>
+      <span class="badge badge-blue">Unsloth Prize $10K</span>
+      <span class="badge badge-purple">Health &amp; Sciences Track $10K</span>
+      <span class="badge badge-orange">Deadline: May 18, 2026</span>
+    </div>
+  </header>
+
+  <!-- Live Status -->
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <div>
+      <strong>Training RUNNING</strong>
+      <span>· dgx1 (GB10) · Session: autopilot_v3 · Log: ~/unsloth/gemma-4-finetune-v2/TRAIN_V3.log</span>
+    </div>
+  </div>
+
+  <!-- Hardware -->
+  <section>
+    <h2><span class="icon">🖥</span> Infrastructure</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="label">Training GPU — dgx1</div>
+        <div class="value">NVIDIA GB10 (Grace Blackwell)</div>
+        <div class="sub">ARM64 · 122–130 GB unified VRAM · CUDA 13.0 · Driver 580.142</div>
+        <div class="sub">SSH alias: <code>dgx1</code> · Key: <code>~/.ssh/id_rsa_dgx</code></div>
+      </div>
+      <div class="card">
+        <div class="label">MAMMAL API — dlyog03</div>
+        <div class="value">192.168.86.20:8090</div>
+        <div class="sub">IBM MAMMAL DTI model · pKd scorer · Used POST-training only</div>
+        <div class="sub">Model: <code>ibm/biomed.omics.bl.sm.ma-ted-458m.dti_bindingdb_pkd</code></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Model -->
+  <section>
+    <h2><span class="icon">🤖</span> Model Configuration</h2>
+    <div class="grid-3">
+      <div class="card">
+        <div class="label">Base Model</div>
+        <div class="value">Gemma 4-E2B-it</div>
+        <div class="sub">unsloth/gemma-4-E2B-it-unsloth-bnb-4bit · 5.2B params</div>
+      </div>
+      <div class="card">
+        <div class="label">LoRA Config</div>
+        <div class="value">r=64 · α=128</div>
+        <div class="sub">RS-LoRA · 124M trainable (2.37%) · targets: all proj layers</div>
+      </div>
+      <div class="card">
+        <div class="label">Training Precision</div>
+        <div class="value">4-bit base + bf16</div>
+        <div class="sub">load_in_4bit=True · bf16=True · adamw_8bit · seq_len=4096</div>
+      </div>
+      <div class="card">
+        <div class="label">Effective Batch</div>
+        <div class="value">128</div>
+        <div class="sub">per_device=8 · grad_accum=16 · 1 GPU</div>
+      </div>
+      <div class="card">
+        <div class="label">Schedule</div>
+        <div class="value">2 epochs · cosine LR</div>
+        <div class="sub">LR=1e-4 · warmup_ratio=0.03 · weight_decay=0.01</div>
+      </div>
+      <div class="card">
+        <div class="label">Total Steps</div>
+        <div class="value">3,518 steps</div>
+        <div class="sub">~25s/step → ETA ~24h · finishes ~May 17 7 AM</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- v2 vs v3 -->
+  <section>
+    <h2><span class="icon">📈</span> v2 → v3 Upgrades</h2>
+    <table>
+      <thead>
+        <tr><th>Parameter</th><th>v2</th><th>v3</th><th>Why</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Dataset size</td><td>12,494 records</td><td>225,060 records</td><td>18x more data → better generalization</td></tr>
+        <tr><td>LoRA rank</td><td>r=32, α=64</td><td>r=64, α=128</td><td>Higher rank → richer adaptation</td></tr>
+        <tr><td>Effective batch</td><td>32 (4×8)</td><td>128 (8×16)</td><td>Smoother gradients, stable LR</td></tr>
+        <tr><td>Learning rate</td><td>1.5e-4</td><td>1e-4</td><td>Lower LR for larger batch stability</td></tr>
+        <tr><td>Epochs</td><td>3</td><td>2</td><td>Sufficient with 18x more data</td></tr>
+        <tr><td>Serve port</td><td>9003</td><td>9004</td><td>v2 stays live for comparison</td></tr>
+        <tr><td>Data format</td><td>ChEMBL + Mol-Inst</td><td>BindingDB + ChEMBL + MOSES</td><td>Real measured affinities</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Dataset -->
+  <section>
+    <h2><span class="icon">📊</span> Dataset v3 — 225,060 Records</h2>
+    <table>
+      <thead>
+        <tr><th>Source</th><th>Records</th><th>Share</th><th>Format</th><th>Filter</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>BindingDB All (TSV 4.8GB)</td>
+          <td>150,000</td>
+          <td>66.6%</td>
+          <td>Rationale-first ChatML</td>
+          <td>Kd/Ki/IC50 ≤ 100 nM · seq ≥ 50 AA · dedup</td>
+        </tr>
+        <tr>
+          <td>ChEMBL pairs (pre-built v2)</td>
+          <td>65,000</td>
+          <td>28.9%</td>
+          <td>Rationale-first ChatML</td>
+          <td>IC50/Ki ≤ 100 nM · UniProt FASTA</td>
+        </tr>
+        <tr>
+          <td>MOSES (drug-like scaffolds)</td>
+          <td>10,000</td>
+          <td>4.4%</td>
+          <td>Standard ChatML</td>
+          <td>Lipinski Ro5 · valid SMILES</td>
+        </tr>
+        <tr>
+          <td>Deep2Lead custom v2</td>
+          <td>60</td>
+          <td>0.03%</td>
+          <td>Curated examples</td>
+          <td>Hand-curated</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:1rem">
+      <div class="label" style="font-size:0.78rem;color:#8b949e;margin-bottom:0.4rem">BINDINGDB RAW PARSE STATS (from 3.17M rows)</div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="label">Total rows</div>
+          <div class="value">3,176,529</div>
+        </div>
+        <div class="card">
+          <div class="label">Pairs written</div>
+          <div class="value">867,108</div>
+          <div class="sub">Before 150K cap in dataset builder</div>
+        </div>
+        <div class="card">
+          <div class="label">Key filters</div>
+          <div class="value">Affinity + dedup</div>
+          <div class="sub">1.79M skipped affinity · 320K dedup removed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Response format -->
+  <section>
+    <h2><span class="icon">💬</span> Training Data Format (Rationale-First ChatML)</h2>
+    <pre>messages:
+  system:    "You are Deep2Lead's drug discovery AI v2. When given a protein target..."
+  user:      "Target: EGFR T790M\nProtein sequence (first 150 AA): ...\nMeasured binding affinity: IC50 = 3.2 nM\nDesign a small molecule drug candidate..."
+  assistant: "Rationale: This kinase target presents a conserved ATP-binding hinge region. An N-heterocyclic
+              hinge binder combined with a hydrophobic back-pocket group achieves selectivity and nanomolar potency.
+
+              SMILES: CC1=CC2=C(N1)N=CN=C2NC3=CC(=C(C=C3)OCC4=CC(=CC=C4)F)Cl"</pre>
+    <div style="margin-top:0.8rem;font-size:0.84rem;color:#8b949e">
+      7 target-aware rationale templates: kinase · protease · GPCR · allosteric · fragment · covalent · PPI.
+      <code>_pick_rationale(target_name)</code> selects by keyword matching on target name.
+    </div>
+  </section>
+
+  <!-- Issues & Fixes -->
+  <section>
+    <h2><span class="icon">🔧</span> Issues Encountered &amp; Fixes</h2>
+    <ul class="issue-list">
+      <li class="fix">
+        <strong>Unsloth model not supported error</strong>
+        <code>NotImplementedError: unsloth/gemma-4-E2B-it-unsloth-bnb-4bit is not supported</code>
+        <div class="solution">Fix: Updated unsloth 2026.4.4 → 2026.5.2 via git install. The bnb-4bit model also requires <code>load_in_4bit=True</code> — using <code>False</code> triggers rejection.</div>
+      </li>
+      <li class="fix">
+        <strong>Wrong PyTorch wheel for ARM64 (GB10)</strong>
+        <code>NotImplementedError: Unsloth cannot find any torch accelerator</code>
+        <div class="solution">Fix: Standard <code>pip install torch</code> downloads CPU-only aarch64 wheel. Must use:<br>
+        <code>pip install torch==2.11.0+cu130 --index-url https://download.pytorch.org/whl/cu130</code></div>
+      </li>
+      <li class="fix">
+        <strong>formatting_func returns string, not list</strong>
+        <code>ValueError: The formatting_func should return a list of processed strings</code>
+        <div class="solution">Fix: Pre-apply <code>processor.apply_chat_template()</code> to all 225K records before <code>Dataset.from_dict()</code>, then use <code>dataset_text_field="text"</code>. Avoids batch/single ambiguity entirely.</div>
+      </li>
+      <li class="fix">
+        <strong>Mol-Instructions git-lfs not available</strong>
+        <div class="solution">Fix: git-lfs not installed on dgx1, apt mirror broken. Dataset files are LFS pointers. Solution: Skip Mol-Instructions — BindingDB (150K) + ChEMBL (65K) already gives 225K records, exceeding the 220K target without it.</div>
+      </li>
+      <li class="fix">
+        <strong>MAMMAL pKd threshold too strict (0.70)</strong>
+        <div class="solution">Fix: Model scores cluster 5.2–5.5 for most inputs (mean pKd=5.79). Official IBM example pair scores 0.549. Lowered threshold to 0.55 in config.py.</div>
+      </li>
+      <li class="fix">
+        <strong>RDKit SMILES parse error flood</strong>
+        <div class="solution">Fix: Added <code>RDLogger.DisableLog("rdApp.error")</code> + pre-filter regex <code>[0-9\[\]=#@\\/]</code> before any RDKit call so English words (amino, chains) never reach the parser.</div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Three-tier eval -->
+  <section>
+    <h2><span class="icon">🧪</span> Evaluation Framework (3-Tier)</h2>
+    <table>
+      <thead>
+        <tr><th>Tier</th><th>What it measures</th><th>Key metrics</th><th>Tool</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Tier 1 — Chemistry</strong></td>
+          <td>Molecule quality independent of target</td>
+          <td>Validity · Uniqueness · Novelty · QED · SAS · Ro5 · Internal diversity</td>
+          <td><code>eval/tier1_chemistry.py</code></td>
+        </tr>
+        <tr>
+          <td><strong>Tier 2 — Target Conditioning</strong></td>
+          <td>Does the model bind to the right protein?</td>
+          <td>MAMMAL pKd · % binders · Murcko scaffold count · delta vs known drugs</td>
+          <td><code>eval/tier2_target_cond.py</code> + dlyog03:8090</td>
+        </tr>
+        <tr>
+          <td><strong>Tier 3 — Rationale Quality</strong></td>
+          <td>Does the explanation make scientific sense?</td>
+          <td>Format compliance · Keyword coverage (96 binding terms) · Coherence score · Pearson r vs pKd</td>
+          <td><code>eval/tier3_rationale.py</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:0.8rem">
+      <strong style="color:#e6edf3;font-size:0.88rem">5 Held-out Test Targets:</strong>
+      <span style="color:#8b949e;font-size:0.84rem">
+        SARS-CoV-2 MPro · EGFR T790M · CDK2/Cyclin E · DPP-4 · BACE1
+      </span>
+    </div>
+  </section>
+
+  <!-- Sprint plan -->
+  <section>
+    <h2><span class="icon">🗓</span> 72-Hour Hackathon Sprint Plan</h2>
+    <ul class="timeline">
+      <li class="done">
+        <div class="tl-title">Sprint 1 — Dataset + Overnight Train (0–8h) ✓</div>
+        <div class="tl-desc">Download BindingDB TSV (4.8GB) · Parse 867K pairs · Build 225K merged dataset · Launch v3 training</div>
+      </li>
+      <li class="active">
+        <div class="tl-title">Training Running (~24h) — In Progress</div>
+        <div class="tl-desc">3,518 steps · ~25s/step · ETA May 17 ~7 AM · Monitor: TRAIN_V3.log</div>
+      </li>
+      <li>
+        <div class="tl-title">Sprint 2 — Evaluation (May 17, 0–4h after train)</div>
+        <div class="tl-desc">Run run_full_eval.py · Check QED≥0.62 · Novelty≥82% · MAMMAL pKd on 5 held-out targets · Generate Tables 1/2/3</div>
+      </li>
+      <li>
+        <div class="tl-title">Sprint 3 — Gradio Demo App (May 17, 4–8h)</div>
+        <div class="tl-desc">Build Gradio interface · Protein FASTA / target name input · SMILES output with rationale · Live MAMMAL pKd scoring · Deploy on dgx1:9004</div>
+      </li>
+      <li>
+        <div class="tl-title">Sprint 4 — Demo Video + GitHub (May 17, 8–12h)</div>
+        <div class="tl-desc">Record 3-min demo video · COVID MPro + EGFR T790M + BACE1 · GitHub README with eval tables · HuggingFace model card</div>
+      </li>
+      <li>
+        <div class="tl-title">Sprint 5 — Kaggle Submit (May 17–18)</div>
+        <div class="tl-desc">Write Kaggle notebook · Link HF model + Gradio demo · Submit before May 18 11:59 PM UTC</div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Key files -->
+  <section>
+    <h2><span class="icon">📁</span> Key Files</h2>
+    <table>
+      <thead>
+        <tr><th>File</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>data/parse_bindingdb.py</code></td><td>Parse BindingDB All TSV → JSONL (Kd/Ki/IC50 filter, dedup, RDKit validate)</td></tr>
+        <tr><td><code>data/build_dataset_v3.py</code></td><td>Merge 4 sources → <code>merged_finetune_v3.jsonl</code> (225K records)</td></tr>
+        <tr><td><code>data/dataset_utils.py</code></td><td>ChatML helpers, rationale templates, SMILES utils, RDKit suppression</td></tr>
+        <tr><td><code>train/finetune_gemma4_v3.py</code></td><td>Main training script — pre-templates dataset, LoRA r=64, 2 epochs</td></tr>
+        <tr><td><code>scripts/autopilot_v3.sh</code></td><td>One-command launcher — checks GPU/dataset/unsloth, runs in tmux</td></tr>
+        <tr><td><code>scripts/_autopilot_worker.sh</code></td><td>Worker called by autopilot — all output → TRAIN_V3.log</td></tr>
+        <tr><td><code>eval/tier1_chemistry.py</code></td><td>Validity · Novelty · QED · SAS · Ro5 metrics</td></tr>
+        <tr><td><code>eval/tier2_target_cond.py</code></td><td>MAMMAL pKd scoring for 5 held-out targets</td></tr>
+        <tr><td><code>eval/tier3_rationale.py</code></td><td>Rationale format + keyword coverage + coherence scoring</td></tr>
+        <tr><td><code>eval/run_full_eval.py</code></td><td>Orchestrator — runs all 3 tiers, writes summary_table.md</td></tr>
+        <tr><td><code>ibm_biomed/serve_mammal.py</code></td><td>MAMMAL DTI API server (runs on dlyog03:8090)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Monitor commands -->
+  <section>
+    <h2><span class="icon">👁</span> Morning Check Commands</h2>
+    <div class="monitor-box">
+      <div class="cmd-label">Check step progress</div>
+      <pre>ssh dgx1 'grep -oE "[0-9]+/3518" ~/unsloth/gemma-4-finetune-v2/TRAIN_V3.log | tail -3'</pre>
+    </div>
+    <div class="monitor-box" style="margin-top:0.8rem">
+      <div class="cmd-label">Check if complete or errored</div>
+      <pre>ssh dgx1 'grep "COMPLETE\|ERROR" ~/unsloth/gemma-4-finetune-v2/TRAIN_V3.log'</pre>
+    </div>
+    <div class="monitor-box" style="margin-top:0.8rem">
+      <div class="cmd-label">Live tail (for active monitoring)</div>
+      <pre>ssh dgx1 'tail -f ~/unsloth/gemma-4-finetune-v2/TRAIN_V3.log'</pre>
+    </div>
+    <div class="monitor-box" style="margin-top:0.8rem">
+      <div class="cmd-label">GPU status</div>
+      <pre>ssh dgx1 nvidia-smi</pre>
+    </div>
+    <div class="monitor-box" style="margin-top:0.8rem">
+      <div class="cmd-label">Run evaluation (after training completes)</div>
+      <pre>ssh dgx1 'cd ~/unsloth/gemma-4-finetune-v2 && source ~/.unsloth/.unsloth/bin/activate && \
+python3 eval/run_full_eval.py --lora-path ./drug_discovery/lora/gemma4_e2b_drug_v3 \
+  --n-general 60 --n-per-target 20 --output-dir ./eval_results_v3'</pre>
+    </div>
+  </section>
+
+  <!-- Critical config -->
+  <section>
+    <h2><span class="icon">⚙️</span> Critical Config Notes</h2>
+    <table>
+      <thead>
+        <tr><th>Setting</th><th>Value</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>PyTorch for GB10</td>
+          <td><code>torch==2.11.0+cu130</code></td>
+          <td>Must use <code>--index-url https://download.pytorch.org/whl/cu130</code> — default pip gives CPU-only ARM wheel</td>
+        </tr>
+        <tr>
+          <td>load_in_4bit</td>
+          <td><code>True</code></td>
+          <td>Required for bnb-4bit model variant — setting False causes NotImplementedError in unsloth</td>
+        </tr>
+        <tr>
+          <td>dataset_text_field</td>
+          <td><code>"text"</code></td>
+          <td>Pre-template all records to plain strings, avoid formatting_func batch/list bug</td>
+        </tr>
+        <tr>
+          <td>MAMMAL threshold</td>
+          <td><code>0.55</code> (was 0.70)</td>
+          <td>Model pKd clusters 5.2–5.5; official IBM example = 0.549; 0.70 would reject everything</td>
+        </tr>
+        <tr>
+          <td>Unsloth version</td>
+          <td><code>2026.5.2</code></td>
+          <td>2026.4.4 didn't support gemma-4-E2B with new model registry</td>
+        </tr>
+        <tr>
+          <td>dlyog03 usage</td>
+          <td>Post-training only</td>
+          <td>No MAMMAL calls during training — eval/tier2 only. dlyog03 can idle overnight safely.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    Deep2Lead v3 · Generated May 16, 2026 · Kaggle Gemma 4 Good Hackathon · Deadline May 18, 2026 11:59 PM UTC
+  </footer>
+
+</div>
+</body>
+</html>
