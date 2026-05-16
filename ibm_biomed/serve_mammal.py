@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 """
-IBM MAMMAL DTI Binding Affinity API
-Serves ibm/biomed.omics.bl.sm.ma-ted-458m on dlyog03 port 8090.
+IBM MAMMAL DTI Binding Affinity API — corrected implementation.
 
-Endpoints:
-  GET  /health              — status + GPU info
-  GET  /model-info          — model card summary
-  POST /predict-binding     — single (fasta, smiles) → score
-  POST /predict-batch       — list of pairs → list of scores (max 100 per call)
+Uses the task-specific fine-tuned model:
+  ibm/biomed.omics.bl.sm.ma-ted-458m.dti_bindingdb_pkd
 
-Called by dgx1 during Gemma v2 training data filtering.
-Model: 458M params, ~2GB VRAM on RTX 3060 Ti (float32) or ~1GB (float16)
+Key corrections vs v1:
+  - Uses DtiBindingdbKdTask.data_preprocessing() for correct prompt format
+  - Uses nn_model.forward_encoder_only() not generate()
+  - Uses DtiBindingdbKdTask.process_model_output() for pKd denormalization
+  - Output is pKd (higher = stronger binding), mapped to [0,1] score:
+      score = min(pKd / 10, 1.0)
+      is_binder = pKd >= 7.0  (= Kd/IC50 <= 100 nM)
+
+pKd reference:
+  pKd 9 → Kd = 1 nM   (excellent binder)
+  pKd 7 → Kd = 100 nM (good binder, our threshold)
+  pKd 5 → Kd = 10 µM  (weak binder)
 """
 
 import logging
@@ -25,106 +31,85 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s",
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("mammal-api")
 
-PORT      = int(os.getenv("MAMMAL_PORT", "8090"))
-MODEL_ID  = os.getenv("MAMMAL_MODEL_ID", "ibm/biomed.omics.bl.sm.ma-ted-458m")
-DEVICE    = "cuda" if torch.cuda.is_available() else "cpu"
-MAX_FASTA = int(os.getenv("MAMMAL_MAX_FASTA", "600"))   # cap for VRAM safety
-MAX_BATCH = int(os.getenv("MAMMAL_MAX_BATCH", "100"))
+PORT       = int(os.getenv("MAMMAL_PORT", "8090"))
+MODEL_ID   = "ibm/biomed.omics.bl.sm.ma-ted-458m.dti_bindingdb_pkd"
+DEVICE     = "cuda" if torch.cuda.is_available() else "cpu"
+MAX_FASTA  = int(os.getenv("MAMMAL_MAX_FASTA", "600"))
+MAX_BATCH  = int(os.getenv("MAMMAL_MAX_BATCH", "50"))
 
-MODEL   = None
-TOK     = None
-READY   = False
+# BindingDB Kd normalization constants (from MAMMAL training)
+NORM_Y_MEAN = 5.79384684128215
+NORM_Y_STD  = 1.33808027428196
 
+# pKd threshold for "is_binder": pKd >= 7.0 = Kd <= 100 nM
+PKD_BINDER_THRESHOLD = 7.0
 
-def _build_dti_prompt(fasta: str, smiles: str) -> str:
-    """Build MAMMAL DTI encoder prompt string."""
-    return (
-        f"<@TOKENIZER-TYPE=AA><BINDING_AFFINITY_CLASS><SENTINEL_ID_0>"
-        f"<MOLECULAR_ENTITY><MOLECULAR_ENTITY_GENERAL_PROTEIN>"
-        f"<SEQUENCE_NATURAL_START>{fasta}<SEQUENCE_NATURAL_END>"
-        f"<MOLECULAR_ENTITY><MOLECULAR_ENTITY_SMALL_MOLECULE>"
-        f"<SEQUENCE_NATURAL_START>{smiles}<SEQUENCE_NATURAL_END><EOS>"
-    )
+MODEL     = None
+TOK       = None
+TASK      = None
+READY     = False
 
 
-def _decode_score(raw: str) -> float:
-    """
-    Convert MAMMAL raw output to a float score in [0, 1].
-    MAMMAL outputs vary by task version — handle both numeric and label forms.
-    """
-    text = raw.strip().lower()
-    # Numeric probability output (ideal)
-    try:
-        val = float(text)
-        return max(0.0, min(1.0, val))
-    except ValueError:
-        pass
-    # Class label output
-    if any(k in text for k in ("high", "active", "binder", "1", "positive")):
-        return 0.85
-    if any(k in text for k in ("low", "inactive", "non", "0", "negative")):
-        return 0.20
-    # Unknown — conservative middle score
-    log.warning(f"Unknown MAMMAL output: '{raw}' — returning 0.50")
-    return 0.50
+def _pkd_to_score(pkd: float) -> float:
+    """Map pKd to [0,1] score. pKd=7 → 0.70, pKd=10 → 1.0, pKd=5 → 0.50."""
+    return min(max(pkd / 10.0, 0.0), 1.0)
 
 
 def _predict_one(fasta: str, smiles: str) -> dict:
-    from mammal.keys import (
-        ENCODER_INPUTS_STR, ENCODER_INPUTS_TOKENS,
-        ENCODER_INPUTS_ATTENTION_MASK, CLS_PRED,
-    )
     fasta_trimmed = fasta[:MAX_FASTA]
-    prompt        = _build_dti_prompt(fasta_trimmed, smiles)
+    sample = {"target_seq": fasta_trimmed, "drug_seq": smiles}
 
-    sample = {ENCODER_INPUTS_STR: prompt}
-    TOK(
+    sample = TASK.data_preprocessing(
         sample_dict=sample,
-        key_in=ENCODER_INPUTS_STR,
-        key_out_tokens_ids=ENCODER_INPUTS_TOKENS,
-        key_out_attention_mask=ENCODER_INPUTS_ATTENTION_MASK,
+        tokenizer_op=TOK,
+        target_sequence_key="target_seq",
+        drug_sequence_key="drug_seq",
+        norm_y_mean=None,
+        norm_y_std=None,
+        device=torch.device(DEVICE),
     )
-    sample[ENCODER_INPUTS_TOKENS]         = torch.tensor(sample[ENCODER_INPUTS_TOKENS]).to(DEVICE)
-    sample[ENCODER_INPUTS_ATTENTION_MASK] = torch.tensor(sample[ENCODER_INPUTS_ATTENTION_MASK]).to(DEVICE)
 
-    with torch.no_grad():
-        batch = MODEL.generate(
-            [sample],
-            output_scores=True,
-            return_dict_in_generate=True,
-            max_new_tokens=5,
-        )
+    batch_dict = MODEL.forward_encoder_only([sample])
 
-    raw   = TOK._tokenizer.decode(batch[CLS_PRED][0])
-    score = _decode_score(raw)
-    return {"score": score, "raw_output": raw.strip(), "is_binder": score >= 0.70}
+    batch_dict = TASK.process_model_output(
+        batch_dict,
+        scalars_preds_processed_key="model.out.dti_bindingdb_kd",
+        norm_y_mean=NORM_Y_MEAN,
+        norm_y_std=NORM_Y_STD,
+    )
+
+    pkd   = float(batch_dict["model.out.dti_bindingdb_kd"][0])
+    score = _pkd_to_score(pkd)
+    return {
+        "pkd":       round(pkd, 4),
+        "score":     round(score, 4),
+        "is_binder": pkd >= PKD_BINDER_THRESHOLD,
+        "raw_output": f"pKd={pkd:.3f}",
+    }
 
 
 def load_model():
-    global MODEL, TOK, READY
-    log.info(f"Loading IBM MAMMAL from '{MODEL_ID}' on {DEVICE} ...")
-    t0 = time.time()
-
+    global MODEL, TOK, TASK, READY
     from mammal.model import Mammal
     from fuse.data.tokenizers.modular_tokenizer.op import ModularTokenizerOp
+    from mammal.examples.dti_bindingdb_kd.task import DtiBindingdbKdTask
 
+    log.info(f"Loading MAMMAL DTI model: {MODEL_ID}")
+    t0 = time.time()
+
+    TOK   = ModularTokenizerOp.from_pretrained(MODEL_ID)
     MODEL = Mammal.from_pretrained(MODEL_ID)
     MODEL.eval()
-    if DEVICE == "cuda":
-        MODEL = MODEL.cuda()
-
-    TOK = ModularTokenizerOp.from_pretrained(MODEL_ID)
+    MODEL.to(device=torch.device(DEVICE))
+    TASK  = DtiBindingdbKdTask
 
     READY = True
-    elapsed = time.time() - t0
+    elapsed  = time.time() - t0
     vram_used = round(torch.cuda.memory_allocated() / 1e9, 2) if DEVICE == "cuda" else 0
-    log.info(f"MAMMAL ready in {elapsed:.1f}s. VRAM used: {vram_used} GB")
+    log.info(f"MAMMAL DTI model ready in {elapsed:.1f}s. VRAM used: {vram_used} GB")
 
 
 @asynccontextmanager
@@ -134,30 +119,27 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="IBM MAMMAL DTI Binding Affinity API",
-    version="1.0.0",
-    description="Serves ibm/biomed.omics.bl.sm.ma-ted-458m for drug-target interaction scoring.",
+    title="IBM MAMMAL DTI pKd API",
+    version="2.0.0",
+    description=(
+        "Serves ibm/biomed.omics.bl.sm.ma-ted-458m.dti_bindingdb_pkd "
+        "for drug-target binding affinity (pKd) prediction."
+    ),
     lifespan=lifespan,
 )
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-
-# ── Request / Response models ──────────────────────────────────────────────────
 
 class BindingRequest(BaseModel):
-    fasta:  str = Field(..., min_length=5,  description="Protein sequence (amino acids)")
-    smiles: str = Field(..., min_length=2,  description="Small molecule SMILES string")
+    fasta:  str = Field(..., min_length=5)
+    smiles: str = Field(..., min_length=2)
 
 
 class BindingResponse(BaseModel):
-    score:      float   # affinity probability [0, 1]
-    is_binder:  bool    # score >= 0.70
-    raw_output: str     # raw model token string
+    pkd:        float   # predicted pKd (higher = stronger binding)
+    score:      float   # pkd / 10, clamped to [0,1]
+    is_binder:  bool    # pkd >= 7.0 (Kd <= 100 nM)
+    raw_output: str
     latency_ms: int
 
 
@@ -166,26 +148,25 @@ class BatchRequest(BaseModel):
 
 
 class BatchResponse(BaseModel):
-    results:        list[BindingResponse]
-    total:          int
-    passed_filter:  int   # count with is_binder=True
-    latency_ms:     int
+    results:       list[BindingResponse]
+    total:         int
+    passed_filter: int
+    latency_ms:    int
 
-
-# ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @app.get("/health")
 def health():
     vram_free = round(torch.cuda.mem_get_info()[0] / 1e9, 1) if DEVICE == "cuda" else 0
     vram_used = round(torch.cuda.memory_allocated() / 1e9, 1) if DEVICE == "cuda" else 0
     return {
-        "status":    "ready" if READY else "loading",
-        "model":     MODEL_ID,
-        "device":    DEVICE,
-        "gpu":       torch.cuda.get_device_name(0) if DEVICE == "cuda" else "none",
+        "status":       "ready" if READY else "loading",
+        "model":        MODEL_ID,
+        "device":       DEVICE,
+        "gpu":          torch.cuda.get_device_name(0) if DEVICE == "cuda" else "none",
         "vram_used_gb": vram_used,
         "vram_free_gb": vram_free,
-        "port":      PORT,
+        "port":         PORT,
+        "pkd_threshold": PKD_BINDER_THRESHOLD,
     }
 
 
@@ -193,12 +174,15 @@ def health():
 def model_info():
     return {
         "model_id":    MODEL_ID,
+        "task":        "DTI pKd prediction (BindingDB Kd)",
         "parameters":  "458M",
-        "architecture": "MAMMAL (encoder-decoder, multimodal)",
-        "tasks":        ["DTI", "protein-protein binding", "molecular property prediction"],
-        "license":      "Apache 2.0",
-        "paper":        "https://arxiv.org/abs/2410.22367",
-        "threshold_recommendation": 0.70,
+        "output":      "pKd = -log10(Kd[M])",
+        "is_binder_threshold": f"pKd >= {PKD_BINDER_THRESHOLD} (Kd <= 100 nM)",
+        "score_mapping": "score = pKd / 10, clamped to [0,1]",
+        "norm_y_mean": NORM_Y_MEAN,
+        "norm_y_std":  NORM_Y_STD,
+        "license":     "Apache 2.0",
+        "paper":       "https://arxiv.org/abs/2410.22367",
     }
 
 
@@ -210,9 +194,10 @@ def predict_binding(req: BindingRequest):
     try:
         result = _predict_one(req.fasta, req.smiles)
     except Exception as e:
-        log.error(f"Prediction error: {e}")
+        log.error(f"Prediction error: {e}", exc_info=True)
         raise HTTPException(500, f"Prediction failed: {e}")
     return BindingResponse(
+        pkd=result["pkd"],
         score=result["score"],
         is_binder=result["is_binder"],
         raw_output=result["raw_output"],
@@ -224,8 +209,6 @@ def predict_binding(req: BindingRequest):
 def predict_batch(req: BatchRequest):
     if not READY:
         raise HTTPException(503, "Model still loading")
-    if len(req.pairs) > MAX_BATCH:
-        raise HTTPException(400, f"Max {MAX_BATCH} pairs per batch request")
 
     t0 = time.time()
     results = []
@@ -233,18 +216,18 @@ def predict_batch(req: BatchRequest):
         try:
             r = _predict_one(pair.fasta, pair.smiles)
             results.append(BindingResponse(
-                score=r["score"],
-                is_binder=r["is_binder"],
-                raw_output=r["raw_output"],
-                latency_ms=0,
+                pkd=r["pkd"], score=r["score"],
+                is_binder=r["is_binder"], raw_output=r["raw_output"], latency_ms=0,
             ))
         except Exception as e:
-            log.warning(f"Pair prediction error (skipping): {e}")
-            results.append(BindingResponse(score=0.0, is_binder=False, raw_output="error", latency_ms=0))
+            log.warning(f"Pair error (skipping): {e}")
+            results.append(BindingResponse(pkd=0.0, score=0.0, is_binder=False,
+                                           raw_output="error", latency_ms=0))
 
     total_ms = int((time.time() - t0) * 1000)
+    per_ms   = total_ms // max(len(results), 1)
     for r in results:
-        r.latency_ms = total_ms // max(len(results), 1)
+        r.latency_ms = per_ms
 
     return BatchResponse(
         results=results,
@@ -255,5 +238,5 @@ def predict_batch(req: BatchRequest):
 
 
 if __name__ == "__main__":
-    log.info(f"Starting IBM MAMMAL API on 0.0.0.0:{PORT}")
+    log.info(f"Starting IBM MAMMAL DTI API on 0.0.0.0:{PORT}")
     uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="info")
